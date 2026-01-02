@@ -1,0 +1,690 @@
+// ============================================================
+// NeuroBridge™ - Complete Data Model
+// Production-Ready Mock Data for all Application Entities
+// ============================================================
+
+// ============ USERS ============
+export const USERS = [
+    {
+        id: 'p1',
+        name: 'Priya Patel',
+        email: 'priya.patel@email.com',
+        role: 'parent',
+        childId: 'c1',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
+        phone: '+91 98765 43210',
+        joinedAt: '2025-06-15'
+    },
+    {
+        id: 'p2',
+        name: 'Arun Sharma',
+        email: 'arun.sharma@email.com',
+        role: 'parent',
+        childId: 'c2',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
+        phone: '+91 98765 43211',
+        joinedAt: '2025-08-20'
+    },
+    {
+        id: 't1',
+        name: 'Dr. Rajesh Kumar',
+        email: 'dr.rajesh@neurobridge.com',
+        role: 'therapist',
+        specialization: 'Speech & Language Therapy',
+        caseload: ['c1', 'c2', 'c3'],
+        avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=200',
+        experience: '12 years',
+        certifications: ['BCBA', 'SLP-CCC'],
+        joinedAt: '2024-01-10'
+    },
+    {
+        id: 't2',
+        name: 'Dr. Meera Singh',
+        email: 'dr.meera@neurobridge.com',
+        role: 'therapist',
+        specialization: 'Occupational Therapy',
+        caseload: ['c1', 'c4', 'c5'],
+        avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200',
+        experience: '8 years',
+        certifications: ['OTR/L', 'SIPT'],
+        joinedAt: '2024-03-15'
+    },
+    {
+        id: 'cl1',
+        name: 'Dr. Ananya Verma',
+        email: 'dr.ananya@neurobridge.com',
+        role: 'clinical_lead',
+        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200',
+        joinedAt: '2023-06-01'
+    },
+    {
+        id: 'a1',
+        name: 'Director Anjali Sharma',
+        email: 'anjali.sharma@neurobridge.com',
+        role: 'admin',
+        avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=200',
+        joinedAt: '2023-01-01'
+    }
+];
+
+// ============ CHILDREN ============
+export const CHILDREN = [
+    {
+        id: 'c1',
+        name: 'Aarav Patel',
+        age: 5,
+        dateOfBirth: '2020-03-15',
+        diagnosis: 'ASD Level 2',
+        diagnosisDate: '2023-01-20',
+        photoUrl: 'https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&q=80&w=200',
+        parentId: 'p1',
+        therapistId: 't1',
+        program: ['Speech Therapy', 'Occupational Therapy'],
+        currentMood: '😊 Happy',
+        moodContext: 'Engaged well with new sensory toys.',
+        streak: 12,
+        schoolReadinessScore: 68,
+        enrollmentDate: '2025-06-15',
+        status: 'active'
+    },
+    {
+        id: 'c2',
+        name: 'Diya Sharma',
+        age: 6,
+        dateOfBirth: '2019-07-22',
+        diagnosis: 'ASD Level 1',
+        diagnosisDate: '2022-11-10',
+        photoUrl: 'https://images.unsplash.com/photo-1519238263496-652d87e02df9?auto=format&fit=crop&q=80&w=200',
+        parentId: 'p2',
+        therapistId: 't1',
+        program: ['ABA Therapy', 'Social Skills'],
+        currentMood: '😐 Calm',
+        moodContext: 'Focused during table work.',
+        streak: 5,
+        schoolReadinessScore: 75,
+        enrollmentDate: '2025-08-20',
+        status: 'active'
+    },
+    {
+        id: 'c3',
+        name: 'Rohan Gupta',
+        age: 4,
+        dateOfBirth: '2021-11-08',
+        diagnosis: 'ASD Level 2',
+        diagnosisDate: '2024-02-15',
+        photoUrl: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&q=80&w=200',
+        parentId: 'p3',
+        therapistId: 't1',
+        program: ['Speech Therapy', 'Sensory Integration'],
+        currentMood: '😊 Excited',
+        moodContext: 'Loved the music therapy session.',
+        streak: 8,
+        schoolReadinessScore: 55,
+        enrollmentDate: '2025-09-01',
+        status: 'active'
+    },
+    {
+        id: 'c4',
+        name: 'Ananya Reddy',
+        age: 7,
+        dateOfBirth: '2018-05-30',
+        diagnosis: 'ASD Level 1',
+        diagnosisDate: '2021-08-20',
+        photoUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
+        parentId: 'p4',
+        therapistId: 't2',
+        program: ['Occupational Therapy', 'Social Skills'],
+        currentMood: '😌 Content',
+        moodContext: 'Made good progress in fine motor skills.',
+        streak: 15,
+        schoolReadinessScore: 82,
+        enrollmentDate: '2025-04-10',
+        status: 'active'
+    },
+    {
+        id: 'c5',
+        name: 'Arjun Nair',
+        age: 5,
+        dateOfBirth: '2020-09-14',
+        diagnosis: 'ASD Level 2',
+        diagnosisDate: '2023-06-10',
+        photoUrl: 'https://images.unsplash.com/photo-1595254771214-e32e0bc58ca2?auto=format&fit=crop&q=80&w=200',
+        parentId: 'p5',
+        therapistId: 't2',
+        program: ['ABA Therapy', 'Occupational Therapy'],
+        currentMood: '🤔 Curious',
+        moodContext: 'Exploring new learning materials.',
+        streak: 3,
+        schoolReadinessScore: 60,
+        enrollmentDate: '2025-10-15',
+        status: 'active'
+    }
+];
+
+// ============ SESSIONS ============
+export const SESSIONS = [
+    {
+        id: 's1',
+        childId: 'c1',
+        date: '2025-12-23T10:00:00',
+        type: 'Speech Therapy',
+        therapistId: 't1',
+        duration: 45,
+        status: 'completed',
+        engagement: 85,
+        emotionalState: 'Regulated',
+        activities: ['Picture Exchange', 'Sound Imitation'],
+        notes: 'Aarav showed great improvement in "B" sounds today. Excellent focus.',
+        aiSummary: 'We had a wonderful session with Aarav today! 🌟 He did a great job with Picture Exchange and Sound Imitation. We noticed he was feeling happy, and his engagement was strong (85%). Keep up the great work at home!',
+        wins: ['Mastered "B" sounds', 'High engagement', 'Followed 2-step commands'],
+        focusAreas: ['Phoneme production', 'Turn-taking'],
+        behaviorTags: ['cooperative', 'attentive', 'responsive']
+    },
+    {
+        id: 's2',
+        childId: 'c1',
+        date: '2025-12-24T14:00:00',
+        type: 'Occupational Therapy',
+        therapistId: 't2',
+        duration: 50,
+        status: 'scheduled',
+        location: 'Sensory Room B'
+    },
+    {
+        id: 's3',
+        childId: 'c1',
+        date: '2025-12-20T10:00:00',
+        type: 'Speech Therapy',
+        therapistId: 't1',
+        duration: 45,
+        status: 'completed',
+        engagement: 78,
+        emotionalState: 'Neutral',
+        activities: ['Vocabulary Building', 'Story Sequencing'],
+        notes: 'Good session. Some difficulty with 3-syllable words.',
+        aiSummary: 'Aarav had a productive session focusing on vocabulary and storytelling! 📚 He worked hard on building new words and showed great effort. Engagement was solid at 78%.',
+        wins: ['Learned 5 new words', 'Improved story sequencing'],
+        focusAreas: ['Multi-syllable words', 'Narrative skills'],
+        behaviorTags: ['focused', 'needs-prompting']
+    },
+    {
+        id: 's4',
+        childId: 'c1',
+        date: '2025-12-18T10:00:00',
+        type: 'Speech Therapy',
+        therapistId: 't1',
+        duration: 45,
+        status: 'completed',
+        engagement: 92,
+        emotionalState: 'Regulated',
+        activities: ['Sound Imitation', 'Social Greetings'],
+        notes: 'Outstanding session! Aarav initiated greetings independently.',
+        aiSummary: 'What an amazing session! 🎉 Aarav surprised us by saying "Hello" to everyone without prompting. His sound imitation was excellent with 92% engagement!',
+        wins: ['Independent greetings', 'Excellent imitation', 'Self-initiated communication'],
+        focusAreas: ['Social initiation', 'Expressive language'],
+        behaviorTags: ['independent', 'motivated', 'happy']
+    },
+    {
+        id: 's5',
+        childId: 'c2',
+        date: '2025-12-23T11:00:00',
+        type: 'ABA Therapy',
+        therapistId: 't1',
+        duration: 60,
+        status: 'completed',
+        engagement: 65,
+        emotionalState: 'Dysregulated',
+        activities: ['Token Economy', 'Break Requests'],
+        notes: 'Diya had difficulty regulating today. Needed frequent breaks.',
+        aiSummary: 'We had a challenging but productive session with Diya today. 💪 She practiced asking for breaks appropriately and earned her tokens. We\'re working on building her self-regulation skills.',
+        wins: ['Used break card appropriately', 'Completed token board'],
+        focusAreas: ['Self-regulation', 'Functional communication'],
+        behaviorTags: ['needs-support', 'trying-hard']
+    },
+    {
+        id: 's6',
+        childId: 'c3',
+        date: '2025-12-23T14:00:00',
+        type: 'Speech Therapy',
+        therapistId: 't1',
+        duration: 45,
+        status: 'completed',
+        engagement: 88,
+        emotionalState: 'Regulated',
+        activities: ['Music Therapy Integration', 'Vocal Play'],
+        notes: 'Rohan loves music! Used songs to practice sounds.',
+        aiSummary: 'Rohan had a fantastic session with music! 🎵 He loved singing and practiced his sounds through fun songs. Engagement was excellent at 88%!',
+        wins: ['Sang parts of songs', 'Vocalized new sounds', 'Great participation'],
+        focusAreas: ['Vocalization', 'Joint attention'],
+        behaviorTags: ['enthusiastic', 'musical', 'engaged']
+    }
+];
+
+// ============ SKILL SCORES ============
+export const SKILL_SCORES = [
+    // Aarav's skills over time
+    { id: 'sk1', childId: 'c1', domain: 'Language - Receptive', score: 72, maxScore: 100, date: '2025-12-23', trend: 'improving' },
+    { id: 'sk2', childId: 'c1', domain: 'Language - Expressive', score: 65, maxScore: 100, date: '2025-12-23', trend: 'improving' },
+    { id: 'sk3', childId: 'c1', domain: 'Sensory Integration', score: 58, maxScore: 100, date: '2025-12-23', trend: 'stable' },
+    { id: 'sk4', childId: 'c1', domain: 'Social Interaction', score: 55, maxScore: 100, date: '2025-12-23', trend: 'improving' },
+    { id: 'sk5', childId: 'c1', domain: 'Attention Span', score: 70, maxScore: 100, date: '2025-12-23', trend: 'improving' },
+    { id: 'sk6', childId: 'c1', domain: 'Emotional Regulation', score: 62, maxScore: 100, date: '2025-12-23', trend: 'stable' },
+    { id: 'sk7', childId: 'c1', domain: 'Motor Skills', score: 75, maxScore: 100, date: '2025-12-23', trend: 'improving' },
+    { id: 'sk8', childId: 'c1', domain: 'Behavioral Adaptability', score: 60, maxScore: 100, date: '2025-12-23', trend: 'attention' },
+
+    // Historical data for Aarav (last 4 weeks)
+    { id: 'sk1h1', childId: 'c1', domain: 'Language - Receptive', score: 68, maxScore: 100, date: '2025-12-16', trend: 'improving' },
+    { id: 'sk1h2', childId: 'c1', domain: 'Language - Receptive', score: 64, maxScore: 100, date: '2025-12-09', trend: 'improving' },
+    { id: 'sk1h3', childId: 'c1', domain: 'Language - Receptive', score: 60, maxScore: 100, date: '2025-12-02', trend: 'stable' },
+    { id: 'sk1h4', childId: 'c1', domain: 'Language - Receptive', score: 58, maxScore: 100, date: '2025-11-25', trend: 'stable' },
+
+    { id: 'sk2h1', childId: 'c1', domain: 'Language - Expressive', score: 60, maxScore: 100, date: '2025-12-16', trend: 'improving' },
+    { id: 'sk2h2', childId: 'c1', domain: 'Language - Expressive', score: 55, maxScore: 100, date: '2025-12-09', trend: 'stable' },
+    { id: 'sk2h3', childId: 'c1', domain: 'Language - Expressive', score: 52, maxScore: 100, date: '2025-12-02', trend: 'stable' },
+    { id: 'sk2h4', childId: 'c1', domain: 'Language - Expressive', score: 50, maxScore: 100, date: '2025-11-25', trend: 'stable' },
+
+    // Diya's skills
+    { id: 'sk9', childId: 'c2', domain: 'Language - Receptive', score: 78, maxScore: 100, date: '2025-12-23', trend: 'stable' },
+    { id: 'sk10', childId: 'c2', domain: 'Language - Expressive', score: 72, maxScore: 100, date: '2025-12-23', trend: 'improving' },
+    { id: 'sk11', childId: 'c2', domain: 'Social Interaction', score: 65, maxScore: 100, date: '2025-12-23', trend: 'attention' },
+    { id: 'sk12', childId: 'c2', domain: 'Emotional Regulation', score: 45, maxScore: 100, date: '2025-12-23', trend: 'attention' }
+];
+
+// ============ ROADMAP ============
+export const ROADMAP = [
+    {
+        id: 'r1',
+        childId: 'c1',
+        domain: 'Communication',
+        title: 'Uses 2-word phrases consistently',
+        description: 'Child will use 2-word phrases (noun + verb or adjective + noun) in 80% of opportunities.',
+        targetDate: '2026-02-01',
+        status: 'in-progress',
+        progress: 65,
+        confidence: 85,
+        milestones: [
+            { id: 'm1', title: 'Combines noun + verb', completed: true, date: '2025-11-15' },
+            { id: 'm2', title: 'Uses 10 different combinations', completed: true, date: '2025-12-10' },
+            { id: 'm3', title: 'Generalizes to home', completed: false, date: null },
+            { id: 'm4', title: '80% accuracy in clinic', completed: false, date: null }
+        ],
+        therapistNotes: 'Aarav is making excellent progress. Expect to meet goal ahead of schedule.',
+        aiPrediction: 'Based on current trajectory, goal likely to be achieved by mid-January.',
+        priority: 'high'
+    },
+    {
+        id: 'r2',
+        childId: 'c1',
+        domain: 'Motor Skills',
+        title: 'Buttons large buttons independently',
+        targetDate: '2026-01-15',
+        description: 'Child will button and unbutton large buttons on clothing without assistance.',
+        status: 'completed',
+        progress: 100,
+        confidence: 100,
+        milestones: [
+            { id: 'm5', title: 'Grasps button with pincer grip', completed: true, date: '2025-10-20' },
+            { id: 'm6', title: 'Pushes button through hole', completed: true, date: '2025-11-05' },
+            { id: 'm7', title: 'Independent buttoning', completed: true, date: '2025-12-18' }
+        ],
+        therapistNotes: 'Goal achieved! Moving to small buttons next.',
+        completedDate: '2025-12-18',
+        priority: 'medium'
+    },
+    {
+        id: 'r3',
+        childId: 'c1',
+        domain: 'Social Interaction',
+        title: 'Initiates greetings with peers',
+        targetDate: '2026-03-15',
+        description: 'Child will independently greet familiar peers in 70% of opportunities.',
+        status: 'in-progress',
+        progress: 40,
+        confidence: 70,
+        milestones: [
+            { id: 'm8', title: 'Waves when prompted', completed: true, date: '2025-11-01' },
+            { id: 'm9', title: 'Says "Hi" with model', completed: true, date: '2025-12-15' },
+            { id: 'm10', title: 'Independent greetings to adults', completed: false, date: null },
+            { id: 'm11', title: 'Independent greetings to peers', completed: false, date: null }
+        ],
+        therapistNotes: 'Recent breakthrough with independent greetings to therapists!',
+        priority: 'high'
+    },
+    {
+        id: 'r4',
+        childId: 'c1',
+        domain: 'Emotional Regulation',
+        title: 'Uses calm-down strategies',
+        targetDate: '2026-04-01',
+        description: 'Child will use taught calm-down strategies when dysregulated with minimal prompting.',
+        status: 'in-progress',
+        progress: 30,
+        confidence: 60,
+        milestones: [
+            { id: 'm12', title: 'Identifies emotions', completed: true, date: '2025-12-01' },
+            { id: 'm13', title: 'Uses breathing with full prompt', completed: false, date: null },
+            { id: 'm14', title: 'Requests break appropriately', completed: false, date: null },
+            { id: 'm15', title: 'Self-regulates with minimal support', completed: false, date: null }
+        ],
+        priority: 'medium'
+    },
+    {
+        id: 'r5',
+        childId: 'c2',
+        domain: 'Self-Regulation',
+        title: 'Tolerates transitions without meltdowns',
+        targetDate: '2026-02-28',
+        description: 'Child will transition between activities with less than 2 protests per session.',
+        status: 'at-risk',
+        progress: 25,
+        confidence: 45,
+        milestones: [
+            { id: 'm16', title: 'Responds to transition warning', completed: true, date: '2025-11-20' },
+            { id: 'm17', title: 'Uses visual schedule', completed: false, date: null },
+            { id: 'm18', title: 'Transitions with timer', completed: false, date: null }
+        ],
+        therapistNotes: 'Diya is struggling with this area. Need to adjust approach.',
+        aiPrediction: 'Current trajectory suggests goal may need extension. Consider additional support.',
+        priority: 'high'
+    }
+];
+
+// ============ HOME ACTIVITIES ============
+export const HOME_ACTIVITIES = [
+    {
+        id: 'ha1',
+        childId: 'c1',
+        title: 'Picture Naming Game',
+        description: 'Show pictures of common objects and ask Aarav to name them. Celebrate each attempt!',
+        duration: 10,
+        frequency: 'daily',
+        domain: 'Language',
+        videoUrl: null,
+        imageUrl: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=400',
+        instructions: [
+            'Gather 5-10 pictures of familiar objects',
+            'Show one picture at a time',
+            'Wait 5 seconds for response',
+            'If no response, model the word clearly',
+            'Celebrate all attempts with praise!'
+        ],
+        tips: 'Use items Aarav loves to keep him motivated.',
+        assignedDate: '2025-12-23',
+        completions: [
+            { date: '2025-12-23', completed: true, parentNotes: 'Did great! Named 6 out of 8 pictures.' },
+            { date: '2025-12-22', completed: true, parentNotes: 'Good session, a bit tired today.' },
+            { date: '2025-12-21', completed: false, parentNotes: null }
+        ]
+    },
+    {
+        id: 'ha2',
+        childId: 'c1',
+        title: 'Sensory Play Time',
+        description: 'Engage in tactile play with playdough or sand to build sensory tolerance.',
+        duration: 15,
+        frequency: 'daily',
+        domain: 'Sensory',
+        instructions: [
+            'Set up playdough or kinetic sand',
+            'Let Aarav explore at his own pace',
+            'Model pushing, rolling, and cutting',
+            'Gradually introduce new textures',
+            'End before overwhelm signs appear'
+        ],
+        tips: 'If he resists, start with preferred textures first.',
+        assignedDate: '2025-12-20',
+        completions: []
+    },
+    {
+        id: 'ha3',
+        childId: 'c1',
+        title: 'Joint Attention Practice',
+        description: 'Practice pointing and shared looking during book reading.',
+        duration: 10,
+        frequency: 'daily',
+        domain: 'Social',
+        instructions: [
+            'Choose a favorite picture book',
+            'Point to pictures and wait for Aarav to look',
+            'Say the name of what you point to',
+            'Encourage Aarav to point to show you things',
+            'Follow his lead if he points elsewhere'
+        ],
+        assignedDate: '2025-12-23',
+        completions: []
+    }
+];
+
+// ============ MESSAGES ============
+export const MESSAGES = [
+    {
+        id: 'msg1',
+        threadId: 'thread1',
+        senderId: 't1',
+        senderName: 'Dr. Rajesh Kumar',
+        senderRole: 'therapist',
+        recipientId: 'p1',
+        childId: 'c1',
+        subject: 'Great progress this week!',
+        content: 'Hi Priya! I wanted to share that Aarav had an excellent week. His speech sounds are really coming along, especially the "B" sounds we\'ve been working on. The home practice is making a difference!',
+        timestamp: '2025-12-23T16:30:00',
+        read: true,
+        type: 'update'
+    },
+    {
+        id: 'msg2',
+        threadId: 'thread1',
+        senderId: 'p1',
+        senderName: 'Priya Patel',
+        senderRole: 'parent',
+        recipientId: 't1',
+        childId: 'c1',
+        content: 'Thank you so much, Dr. Rajesh! We\'ve been practicing every day. He loves the picture naming game. Is there anything else we should focus on this week?',
+        timestamp: '2025-12-23T17:15:00',
+        read: true,
+        type: 'reply'
+    },
+    {
+        id: 'msg3',
+        threadId: 'thread1',
+        senderId: 't1',
+        senderName: 'Dr. Rajesh Kumar',
+        senderRole: 'therapist',
+        recipientId: 'p1',
+        childId: 'c1',
+        content: 'That\'s wonderful to hear! This week, let\'s also add some 2-word phrase practice. Try saying things like "want juice" or "more cookie" and encourage him to repeat. I\'ll send over a specific activity guide shortly.',
+        timestamp: '2025-12-23T17:45:00',
+        read: false,
+        type: 'reply'
+    },
+    {
+        id: 'msg4',
+        threadId: 'thread2',
+        senderId: 'system',
+        senderName: 'NeuroBridge AI',
+        senderRole: 'system',
+        recipientId: 'p1',
+        childId: 'c1',
+        subject: 'Weekly Progress Summary',
+        content: '🌟 **This Week\'s Highlights for Aarav:**\n\n✅ Completed 3 therapy sessions\n✅ Engagement average: 85%\n✅ New milestone achieved: Mastered "B" sounds\n✅ Home activity streak: 12 days! 🔥\n\n**Focus for Next Week:**\n- Continue 2-word phrase practice\n- Sensory play with new textures\n\nKeep up the amazing work! You\'re doing great! 💪',
+        timestamp: '2025-12-22T09:00:00',
+        read: true,
+        type: 'weekly-summary'
+    },
+    // ============ Messages for Parent p2 (Arun Sharma) - Child c2 (Diya) ============
+    {
+        id: 'msg5',
+        threadId: 'thread3',
+        senderId: 't1',
+        senderName: 'Dr. Rajesh Kumar',
+        senderRole: 'therapist',
+        recipientId: 'p2',
+        childId: 'c2',
+        subject: "Update on Diya's social skills",
+        content: "Hello Arun! Diya had a good session today. We're focusing on peer interaction and turn-taking. She's showing good progress with structured play activities. I'd suggest practicing turn-taking games at home.",
+        timestamp: '2025-12-23T15:00:00',
+        read: true,
+        type: 'update'
+    },
+    {
+        id: 'msg6',
+        threadId: 'thread3',
+        senderId: 'p2',
+        senderName: 'Arun Sharma',
+        senderRole: 'parent',
+        recipientId: 't1',
+        childId: 'c2',
+        content: 'Thanks for the update, Dr. Rajesh. We noticed Diya has been a bit more withdrawn lately. Is this something we should be concerned about?',
+        timestamp: '2025-12-23T16:00:00',
+        read: true,
+        type: 'reply'
+    },
+    {
+        id: 'msg7',
+        threadId: 'thread3',
+        senderId: 't1',
+        senderName: 'Dr. Rajesh Kumar',
+        senderRole: 'therapist',
+        recipientId: 'p2',
+        childId: 'c2',
+        content: "That's a great observation. Some fluctuation is normal. Let's monitor it over the next week. I'll add some specific social-emotional exercises to her program.",
+        timestamp: '2025-12-23T16:30:00',
+        read: false,
+        type: 'reply'
+    },
+    {
+        id: 'msg8',
+        threadId: 'thread4',
+        senderId: 'system',
+        senderName: 'NeuroBridge AI',
+        senderRole: 'system',
+        recipientId: 'p2',
+        childId: 'c2',
+        subject: 'Weekly Progress Summary',
+        content: "🌟 **This Week's Highlights for Diya:**\n\n✅ Completed 2 therapy sessions\n✅ Engagement average: 72%\n✅ Focus area: Social interaction\n\n**Focus for Next Week:**\n- Turn-taking practice\n- Emotion identification games\n\nDiya is making steady progress! 💪",
+        timestamp: '2025-12-22T09:00:00',
+        read: true,
+        type: 'weekly-summary'
+    }
+];
+
+// ============ CONSENT RECORDS ============
+export const CONSENT_RECORDS = [
+    {
+        id: 'consent1',
+        childId: 'c1',
+        parentId: 'p1',
+        type: 'data-collection',
+        description: 'Consent for therapy session data collection and storage',
+        grantedAt: '2025-06-15T10:00:00',
+        expiresAt: '2026-06-15T10:00:00',
+        status: 'active'
+    },
+    {
+        id: 'consent2',
+        childId: 'c1',
+        parentId: 'p1',
+        type: 'ai-analysis',
+        description: 'Consent for AI-powered progress analysis and recommendations',
+        grantedAt: '2025-06-15T10:00:00',
+        expiresAt: '2026-06-15T10:00:00',
+        status: 'active'
+    },
+    {
+        id: 'consent3',
+        childId: 'c1',
+        parentId: 'p1',
+        type: 'photo-video',
+        description: 'Consent for photo/video recording during sessions',
+        grantedAt: '2025-06-15T10:00:00',
+        expiresAt: '2026-06-15T10:00:00',
+        status: 'active'
+    }
+];
+
+// ============ AUDIT LOGS ============
+export const AUDIT_LOGS = [
+    {
+        id: 'audit1',
+        action: 'SESSION_CREATED',
+        userId: 't1',
+        userName: 'Dr. Rajesh Kumar',
+        targetType: 'session',
+        targetId: 's1',
+        details: 'Created session for Aarav Patel',
+        timestamp: '2025-12-23T11:00:00',
+        ipAddress: '192.168.1.100'
+    },
+    {
+        id: 'audit2',
+        action: 'ROADMAP_UPDATED',
+        userId: 't1',
+        userName: 'Dr. Rajesh Kumar',
+        targetType: 'roadmap',
+        targetId: 'r1',
+        details: 'Updated milestone progress for "Uses 2-word phrases"',
+        timestamp: '2025-12-23T11:30:00',
+        ipAddress: '192.168.1.100'
+    },
+    {
+        id: 'audit3',
+        action: 'PARENT_VIEWED_REPORT',
+        userId: 'p1',
+        userName: 'Priya Patel',
+        targetType: 'session',
+        targetId: 's1',
+        details: 'Parent viewed session report',
+        timestamp: '2025-12-23T12:00:00',
+        ipAddress: '192.168.1.105'
+    }
+];
+
+// ============ CDC METRICS ============
+export const CDC_METRICS = {
+    activeChildren: 45,
+    waitlistSize: 8,
+    therapistCount: 12,
+    monthlyRevenue: 425000,
+    revenueTarget: 500000,
+    parentEngagementRate: 87,
+    therapyCompletionRate: 94,
+    avgSessionsPerWeek: 156,
+    dropoutRisk: [
+        { childId: 'c2', name: 'Diya Sharma', riskLevel: 'medium', reason: 'Engagement decline' }
+    ],
+    upcomingRenewals: 5,
+    complianceScore: 96,
+    therapistUtilization: {
+        't1': { name: 'Dr. Rajesh Kumar', utilization: 85, caseload: 15 },
+        't2': { name: 'Dr. Meera Singh', utilization: 78, caseload: 12 }
+    }
+};
+
+// ============ THERAPY TYPES ============
+export const THERAPY_TYPES = [
+    { id: 'speech', name: 'Speech Therapy', color: '#4F46E5', icon: '🗣️' },
+    { id: 'ot', name: 'Occupational Therapy', color: '#10B981', icon: '🖐️' },
+    { id: 'aba', name: 'ABA Therapy', color: '#F59E0B', icon: '🎯' },
+    { id: 'sensory', name: 'Sensory Integration', color: '#EC4899', icon: '✨' },
+    { id: 'social', name: 'Social Skills', color: '#8B5CF6', icon: '👥' },
+    { id: 'music', name: 'Music Therapy', color: '#06B6D4', icon: '🎵' }
+];
+
+// ============ ACTIVITY LIBRARY ============
+export const ACTIVITY_LIBRARY = [
+    { id: 'act1', name: 'Picture Exchange', domain: 'Communication', therapyType: 'speech' },
+    { id: 'act2', name: 'Sound Imitation', domain: 'Communication', therapyType: 'speech' },
+    { id: 'act3', name: 'Vocabulary Building', domain: 'Communication', therapyType: 'speech' },
+    { id: 'act4', name: 'Story Sequencing', domain: 'Communication', therapyType: 'speech' },
+    { id: 'act5', name: 'Social Greetings', domain: 'Social', therapyType: 'social' },
+    { id: 'act6', name: 'Blocks Stacking', domain: 'Motor', therapyType: 'ot' },
+    { id: 'act7', name: 'Sensory Play', domain: 'Sensory', therapyType: 'sensory' },
+    { id: 'act8', name: 'Social Story', domain: 'Social', therapyType: 'social' },
+    { id: 'act9', name: 'Token Economy', domain: 'Behavior', therapyType: 'aba' },
+    { id: 'act10', name: 'Break Requests', domain: 'Communication', therapyType: 'aba' },
+    { id: 'act11', name: 'Music Therapy Integration', domain: 'Engagement', therapyType: 'music' },
+    { id: 'act12', name: 'Vocal Play', domain: 'Communication', therapyType: 'speech' },
+    { id: 'act13', name: 'Fine Motor Activities', domain: 'Motor', therapyType: 'ot' },
+    { id: 'act14', name: 'Gross Motor Activities', domain: 'Motor', therapyType: 'ot' },
+    { id: 'act15', name: 'Peer Interaction', domain: 'Social', therapyType: 'social' }
+];
