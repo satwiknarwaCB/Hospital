@@ -4,7 +4,7 @@
 // ============================================================
 
 import React, { useState, useMemo } from 'react';
-import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Info, Calendar } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Info, Calendar, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useApp } from '../../lib/context';
@@ -181,22 +181,52 @@ const ProgressAnalytics = () => {
     // Get skill scores
     const latestScores = getLatestSkillScores(childId);
 
-    // Process skill data with history
+    // Filter skill history based on time range
+    const getFilteredHistory = (history, range) => {
+        if (!history || history.length === 0) return [];
+
+        const now = new Date();
+        let cutoffDate = new Date();
+
+        switch (range) {
+            case 'week':
+                cutoffDate.setDate(now.getDate() - 7);
+                break;
+            case 'month':
+                cutoffDate.setMonth(now.getMonth() - 1);
+                break;
+            case 'quarter':
+                cutoffDate.setMonth(now.getMonth() - 3);
+                break;
+            default:
+                return history;
+        }
+
+        return history.filter(h => new Date(h.date) >= cutoffDate);
+    };
+
+    // Process skill data with history filtered by time range
     const skillData = useMemo(() => {
         return latestScores.map(score => {
-            const history = getSkillHistory(childId, score.domain);
-            const historicalData = history.map(h => h.score);
-            const weeklyChange = history.length >= 2
-                ? history[history.length - 1].score - history[history.length - 2].score
-                : 0;
+            const allHistory = getSkillHistory(childId, score.domain);
+            const filteredHistory = getFilteredHistory(allHistory, timeRange);
+            const historicalData = filteredHistory.map(h => h.score);
+
+            // Calculate change based on filtered data
+            const weeklyChange = filteredHistory.length >= 2
+                ? filteredHistory[filteredHistory.length - 1].score - filteredHistory[filteredHistory.length - 2].score
+                : allHistory.length >= 2
+                    ? allHistory[allHistory.length - 1].score - allHistory[allHistory.length - 2].score
+                    : 0;
 
             return {
                 ...score,
                 weeklyChange,
-                historicalData: historicalData.length > 0 ? historicalData : [score.score]
+                historicalData: historicalData.length > 0 ? historicalData : [score.score],
+                filteredHistory
             };
         });
-    }, [latestScores, childId, getSkillHistory]);
+    }, [latestScores, childId, getSkillHistory, timeRange]);
 
     // Calculate overall stats
     const overallStats = useMemo(() => {

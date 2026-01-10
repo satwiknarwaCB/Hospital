@@ -85,24 +85,38 @@ export const AppProvider = ({ children }) => {
     }, [getChildSessions]);
 
     const addSession = useCallback((newSession) => {
+        // Ensure all required fields are present
         const sessionWithId = {
-            ...newSession,
             id: `s${Date.now()}`,
-            date: new Date().toISOString(),
-            status: 'completed',
-            therapistId: currentUser?.id || 't1'
+            childId: newSession.childId,
+            date: newSession.date || new Date().toISOString(), // Preserve date from form
+            type: newSession.type,
+            therapistId: newSession.therapistId || currentUser?.id || 't1',
+            duration: newSession.duration || 45,
+            status: newSession.status || 'scheduled', // Use status from form (scheduled for new sessions)
+            location: newSession.location || null,
+            // Optional fields for completed sessions
+            engagement: newSession.engagement || null,
+            emotionalState: newSession.emotionalState || null,
+            activities: newSession.activities || null,
+            notes: newSession.notes || null,
+            aiSummary: newSession.aiSummary || null,
+            wins: newSession.wins || null,
+            focusAreas: newSession.focusAreas || null,
+            behaviorTags: newSession.behaviorTags || null
         };
 
         setSessions(prev => [sessionWithId, ...prev]);
 
         // Log audit event
+        const childName = kids.find(k => k.id === newSession.childId)?.name || 'Unknown';
         addAuditLog({
             action: 'SESSION_CREATED',
             userId: currentUser?.id,
             userName: currentUser?.name,
             targetType: 'session',
             targetId: sessionWithId.id,
-            details: `Created session for ${kids.find(k => k.id === newSession.childId)?.name}`
+            details: `Created ${sessionWithId.status} session for ${childName}`
         });
 
         return sessionWithId;

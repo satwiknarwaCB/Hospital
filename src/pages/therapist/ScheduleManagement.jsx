@@ -201,7 +201,26 @@ const NewSessionModal = ({ patients, onSave, onClose }) => {
     });
 
     const handleSave = () => {
+        // Validation
+        if (!formData.childId) {
+            alert('Please select a patient');
+            return;
+        }
+        if (!formData.date || !formData.time) {
+            alert('Please select both date and time');
+            return;
+        }
+
+        // Combine date and time, ensuring we preserve the local date
         const dateTime = new Date(`${formData.date}T${formData.time}`);
+        
+        // Validate date is not in the past
+        if (dateTime < new Date()) {
+            if (!confirm('This session is scheduled in the past. Continue anyway?')) {
+                return;
+            }
+        }
+
         onSave({
             ...formData,
             date: dateTime.toISOString(),
@@ -310,7 +329,7 @@ const NewSessionModal = ({ patients, onSave, onClose }) => {
 
 // Main Schedule Component
 const ScheduleManagement = () => {
-    const { currentUser, kids, sessions } = useApp();
+    const { currentUser, kids, sessions, addSession, addNotification } = useApp();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [viewMode, setViewMode] = useState('week'); // week or month
@@ -364,8 +383,49 @@ const ScheduleManagement = () => {
     const upcomingToday = todaySessions.filter(s => s.status === 'scheduled').length;
 
     const handleNewSession = (sessionData) => {
-        console.log('Creating session:', sessionData);
-        setShowNewSession(false);
+        try {
+            // Validate required fields
+            if (!sessionData.childId || !sessionData.date || !sessionData.type) {
+                addNotification({
+                    type: 'error',
+                    title: 'Validation Error',
+                    message: 'Please fill in all required fields'
+                });
+                return;
+            }
+
+            // Add therapistId to session data
+            const sessionToAdd = {
+                ...sessionData,
+                therapistId: therapistId
+            };
+            
+            // Add session using context function
+            const newSession = addSession(sessionToAdd);
+            
+            // Close modal
+            setShowNewSession(false);
+            
+            // Show success notification
+            const patientName = myPatients.find(p => p.id === sessionData.childId)?.name || 'patient';
+            addNotification({
+                type: 'success',
+                title: 'Session Scheduled',
+                message: `Session scheduled successfully for ${patientName} on ${new Date(sessionData.date).toLocaleDateString()}`
+            });
+
+            // Optionally select the date where the session was added
+            const sessionDate = new Date(sessionData.date);
+            setSelectedDate(sessionDate);
+            setCurrentDate(sessionDate);
+        } catch (error) {
+            console.error('Error creating session:', error);
+            addNotification({
+                type: 'error',
+                title: 'Error',
+                message: 'Failed to create session. Please try again.'
+            });
+        }
     };
 
     return (

@@ -31,7 +31,7 @@ export const USERS = [
         email: 'dr.rajesh@neurobridge.com',
         role: 'therapist',
         specialization: 'Speech & Language Therapy',
-        caseload: ['c1', 'c2', 'c3'],
+        caseload: ['c1', 'c2'],
         avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=200',
         experience: '12 years',
         certifications: ['BCBA', 'SLP-CCC'],
@@ -79,7 +79,7 @@ export const CHILDREN = [
         photoUrl: 'https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&q=80&w=200',
         parentId: 'p1',
         therapistId: 't1',
-        program: ['Speech Therapy', 'Occupational Therapy'],
+        program: ['Speech Therapy'],
         currentMood: '😊 Happy',
         moodContext: 'Engaged well with new sensory toys.',
         streak: 12,
@@ -97,30 +97,12 @@ export const CHILDREN = [
         photoUrl: 'https://images.unsplash.com/photo-1519238263496-652d87e02df9?auto=format&fit=crop&q=80&w=200',
         parentId: 'p2',
         therapistId: 't1',
-        program: ['ABA Therapy', 'Social Skills'],
+        program: ['Speech Therapy'],
         currentMood: '😐 Calm',
         moodContext: 'Focused during table work.',
         streak: 5,
         schoolReadinessScore: 75,
         enrollmentDate: '2025-08-20',
-        status: 'active'
-    },
-    {
-        id: 'c3',
-        name: 'Rohan Gupta',
-        age: 4,
-        dateOfBirth: '2021-11-08',
-        diagnosis: 'ASD Level 2',
-        diagnosisDate: '2024-02-15',
-        photoUrl: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&q=80&w=200',
-        parentId: 'p3',
-        therapistId: 't1',
-        program: ['Speech Therapy', 'Sensory Integration'],
-        currentMood: '😊 Excited',
-        moodContext: 'Loved the music therapy session.',
-        streak: 8,
-        schoolReadinessScore: 55,
-        enrollmentDate: '2025-09-01',
         status: 'active'
     },
     {
@@ -181,16 +163,6 @@ export const SESSIONS = [
         behaviorTags: ['cooperative', 'attentive', 'responsive']
     },
     {
-        id: 's2',
-        childId: 'c1',
-        date: '2025-12-24T14:00:00',
-        type: 'Occupational Therapy',
-        therapistId: 't2',
-        duration: 50,
-        status: 'scheduled',
-        location: 'Sensory Room B'
-    },
-    {
         id: 's3',
         childId: 'c1',
         date: '2025-12-20T10:00:00',
@@ -228,7 +200,7 @@ export const SESSIONS = [
         id: 's5',
         childId: 'c2',
         date: '2025-12-23T11:00:00',
-        type: 'ABA Therapy',
+        type: 'Speech Therapy',
         therapistId: 't1',
         duration: 60,
         status: 'completed',
@@ -241,23 +213,7 @@ export const SESSIONS = [
         focusAreas: ['Self-regulation', 'Functional communication'],
         behaviorTags: ['needs-support', 'trying-hard']
     },
-    {
-        id: 's6',
-        childId: 'c3',
-        date: '2025-12-23T14:00:00',
-        type: 'Speech Therapy',
-        therapistId: 't1',
-        duration: 45,
-        status: 'completed',
-        engagement: 88,
-        emotionalState: 'Regulated',
-        activities: ['Music Therapy Integration', 'Vocal Play'],
-        notes: 'Rohan loves music! Used songs to practice sounds.',
-        aiSummary: 'Rohan had a fantastic session with music! 🎵 He loved singing and practiced his sounds through fun songs. Engagement was excellent at 88%!',
-        wins: ['Sang parts of songs', 'Vocalized new sounds', 'Great participation'],
-        focusAreas: ['Vocalization', 'Joint attention'],
-        behaviorTags: ['enthusiastic', 'musical', 'engaged']
-    }
+    // c3 session entry removed – child no longer on therapist caseload
 ];
 
 // ============ SKILL SCORES ============
@@ -386,6 +342,67 @@ export const ROADMAP = [
         therapistNotes: 'Diya is struggling with this area. Need to adjust approach.',
         aiPrediction: 'Current trajectory suggests goal may need extension. Consider additional support.',
         priority: 'high'
+    },
+    // Diya's additional roadmap goals (mirroring Aarav's structure)
+    {
+        id: 'r6',
+        childId: 'c2',
+        domain: 'Communication',
+        title: 'Uses 2-word phrases consistently',
+        description: 'Child will use 2-word phrases (noun + verb or adjective + noun) in 80% of opportunities.',
+        targetDate: '2026-02-01',
+        status: 'in-progress',
+        progress: 65,
+        confidence: 85,
+        milestones: [
+            { id: 'm19', title: 'Combines noun + verb', completed: true, date: '2025-11-15' },
+            { id: 'm20', title: 'Uses 10 different combinations', completed: true, date: '2025-12-10' },
+            { id: 'm21', title: 'Generalizes to home', completed: false, date: null },
+            { id: 'm22', title: '80% accuracy in clinic', completed: false, date: null }
+        ],
+        therapistNotes: 'Diya is beginning to use 2-word phrases more consistently. Continue modeling at home.',
+        aiPrediction: 'Based on current trajectory, goal likely to be achieved by mid-January.',
+        priority: 'high'
+    },
+    {
+        id: 'r7',
+        childId: 'c2',
+        domain: 'Social Interaction',
+        title: 'Initiates greetings with peers',
+        targetDate: '2026-03-15',
+        description: 'Child will independently greet familiar peers in 70% of opportunities.',
+        status: 'in-progress',
+        progress: 40,
+        confidence: 70,
+        milestones: [
+            { id: 'm23', title: 'Waves when prompted', completed: true, date: '2025-11-01' },
+            { id: 'm24', title: 'Says "Hi" with model', completed: true, date: '2025-12-15' },
+            { id: 'm25', title: 'Independent greetings to adults', completed: false, date: null },
+            { id: 'm26', title: 'Independent greetings to peers', completed: false, date: null }
+        ],
+        therapistNotes: 'Recent breakthrough with independent greetings to therapists!',
+        aiPrediction: 'Based on current progress, this goal is likely to be achieved with additional focus.',
+        priority: 'high'
+    },
+    {
+        id: 'r8',
+        childId: 'c2',
+        domain: 'Emotional Regulation',
+        title: 'Uses calm-down strategies',
+        targetDate: '2026-04-01',
+        description: 'Child will use taught calm-down strategies when dysregulated with minimal prompting.',
+        status: 'in-progress',
+        progress: 30,
+        confidence: 60,
+        milestones: [
+            { id: 'm27', title: 'Identifies emotions', completed: true, date: '2025-12-01' },
+            { id: 'm28', title: 'Uses breathing with full prompt', completed: false, date: null },
+            { id: 'm29', title: 'Requests break appropriately', completed: false, date: null },
+            { id: 'm30', title: 'Self-regulates with minimal support', completed: false, date: null }
+        ],
+        therapistNotes: 'We are introducing calm-down strategies and helping Diya use them with support.',
+        aiPrediction: 'Based on current progress, this goal is likely to be achieved with additional focus.',
+        priority: 'medium'
     }
 ];
 
@@ -452,6 +469,75 @@ export const HOME_ACTIVITIES = [
         ],
         assignedDate: '2025-12-23',
         completions: []
+    },
+    // Diya Sharma's Home Activities
+    {
+        id: 'ha4',
+        childId: 'c2',
+        title: 'Picture Naming Game',
+        description: 'Show pictures of common objects and ask Diya to name them. Celebrate each attempt!',
+        duration: 10,
+        frequency: 'daily',
+        domain: 'Language',
+        videoUrl: null,
+        imageUrl: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=400',
+        instructions: [
+            'Gather 5-10 pictures of familiar objects',
+            'Show one picture at a time',
+            'Wait 5 seconds for response',
+            'If no response, model the word clearly',
+            'Celebrate all attempts with praise!'
+        ],
+        tips: 'Use items Diya loves to keep her motivated.',
+        assignedDate: '2025-12-23',
+        completions: [
+            { date: '2025-12-23', completed: true, parentNotes: 'Did great! Named 5 out of 7 pictures.' },
+            { date: '2025-12-22', completed: true, parentNotes: 'Good session, focused well today.' },
+            { date: '2025-12-21', completed: false, parentNotes: null }
+        ]
+    },
+    {
+        id: 'ha5',
+        childId: 'c2',
+        title: 'Turn-Taking Practice',
+        description: 'Practice taking turns during simple games or activities to build social skills.',
+        duration: 15,
+        frequency: 'daily',
+        domain: 'Social',
+        instructions: [
+            'Choose a simple turn-taking game (blocks, puzzles, etc.)',
+            'Model "my turn" and "your turn" clearly',
+            'Use visual cues like pointing or a turn card',
+            'Celebrate when Diya waits for her turn',
+            'Keep sessions short and fun'
+        ],
+        tips: 'Start with activities Diya enjoys to maintain engagement.',
+        assignedDate: '2025-12-20',
+        completions: [
+            { date: '2025-12-23', completed: true, parentNotes: 'Great turn-taking today!' },
+            { date: '2025-12-22', completed: true, parentNotes: 'Needed some reminders but did well.' }
+        ]
+    },
+    {
+        id: 'ha6',
+        childId: 'c2',
+        title: 'Emotion Identification Practice',
+        description: 'Help Diya identify and express emotions using pictures, books, or mirrors.',
+        duration: 10,
+        frequency: 'daily',
+        domain: 'Social',
+        instructions: [
+            'Use emotion cards or pictures showing different feelings',
+            'Point to each emotion and name it clearly',
+            'Ask Diya to point to how she feels',
+            'Model emotions with facial expressions',
+            'Use mirrors to practice making different faces'
+        ],
+        tips: 'Keep it playful and use Diya\'s favorite characters or books.',
+        assignedDate: '2025-12-23',
+        completions: [
+            { date: '2025-12-23', completed: true, parentNotes: 'Identified happy and sad correctly!' }
+        ]
     }
 ];
 

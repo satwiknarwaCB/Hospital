@@ -3,7 +3,8 @@
 // Parent Portal - View Past Therapy Sessions
 // ============================================================
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
     History,
     Calendar,
@@ -285,6 +286,7 @@ const FilterModal = ({ isOpen, onClose, filters, onApply }) => {
 // Main Session History Component
 const SessionHistory = () => {
     const { currentUser, kids, getChildSessions } = useApp();
+    const location = useLocation();
     const [expandedSession, setExpandedSession] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
@@ -300,6 +302,23 @@ const SessionHistory = () => {
 
     // Get all sessions
     const allSessions = getChildSessions(childId);
+
+    // Handle navigation state - expand session if sessionId is provided
+    useEffect(() => {
+        if (location.state?.sessionId) {
+            const session = allSessions.find(s => s.id === location.state.sessionId);
+            if (session) {
+                setExpandedSession(session.id);
+                // Scroll to session after a brief delay
+                setTimeout(() => {
+                    const element = document.getElementById(`session-${session.id}`);
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
+            }
+        }
+    }, [location.state, allSessions]);
 
     // Apply filters
     const filteredSessions = useMemo(() => {
@@ -432,15 +451,16 @@ const SessionHistory = () => {
             <div className="space-y-3">
                 {filteredSessions.length > 0 ? (
                     filteredSessions.map(session => (
-                        <SessionCard
-                            key={session.id}
-                            session={session}
-                            childName={child.name}
-                            isExpanded={expandedSession === session.id}
-                            onToggle={() => setExpandedSession(
-                                expandedSession === session.id ? null : session.id
-                            )}
-                        />
+                        <div key={session.id} id={`session-${session.id}`}>
+                            <SessionCard
+                                session={session}
+                                childName={child.name}
+                                isExpanded={expandedSession === session.id}
+                                onToggle={() => setExpandedSession(
+                                    expandedSession === session.id ? null : session.id
+                                )}
+                            />
+                        </div>
                     ))
                 ) : (
                     <Card className="p-8 text-center">

@@ -4,6 +4,7 @@
 // ============================================================
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Users,
     Search,
@@ -16,7 +17,8 @@ import {
     ChevronRight,
     Activity,
     AlertTriangle,
-    Star
+    Star,
+    X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -133,38 +135,54 @@ const PatientCard = ({ child, sessions, skillScores, onSelect }) => {
 
 // Patient Detail Modal
 const PatientDetailModal = ({ child, sessions, skillScores, onClose }) => {
+    const navigate = useNavigate();
+    
     if (!child) return null;
+
+    const handleLogNewSession = () => {
+        // Navigate to session log with childId in state
+        navigate('/therapist/log', { state: { childId: child.id } });
+        onClose();
+    };
+
+    const handleViewFullProfile = () => {
+        // Navigate to patient detail or expand view
+        // For now, we'll show an expanded view with more details
+        // In production, this could navigate to a dedicated patient profile page
+        navigate('/therapist/patients', { state: { expandedPatient: child.id } });
+        onClose();
+    };
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6">
+                <div className="p-6 relative">
+                    {/* Close Button at Top Right */}
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-600 transition-colors p-1 z-10"
+                    >
+                        <X className="h-6 w-6" />
+                    </button>
+
                     {/* Header */}
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-4">
-                            <img
-                                src={child.photoUrl}
-                                alt={child.name}
-                                className="w-20 h-20 rounded-full object-cover border-4 border-primary-100"
-                            />
-                            <div>
-                                <h2 className="text-2xl font-bold text-neutral-800">{child.name}</h2>
-                                <p className="text-neutral-500">{child.age} years • {child.diagnosis}</p>
-                                <div className="flex gap-2 mt-2">
-                                    {child.program.map((prog, idx) => (
-                                        <span key={idx} className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded text-xs font-medium">
-                                            {prog}
-                                        </span>
-                                    ))}
-                                </div>
+                    <div className="flex items-center gap-4 mb-6 pr-8">
+                        <img
+                            src={child.photoUrl}
+                            alt={child.name}
+                            className="w-20 h-20 rounded-full object-cover border-4 border-primary-100"
+                        />
+                        <div>
+                            <h2 className="text-2xl font-bold text-neutral-800">{child.name}</h2>
+                            <p className="text-neutral-500">{child.age} years • {child.diagnosis}</p>
+                            <div className="flex gap-2 mt-2">
+                                {child.program.map((prog, idx) => (
+                                    <span key={idx} className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded text-xs font-medium">
+                                        {prog}
+                                    </span>
+                                ))}
                             </div>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="text-neutral-400 hover:text-neutral-600"
-                        >
-                            ✕
-                        </button>
                     </div>
 
                     {/* Stats Grid */}
@@ -236,8 +254,12 @@ const PatientDetailModal = ({ child, sessions, skillScores, onClose }) => {
 
                     {/* Actions */}
                     <div className="flex gap-3 mt-6">
-                        <Button className="flex-1">Log New Session</Button>
-                        <Button variant="outline" className="flex-1">View Full Profile</Button>
+                        <Button className="flex-1" onClick={handleLogNewSession}>
+                            Log New Session
+                        </Button>
+                        <Button variant="outline" className="flex-1" onClick={handleViewFullProfile}>
+                            Cancel
+                        </Button>
                     </div>
                 </div>
             </div>

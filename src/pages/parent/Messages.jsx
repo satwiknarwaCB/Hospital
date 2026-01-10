@@ -47,10 +47,10 @@ const MessageBubble = ({ message, isOwn }) => {
 
                 {/* Message Content */}
                 <div className={`rounded-2xl px-4 py-3 ${isOwn
-                        ? 'bg-primary-600 text-white rounded-br-md'
-                        : message.type === 'weekly-summary'
-                            ? 'bg-gradient-to-r from-violet-100 to-purple-100 text-neutral-800 rounded-bl-md'
-                            : 'bg-neutral-100 text-neutral-800 rounded-bl-md'
+                    ? 'bg-primary-600 text-white rounded-br-md'
+                    : message.type === 'weekly-summary'
+                        ? 'bg-gradient-to-r from-violet-100 to-purple-100 text-neutral-800 rounded-bl-md'
+                        : 'bg-neutral-100 text-neutral-800 rounded-bl-md'
                     }`}>
                     {message.subject && (
                         <p className={`font-semibold mb-2 ${isOwn ? 'text-white' : 'text-neutral-800'}`}>
@@ -103,7 +103,7 @@ const ThreadItem = ({ thread, isActive, onClick, currentUserId }) => {
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                         <span className="font-medium text-neutral-800 truncate">
-                            {thread.participantName || 'NeuroBridge AI'}
+                            {thread.participantName || (thread.type === 'weekly-summary' ? 'NeuroBridge AI' : 'Dr. Rajesh Kumar')}
                         </span>
                         <span className="text-xs text-neutral-400 flex-shrink-0">
                             {new Date(latestMessage.timestamp).toLocaleDateString()}
@@ -127,7 +127,7 @@ const ThreadItem = ({ thread, isActive, onClick, currentUserId }) => {
 
 // Main Messages Component
 const Messages = () => {
-    const { currentUser, kids, messages: allMessages, sendMessage, markMessageRead } = useApp();
+    const { currentUser, kids, users, messages: allMessages, sendMessage, markMessageRead } = useApp();
     const [activeThread, setActiveThread] = useState(null);
     const [newMessage, setNewMessage] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
@@ -147,13 +147,16 @@ const Messages = () => {
             .forEach(message => {
                 const threadId = message.threadId;
                 if (!threadMap[threadId]) {
+                    // Determine the other participant to show as the thread name
+                    const otherUserId = message.senderId === userId ? message.recipientId : message.senderId;
+                    const otherUser = users?.find(u => u.id === otherUserId);
+
                     threadMap[threadId] = {
                         id: threadId,
                         messages: [],
                         type: message.type,
-                        participantName: message.senderRole === 'parent'
-                            ? message.recipientId === userId ? message.senderName : 'Unknown'
-                            : message.senderName
+                        participantName: otherUser ? otherUser.name :
+                            (message.type === 'weekly-summary' ? 'NeuroBridge AI' : 'Dr. Rajesh Kumar')
                     };
                 }
                 threadMap[threadId].messages.push(message);

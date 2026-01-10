@@ -3,8 +3,8 @@
 // Complete Parent Experience with All Modules
 // ============================================================
 
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import {
     LayoutDashboard,
@@ -12,7 +12,12 @@ import {
     TrendingUp,
     Target,
     Home,
-    MessageCircle
+    MessageCircle,
+    Clock,
+    MapPin,
+    Calendar,
+    X,
+    CheckCircle2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -23,13 +28,210 @@ import ProgressAnalytics from './ProgressAnalytics';
 import GrowthRoadmap from './GrowthRoadmap';
 import HomeActivities from './HomeActivities';
 import SessionHistory from './SessionHistory';
+import UpcomingSessions from './UpcomingSessions';
 import Messages from './Messages';
+
+// ============================================================
+// Session Detail Modal Component
+// ============================================================
+const SessionDetailModal = ({ session, child, onClose }) => {
+    if (!session) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-6">
+                    {/* Header with Close Button */}
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-2xl font-bold text-neutral-800">Session Details</h3>
+                        <button
+                            onClick={onClose}
+                            className="text-neutral-400 hover:text-neutral-600 transition-colors"
+                        >
+                            <X className="h-6 w-6" />
+                        </button>
+                    </div>
+
+                    {/* Session Info */}
+                    <div className="space-y-6">
+                        {/* Basic Info */}
+                        <div className="bg-primary-50 rounded-xl p-4">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-3 bg-primary-100 rounded-lg">
+                                    <Calendar className="h-6 w-6 text-primary-600" />
+                                </div>
+                                <div>
+                                    <h4 className="text-xl font-bold text-neutral-800">{session.type}</h4>
+                                    <p className="text-sm text-neutral-600">
+                                        {new Date(session.date).toLocaleDateString([], {
+                                            weekday: 'long',
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 mt-4">
+                                <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-neutral-500" />
+                                    <span className="text-sm text-neutral-600">
+                                        {new Date(session.date).toLocaleTimeString([], {
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-neutral-500" />
+                                    <span className="text-sm text-neutral-600">{session.duration} minutes</span>
+                                </div>
+                                {session.location && (
+                                    <div className="flex items-center gap-2 col-span-2">
+                                        <MapPin className="h-4 w-4 text-neutral-500" />
+                                        <span className="text-sm text-neutral-600">{session.location}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-neutral-700">Status:</span>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${session.status === 'scheduled'
+                                    ? 'bg-blue-100 text-blue-700'
+                                    : 'bg-green-100 text-green-700'
+                                }`}>
+                                {session.status === 'scheduled' ? 'Scheduled' : 'Completed'}
+                            </span>
+                        </div>
+
+                        {/* Child Info */}
+                        {child && (
+                            <div className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg">
+                                <img
+                                    src={child.photoUrl}
+                                    alt={child.name}
+                                    className="w-12 h-12 rounded-full object-cover"
+                                />
+                                <div>
+                                    <p className="font-medium text-neutral-800">{child.name}</p>
+                                    <p className="text-sm text-neutral-500">{child.diagnosis}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Additional Details for Completed Sessions */}
+                        {session.status === 'completed' && (
+                            <>
+                                {session.engagement && (
+                                    <div>
+                                        <p className="text-sm font-medium text-neutral-700 mb-2">Engagement</p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-1 h-2 bg-neutral-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full ${session.engagement >= 80 ? 'bg-green-500' :
+                                                            session.engagement >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                                        }`}
+                                                    style={{ width: `${session.engagement}%` }}
+                                                />
+                                            </div>
+                                            <span className="text-sm font-medium text-neutral-700">
+                                                {session.engagement}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {session.activities && session.activities.length > 0 && (
+                                    <div>
+                                        <p className="text-sm font-medium text-neutral-700 mb-2">Activities</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {session.activities.map((activity, idx) => (
+                                                <span
+                                                    key={idx}
+                                                    className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm"
+                                                >
+                                                    {activity}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {session.wins && session.wins.length > 0 && (
+                                    <div>
+                                        <p className="text-sm font-medium text-neutral-700 mb-2">Wins 🏆</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {session.wins.map((win, idx) => (
+                                                <span
+                                                    key={idx}
+                                                    className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm"
+                                                >
+                                                    {win}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {session.aiSummary && (
+                                    <div className="bg-violet-50 rounded-xl p-4">
+                                        <p className="text-sm font-medium text-violet-900 mb-2">Session Summary</p>
+                                        <p className="text-sm text-violet-700 leading-relaxed">
+                                            {session.aiSummary}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {session.notes && (
+                                    <div>
+                                        <p className="text-sm font-medium text-neutral-700 mb-2">Therapist Notes</p>
+                                        <p className="text-sm text-neutral-600 italic bg-neutral-50 p-3 rounded-lg">
+                                            "{session.notes}"
+                                        </p>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-3 mt-6">
+                        <Button variant="outline" className="flex-1" onClick={onClose}>
+                            Close
+                        </Button>
+                        {session.status === 'scheduled' && (
+                            <Button className="flex-1">
+                                Add to Calendar
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // ============================================================
 // Parent Dashboard - Main Overview
 // ============================================================
 const ParentDashboard = () => {
-    const { currentUser, kids, getChildSessions, getLatestSkillScores, getUnreadCount } = useApp();
+    const {
+        currentUser,
+        kids,
+        users,
+        getChildSessions,
+        getLatestSkillScores,
+        getUnreadCount,
+        getChildMessages,
+        sendMessage,
+        addNotification
+    } = useApp();
+    const navigate = useNavigate();
+    const [selectedSession, setSelectedSession] = useState(null);
+    const [showThanksSent, setShowThanksSent] = useState(false);
 
     // Safety check
     if (!currentUser || currentUser.role !== 'parent') {
@@ -140,8 +342,73 @@ const ParentDashboard = () => {
                                 )}
 
                                 <div className="flex gap-3 mt-4">
-                                    <Button className="flex-1" variant="outline">View Full Report</Button>
-                                    <Button className="flex-1">Send Thanks to Therapist</Button>
+                                    {/* View full report in an overlay */}
+                                    <Button
+                                        className="flex-1"
+                                        variant="outline"
+                                        onClick={() => setSelectedSession(lastSession)}
+                                    >
+                                        View Full Report
+                                    </Button>
+
+                                    {/* Send thanks to the therapist in existing chat thread */}
+                                    <Button
+                                        className="flex-1"
+                                        onClick={() => {
+                                            const childForSession = kids.find(c => c.id === lastSession.childId);
+                                            const therapistId = lastSession.therapistId || childForSession?.therapistId || 't1';
+
+                                            if (therapistId) {
+                                                // Find existing thread between this parent and therapist for this child
+                                                const existingMessages = getChildMessages(childForSession.id, currentUser.id);
+                                                const existingThread = existingMessages.find(
+                                                    m =>
+                                                        (m.senderId === therapistId || m.recipientId === therapistId) &&
+                                                        m.childId === childForSession.id
+                                                );
+
+                                                const threadId = existingThread?.threadId || `thread-${currentUser.id}-${therapistId}`;
+                                                const therapistUser = users.find(u => u.id === therapistId);
+
+                                                sendMessage({
+                                                    threadId,
+                                                    senderId: currentUser.id,
+                                                    senderName: currentUser.name,
+                                                    senderRole: 'parent',
+                                                    recipientId: therapistId,
+                                                    childId: childForSession.id,
+                                                    subject: 'Thank You',
+                                                    content: `Thank you so much, ${therapistUser?.name || 'Doctor'}, for the wonderful session with ${childForSession?.name || 'my child'}! We really appreciate your dedication and the progress we're seeing. 🙏`,
+                                                    type: 'message'
+                                                });
+
+                                                addNotification({
+                                                    type: 'success',
+                                                    title: 'Message Sent',
+                                                    message: `Your thank you message has been sent to ${therapistUser?.name || 'the therapist'}.`
+                                                });
+
+                                                setShowThanksSent(true);
+                                                setTimeout(() => setShowThanksSent(false), 3000);
+                                            } else {
+                                                addNotification({
+                                                    type: 'error',
+                                                    title: 'Error',
+                                                    message: 'Unable to send message. Therapist information not available.'
+                                                });
+                                            }
+                                        }}
+                                        disabled={showThanksSent}
+                                    >
+                                        {showThanksSent ? (
+                                            <>
+                                                <CheckCircle2 className="h-4 w-4 mr-2" />
+                                                Sent!
+                                            </>
+                                        ) : (
+                                            'Send Thanks to Therapist'
+                                        )}
+                                    </Button>
                                 </div>
                             </div>
                         ) : (
@@ -180,7 +447,13 @@ const ParentDashboard = () => {
                                     {new Date(nextSession.date).toLocaleString([], { weekday: 'long', hour: '2-digit', minute: '2-digit' })}
                                 </div>
                                 <p className="text-sm text-neutral-500 mt-2">{nextSession.location}</p>
-                                <Button variant="outline" className="w-full mt-6">View Details</Button>
+                                <Button
+                                    variant="outline"
+                                    className="w-full mt-6"
+                                    onClick={() => setSelectedSession(nextSession)}
+                                >
+                                    View Details
+                                </Button>
                             </>
                         ) : (
                             <p className="text-neutral-500">No upcoming sessions scheduled.</p>
@@ -232,6 +505,15 @@ const ParentDashboard = () => {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Session Detail Modal */}
+            {selectedSession && (
+                <SessionDetailModal
+                    session={selectedSession}
+                    child={child}
+                    onClose={() => setSelectedSession(null)}
+                />
+            )}
         </div>
     );
 };
@@ -246,6 +528,7 @@ const ParentPortal = () => {
         { label: 'Roadmap', path: '/parent/roadmap', icon: Target },
         { label: 'Home Activities', path: '/parent/activities', icon: Home },
         { label: 'Session History', path: '/parent/history', icon: History },
+        { label: 'Upcoming Session', path: '/parent/upcoming', icon: Calendar },
         { label: 'Messages', path: '/parent/messages', icon: MessageCircle },
     ];
 
@@ -257,6 +540,7 @@ const ParentPortal = () => {
                 <Route path="roadmap" element={<GrowthRoadmap />} />
                 <Route path="activities" element={<HomeActivities />} />
                 <Route path="history" element={<SessionHistory />} />
+                <Route path="upcoming" element={<UpcomingSessions />} />
                 <Route path="messages" element={<Messages />} />
                 <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Route>

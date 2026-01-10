@@ -1,15 +1,30 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Save, X, Activity, Frown, Meh, Smile, Sparkles, CheckCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { generateSessionSummary } from '../../lib/aiService';
 import { useApp } from '../../lib/context';
+import { THERAPY_TYPES } from '../../data/mockData';
 
 const SessionLog = () => {
   const { kids, addSession } = useApp();
   const navigate = useNavigate();
-  const [selectedChild, setSelectedChild] = useState(kids && kids[0] ? kids[0].id : '');
+  const location = useLocation();
+  const childIdFromState = location.state?.childId;
+  
+  const [selectedChild, setSelectedChild] = useState(
+    childIdFromState || (kids && kids[0] ? kids[0].id : '')
+  );
+
+  // Update selected child if passed from navigation
+  useEffect(() => {
+    if (childIdFromState) {
+      setSelectedChild(childIdFromState);
+    }
+  }, [childIdFromState]);
+  
+  const [sessionType, setSessionType] = useState('Speech Therapy');
   const [engagement, setEngagement] = useState(50);
   const [activities, setActivities] = useState([]);
   const [notes, setNotes] = useState('');
@@ -61,13 +76,15 @@ const SessionLog = () => {
 
     addSession({
       childId: selectedChild,
-      type: "Therapy Session",
+      type: sessionType,
       engagement: parseInt(engagement),
       activities,
       notes,
       aiSummary: aiSummary?.parentSummary,
       wins: aiSummary?.wins,
-      mood: mood
+      emotionalState: mood,
+      status: 'completed',
+      duration: 45 // Default duration, can be made configurable later
     });
 
     alert("Session Saved & Published to Parent Portal!");
@@ -107,6 +124,22 @@ const SessionLog = () => {
               >
                 {kids.map(c => (
                   <option key={c.id} value={c.id}>{c.name} - {c.diagnosis}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Session Type */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-700">Session Type</label>
+              <select
+                className="w-full p-2 border border-neutral-200 rounded-lg bg-neutral-50"
+                value={sessionType}
+                onChange={(e) => setSessionType(e.target.value)}
+              >
+                {THERAPY_TYPES.map(therapy => (
+                  <option key={therapy.id} value={therapy.name}>
+                    {therapy.icon} {therapy.name}
+                  </option>
                 ))}
               </select>
             </div>
