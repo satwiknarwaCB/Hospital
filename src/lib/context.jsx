@@ -3,7 +3,7 @@
 // Production-Ready Global State Provider
 // ============================================================
 
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import {
     USERS,
     CHILDREN,
@@ -35,6 +35,41 @@ export const AppProvider = ({ children }) => {
     // ============ Auth State ============
     const [currentUser, setCurrentUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    // Sync with localStorage on mount and when doctor_data changes
+    useEffect(() => {
+        const syncAuth = () => {
+            const doctorData = localStorage.getItem('doctor_data');
+            if (doctorData) {
+                try {
+                    const doctor = JSON.parse(doctorData);
+                    const user = users.find(u => u.email === doctor.email);
+                    if (user) {
+                        setCurrentUser(user);
+                        setIsAuthenticated(true);
+                    }
+                } catch (err) {
+                    console.error('Error syncing auth in AppProvider:', err);
+                }
+            } else {
+                setCurrentUser(null);
+                setIsAuthenticated(false);
+            }
+        };
+
+        syncAuth();
+
+        // Listen for storage changes (for multiple tabs)
+        window.addEventListener('storage', syncAuth);
+
+        // Also listen for a custom event we can trigger on login
+        window.addEventListener('auth-change', syncAuth);
+
+        return () => {
+            window.removeEventListener('storage', syncAuth);
+            window.removeEventListener('auth-change', syncAuth);
+        };
+    }, [users]);
 
     // ============ UI State ============
     const [notifications, setNotifications] = useState([]);

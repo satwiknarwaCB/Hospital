@@ -4,7 +4,11 @@ import { AppProvider } from './lib/context';
 import Landing from './pages/Landing';
 import ParentPortal from './pages/parent/ParentPortal';
 import TherapistPortal from './pages/therapist/TherapistPortal';
+import TherapistLogin from './pages/therapist/TherapistLogin';
 import AdminPortal from './pages/admin/AdminPortal';
+import DoctorLogin from './pages/doctor/DoctorLogin';
+import DoctorPortal from './pages/doctor/DoctorPortal';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
     return (
@@ -13,9 +17,30 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Landing />} />
 
+                    {/* Doctor Module */}
+                    <Route path="/doctor/login" element={<DoctorLogin />} />
+                    <Route
+                        path="/doctor/*"
+                        element={
+                            <ProtectedRoute>
+                                <DoctorPortal />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Therapist Module */}
+                    <Route path="/therapist/login" element={<TherapistLogin />} />
+                    <Route
+                        path="/therapist/*"
+                        element={
+                            <ProtectedRoute redirectTo="/therapist/login">
+                                <TherapistPortal />
+                            </ProtectedRoute>
+                        }
+                    />
+
                     {/* Portals */}
                     <Route path="/parent/*" element={<ParentPortal />} />
-                    <Route path="/therapist/*" element={<TherapistPortal />} />
                     <Route path="/admin/*" element={<AdminPortal />} />
 
                     {/* Fallback */}

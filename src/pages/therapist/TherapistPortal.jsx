@@ -13,11 +13,13 @@ import {
     ClipboardList,
     Brain,
     Target,
-    MessageSquare
+    MessageSquare,
+    LogOut
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useApp } from '../../lib/context';
+import { useAuth } from '../../hooks/useAuth';
 
 // Import all therapist pages
 import SessionLog from './SessionLog';
@@ -26,6 +28,40 @@ import TherapyIntelligence from './TherapyIntelligence';
 import RoadmapEditor from './RoadmapEditor';
 import ScheduleManagement from './ScheduleManagement';
 import TherapistMessages from './TherapistMessages';
+
+// ============================================================
+// Therapist Layout Wrapper with Logout
+// ============================================================
+const TherapistLayoutWrapper = ({ children }) => {
+    const { logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        await logout();
+        navigate('/therapist/login');
+    };
+
+    const sidebarItems = [
+        { label: 'Dashboard', path: '/therapist/dashboard', icon: LayoutDashboard },
+        { label: 'My Patients', path: '/therapist/patients', icon: Users },
+        { label: 'Schedule', path: '/therapist/schedule', icon: Calendar },
+        { label: 'Session Logs', path: '/therapist/logs', icon: ClipboardList },
+        { label: 'Messages', path: '/therapist/messages', icon: MessageSquare },
+        { label: 'AI Intelligence', path: '/therapist/intelligence', icon: Brain },
+        { label: 'Roadmap Editor', path: '/therapist/roadmap', icon: Target },
+    ];
+
+    return (
+        <DashboardLayout
+            title="Therapist Console"
+            sidebarItems={sidebarItems}
+            roleColor="bg-secondary-600"
+            onLogout={handleLogout}
+        >
+            {children}
+        </DashboardLayout>
+    );
+};
 
 // ============================================================
 // Therapist Dashboard - Main Overview
@@ -219,19 +255,9 @@ const TherapistDashboard = () => {
 // Therapist Portal Router
 // ============================================================
 const TherapistPortal = () => {
-    const sidebarItems = [
-        { label: 'Dashboard', path: '/therapist/dashboard', icon: LayoutDashboard },
-        { label: 'My Patients', path: '/therapist/patients', icon: Users },
-        { label: 'Schedule', path: '/therapist/schedule', icon: Calendar },
-        { label: 'Session Logs', path: '/therapist/logs', icon: ClipboardList },
-        { label: 'Messages', path: '/therapist/messages', icon: MessageSquare },
-        { label: 'AI Intelligence', path: '/therapist/intelligence', icon: Brain },
-        { label: 'Roadmap Editor', path: '/therapist/roadmap', icon: Target },
-    ];
-
     return (
         <Routes>
-            <Route element={<DashboardLayout title="Therapist Console" sidebarItems={sidebarItems} roleColor="bg-secondary-600" />}>
+            <Route element={<TherapistLayoutWrapper />}>
                 <Route path="dashboard" element={<TherapistDashboard />} />
                 <Route path="log" element={<SessionLog />} />
                 <Route path="patients" element={<MyPatients />} />

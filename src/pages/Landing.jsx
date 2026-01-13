@@ -79,7 +79,7 @@ const Landing = () => {
                         <Card
                             clickable
                             className="border-t-4 border-t-secondary-500 hover:-translate-y-1 transition-transform"
-                            onClick={() => setSelectedRole('therapist')}
+                            onClick={() => navigate('/therapist/login')}
                         >
                             <CardHeader>
                                 <div className="h-12 w-12 rounded-lg bg-secondary-100 text-secondary-600 flex items-center justify-center mb-4">

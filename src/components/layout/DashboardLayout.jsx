@@ -4,9 +4,17 @@ import { LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/Button';
 
-const DashboardLayout = ({ title, sidebarItems, roleColor = "bg-primary-700" }) => {
+const DashboardLayout = ({ title, sidebarItems, roleColor = "bg-primary-700", onLogout }) => {
     const [isSidebarOpen, setSidebarOpen] = React.useState(true);
     const location = useLocation();
+
+    const handleLogout = () => {
+        if (onLogout) {
+            onLogout();
+        } else {
+            window.location.href = '/';
+        }
+    };
 
     return (
         <div className="min-h-screen bg-neutral-50 flex">
@@ -44,12 +52,14 @@ const DashboardLayout = ({ title, sidebarItems, roleColor = "bg-primary-700" }) 
                 </nav>
 
                 <div className="absolute bottom-0 w-full p-4 border-t border-neutral-100">
-                    <Link to="/">
-                        <Button variant="ghost" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50">
-                            <LogOut className="mr-3 h-5 w-5" />
-                            Sign Out
-                        </Button>
-                    </Link>
+                    <Button
+                        variant="ghost"
+                        className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={handleLogout}
+                    >
+                        <LogOut className="mr-3 h-5 w-5" />
+                        Sign Out
+                    </Button>
                 </div>
             </aside>
 
