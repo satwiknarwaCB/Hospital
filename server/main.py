@@ -8,6 +8,8 @@ from contextlib import asynccontextmanager
 from config import settings
 from database import db_manager
 from routes.doctor_auth import router as doctor_auth_router
+from routes.parent_auth import router as parent_auth_router
+from routes.sessions import router as sessions_router
 
 
 @asynccontextmanager
@@ -46,6 +48,8 @@ app.add_middleware(
 
 # Register routers
 app.include_router(doctor_auth_router)
+app.include_router(parent_auth_router)
+app.include_router(sessions_router)
 
 
 # Health check endpoint

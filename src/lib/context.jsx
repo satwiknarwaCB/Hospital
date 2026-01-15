@@ -16,6 +16,7 @@ import {
     AUDIT_LOGS,
     CDC_METRICS
 } from '../data/mockData';
+import { sessionAPI } from './api';
 
 const AppContext = createContext();
 
@@ -36,20 +37,38 @@ export const AppProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    // Sync with localStorage on mount and when doctor_data changes
+    // Sync with localStorage on mount and when authentication changes
     useEffect(() => {
         const syncAuth = () => {
             const doctorData = localStorage.getItem('doctor_data');
-            if (doctorData) {
+            const parentData = localStorage.getItem('parent_data');
+
+            if (parentData) {
+                try {
+                    const parent = JSON.parse(parentData);
+                    // Find user in static mock data to get full object if needed,
+                    // or just use the data from localStorage
+                    const user = users.find(u => u.email === parent.email) || parent;
+
+                    // Ensure role is set for portal permission checks
+                    if (!user.role) user.role = 'parent';
+
+                    setCurrentUser(user);
+                    setIsAuthenticated(true);
+                } catch (err) {
+                    console.error('Error syncing parent auth:', err);
+                }
+            } else if (doctorData) {
                 try {
                     const doctor = JSON.parse(doctorData);
-                    const user = users.find(u => u.email === doctor.email);
-                    if (user) {
-                        setCurrentUser(user);
-                        setIsAuthenticated(true);
-                    }
+                    const user = users.find(u => u.email === doctor.email) || doctor;
+
+                    if (!user.role) user.role = 'therapist';
+
+                    setCurrentUser(user);
+                    setIsAuthenticated(true);
                 } catch (err) {
-                    console.error('Error syncing auth in AppProvider:', err);
+                    console.error('Error syncing doctor auth:', err);
                 }
             } else {
                 setCurrentUser(null);
@@ -70,6 +89,38 @@ export const AppProvider = ({ children }) => {
             window.removeEventListener('auth-change', syncAuth);
         };
     }, [users]);
+
+    // Production-Level Session Synchronization
+    useEffect(() => {
+        const syncSessionsFromCloud = async () => {
+            if (!isAuthenticated || !currentUser) return;
+
+            try {
+                console.log(`🌐 Syncing sessions for ${currentUser.role}: ${currentUser.name}`);
+                let cloudSessions = [];
+
+                if (currentUser.role === 'parent' && currentUser.childId) {
+                    cloudSessions = await sessionAPI.getByChild(currentUser.childId);
+                } else if (currentUser.role === 'therapist') {
+                    cloudSessions = await sessionAPI.getByTherapist(currentUser.id);
+                }
+
+                if (cloudSessions.length > 0) {
+                    setSessions(prev => {
+                        // Smart Deduplication: Prioritize Cloud Data
+                        const cloudIds = new Set(cloudSessions.map(s => s.id || s._id));
+                        const legacySessions = prev.filter(s => !cloudIds.has(s.id) && !cloudIds.has(s._id));
+                        return [...cloudSessions, ...legacySessions];
+                    });
+                    console.log(`✅ Successfully synced ${cloudSessions.length} sessions from MongoDB.`);
+                }
+            } catch (err) {
+                console.error('❌ Cloud Session Sync Failed:', err);
+            }
+        };
+
+        syncSessionsFromCloud();
+    }, [isAuthenticated, currentUser]);
 
     // ============ UI State ============
     const [notifications, setNotifications] = useState([]);

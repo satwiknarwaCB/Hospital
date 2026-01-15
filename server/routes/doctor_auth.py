@@ -69,7 +69,8 @@ async def login(credentials: DoctorLogin):
         assigned_patients=int(doctor_data.get("assigned_patients", 0)),
         phone=str(doctor_data.get("phone")) if doctor_data.get("phone") else None,
         license_number=str(doctor_data.get("license_number")) if doctor_data.get("license_number") else None,
-        is_active=bool(doctor_data.get("is_active", True))
+        is_active=bool(doctor_data.get("is_active", True)),
+        role="therapist"
     )
     
     return TokenResponse(

@@ -20,6 +20,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button';
 import { useApp } from '../../lib/context';
 import { THERAPY_TYPES } from '../../data/mockData';
+import { sessionAPI } from '../../lib/api';
+import { Loader2 } from 'lucide-react';
 
 // Time Slot Component
 const TimeSlot = ({ session, child, onClick }) => {
@@ -67,8 +69,8 @@ const CalendarDay = ({ date, sessions, kids, isToday, isSelected, onClick }) => 
     return (
         <div
             className={`min-h-[100px] p-2 border border-neutral-100 cursor-pointer transition-colors ${isSelected ? 'bg-primary-50 border-primary-300' :
-                    isToday ? 'bg-blue-50' :
-                        'hover:bg-neutral-50'
+                isToday ? 'bg-blue-50' :
+                    'hover:bg-neutral-50'
                 }`}
             onClick={onClick}
         >
@@ -157,8 +159,8 @@ const SessionDetailModal = ({ session, child, onClose, onStatusChange }) => {
                         <div className="flex items-center justify-between">
                             <span className="text-neutral-500">Status</span>
                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${session.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                    session.status === 'scheduled' ? 'bg-primary-100 text-primary-700' :
-                                        'bg-yellow-100 text-yellow-700'
+                                session.status === 'scheduled' ? 'bg-primary-100 text-primary-700' :
+                                    'bg-yellow-100 text-yellow-700'
                                 }`}>
                                 {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
                             </span>
@@ -190,7 +192,7 @@ const SessionDetailModal = ({ session, child, onClose, onStatusChange }) => {
 };
 
 // New Session Modal
-const NewSessionModal = ({ patients, onSave, onClose }) => {
+const NewSessionModal = ({ patients, onSave, onClose, isLoading }) => {
     const [formData, setFormData] = useState({
         childId: patients[0]?.id || '',
         type: THERAPY_TYPES[0].name,
@@ -213,7 +215,7 @@ const NewSessionModal = ({ patients, onSave, onClose }) => {
 
         // Combine date and time, ensuring we preserve the local date
         const dateTime = new Date(`${formData.date}T${formData.time}`);
-        
+
         // Validate date is not in the past
         if (dateTime < new Date()) {
             if (!confirm('This session is scheduled in the past. Continue anyway?')) {
@@ -314,10 +316,14 @@ const NewSessionModal = ({ patients, onSave, onClose }) => {
                     </div>
 
                     <div className="flex gap-2 mt-6">
-                        <Button className="flex-1" onClick={handleSave}>
-                            Schedule Session
+                        <Button className="flex-1" onClick={handleSave} disabled={isLoading}>
+                            {isLoading ? (
+                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Scheduling...</>
+                            ) : (
+                                'Schedule Session'
+                            )}
                         </Button>
-                        <Button variant="outline" onClick={onClose}>
+                        <Button variant="outline" onClick={onClose} disabled={isLoading}>
                             Cancel
                         </Button>
                     </div>
@@ -335,6 +341,7 @@ const ScheduleManagement = () => {
     const [viewMode, setViewMode] = useState('week'); // week or month
     const [showNewSession, setShowNewSession] = useState(false);
     const [selectedSession, setSelectedSession] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     // Get therapist's data
     const therapistId = currentUser?.id || 't1';
@@ -382,7 +389,7 @@ const ScheduleManagement = () => {
     const completedToday = todaySessions.filter(s => s.status === 'completed').length;
     const upcomingToday = todaySessions.filter(s => s.status === 'scheduled').length;
 
-    const handleNewSession = (sessionData) => {
+    const handleNewSession = async (sessionData) => {
         try {
             // Validate required fields
             if (!sessionData.childId || !sessionData.date || !sessionData.type) {
@@ -394,37 +401,50 @@ const ScheduleManagement = () => {
                 return;
             }
 
-            // Add therapistId to session data
+            setIsLoading(true);
+            console.log('📡 Scheduling new session to MongoDB...');
+
+            // 1. Persist to MongoDB via existing sessionAPI
             const sessionToAdd = {
                 ...sessionData,
-                therapistId: therapistId
+                therapistId: therapistId,
+                status: 'scheduled'
             };
-            
-            // Add session using context function
-            const newSession = addSession(sessionToAdd);
-            
+
+            const savedSession = await sessionAPI.create(sessionToAdd);
+            console.log('✅ Session scheduled in database:', savedSession);
+
+            // 2. Add session to local state using context function
+            addSession({
+                ...sessionToAdd,
+                id: savedSession.id || savedSession._id
+            });
+
             // Close modal
             setShowNewSession(false);
-            
+
             // Show success notification
             const patientName = myPatients.find(p => p.id === sessionData.childId)?.name || 'patient';
             addNotification({
                 type: 'success',
                 title: 'Session Scheduled',
-                message: `Session scheduled successfully for ${patientName} on ${new Date(sessionData.date).toLocaleDateString()}`
+                message: `Session scheduled successfully in MongoDB for ${patientName}!`
             });
 
-            // Optionally select the date where the session was added
+            // 3. Update UI Focus
             const sessionDate = new Date(sessionData.date);
             setSelectedDate(sessionDate);
             setCurrentDate(sessionDate);
         } catch (error) {
-            console.error('Error creating session:', error);
+            console.error('❌ Error scheduling session:', error);
+            const errorMsg = typeof error === 'object' ? (error.detail || JSON.stringify(error)) : error;
             addNotification({
                 type: 'error',
-                title: 'Error',
-                message: 'Failed to create session. Please try again.'
+                title: 'Scheduling Failed',
+                message: `Database error: ${errorMsg}`
             });
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -569,6 +589,7 @@ const ScheduleManagement = () => {
                     patients={myPatients}
                     onSave={handleNewSession}
                     onClose={() => setShowNewSession(false)}
+                    isLoading={isLoading}
                 />
             )}
 

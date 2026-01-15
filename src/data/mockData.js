@@ -8,7 +8,7 @@ export const USERS = [
     {
         id: 'p1',
         name: 'Priya Patel',
-        email: 'priya.patel@email.com',
+        email: 'priya.patel@parent.com',
         role: 'parent',
         childId: 'c1',
         avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200',
@@ -18,7 +18,7 @@ export const USERS = [
     {
         id: 'p2',
         name: 'Arun Sharma',
-        email: 'arun.sharma@email.com',
+        email: 'arun.sharma@parent.com',
         role: 'parent',
         childId: 'c2',
         avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
@@ -28,7 +28,7 @@ export const USERS = [
     {
         id: 't1',
         name: 'Dr. Rajesh Kumar',
-        email: 'dr.rajesh@neurobridge.com',
+        email: 'dr.rajesh@therapist.com',
         role: 'therapist',
         specialization: 'Speech & Language Therapy',
         caseload: ['c1', 'c2'],
@@ -40,7 +40,7 @@ export const USERS = [
     {
         id: 't2',
         name: 'Dr. Meera Singh',
-        email: 'dr.meera@neurobridge.com',
+        email: 'dr.meera@therapist.com',
         role: 'therapist',
         specialization: 'Occupational Therapy',
         caseload: ['c1', 'c4', 'c5'],

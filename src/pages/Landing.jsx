@@ -54,7 +54,7 @@ const Landing = () => {
                         <Card
                             clickable
                             className="border-t-4 border-t-primary-500 hover:-translate-y-1 transition-transform"
-                            onClick={() => setSelectedRole('parent')}
+                            onClick={() => navigate('/parent/login')}
                         >
                             <CardHeader>
                                 <div className="h-12 w-12 rounded-lg bg-primary-100 text-primary-600 flex items-center justify-center mb-4">
@@ -70,7 +70,7 @@ const Landing = () => {
                                     <li className="flex items-center"><ArrowRight className="h-4 w-4 mr-2 text-primary-400" /> Access Home Activities</li>
                                 </ul>
                                 <Button className="w-full">
-                                    Select Parent Account <ChevronRight className="ml-2 h-4 w-4" />
+                                    Sign In as Parent <ChevronRight className="ml-2 h-4 w-4" />
                                 </Button>
                             </CardContent>
                         </Card>
@@ -95,7 +95,7 @@ const Landing = () => {
                                     <li className="flex items-center"><ArrowRight className="h-4 w-4 mr-2 text-secondary-400" /> AI-Assisted Planning</li>
                                 </ul>
                                 <Button variant="secondary" className="w-full">
-                                    Select Therapist Account <ChevronRight className="ml-2 h-4 w-4" />
+                                    Sign In as Therapist <ChevronRight className="ml-2 h-4 w-4" />
                                 </Button>
                             </CardContent>
                         </Card>

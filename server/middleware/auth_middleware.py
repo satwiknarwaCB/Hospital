@@ -8,6 +8,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from database import db_manager
 from utils.auth import decode_access_token
 from models.doctor import DoctorResponse
+from models.parent import ParentResponse
 
 
 # HTTP Bearer token scheme
@@ -70,7 +71,8 @@ async def get_current_doctor(
         assigned_patients=doctor_data["assigned_patients"],
         phone=doctor_data.get("phone"),
         license_number=doctor_data.get("license_number"),
-        is_active=doctor_data.get("is_active", True)
+        is_active=doctor_data.get("is_active", True),
+        role="therapist"
     )
 
 
@@ -95,3 +97,85 @@ async def get_current_active_doctor(
             detail="Inactive doctor account"
         )
     return current_doctor
+
+
+async def get_current_parent(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> ParentResponse:
+    """
+    Dependency to get the current authenticated parent
+    
+    Args:
+        credentials: HTTP Authorization header with Bearer token
+        
+    Returns:
+        ParentResponse object
+        
+    Raises:
+        HTTPException: If token is invalid or parent not found
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    # Extract token
+    token = credentials.credentials
+    
+    # Decode token
+    payload = decode_access_token(token)
+    if payload is None:
+        raise credentials_exception
+    
+    # Extract parent ID from token
+    parent_id: str = payload.get("sub")
+    if parent_id is None:
+        raise credentials_exception
+    
+    # Get parent from database
+    parent_data = db_manager.parents.find_one({"_id": parent_id})
+    if parent_data is None:
+        raise credentials_exception
+    
+    # Check if parent is active
+    if not parent_data.get("is_active", True):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Parent account is deactivated"
+        )
+    
+    # Return parent response (without password)
+    return ParentResponse(
+        id=parent_data["_id"],
+        name=parent_data["name"],
+        email=parent_data["email"],
+        phone=parent_data.get("phone"),
+        children_ids=parent_data.get("children_ids", []),
+        childId=parent_data.get("child_id") or (parent_data.get("children_ids")[0] if parent_data.get("children_ids") else None),
+        relationship=parent_data.get("relationship"),
+        is_active=parent_data.get("is_active", True)
+    )
+
+
+async def get_current_active_parent(
+    current_parent: ParentResponse = Depends(get_current_parent)
+) -> ParentResponse:
+    """
+    Dependency to get current active parent (additional layer)
+    
+    Args:
+        current_parent: Parent from get_current_parent dependency
+        
+    Returns:
+        ParentResponse object
+        
+    Raises:
+        HTTPException: If parent is not active
+    """
+    if not current_parent.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive parent account"
+        )
+    return current_parent

@@ -6,13 +6,14 @@ import { Button } from '../../components/ui/Button';
 import { generateSessionSummary } from '../../lib/aiService';
 import { useApp } from '../../lib/context';
 import { THERAPY_TYPES } from '../../data/mockData';
+import { sessionAPI } from '../../lib/api';
 
 const SessionLog = () => {
   const { kids, addSession } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const childIdFromState = location.state?.childId;
-  
+
   const [selectedChild, setSelectedChild] = useState(
     childIdFromState || (kids && kids[0] ? kids[0].id : '')
   );
@@ -23,7 +24,7 @@ const SessionLog = () => {
       setSelectedChild(childIdFromState);
     }
   }, [childIdFromState]);
-  
+
   const [sessionType, setSessionType] = useState('Speech Therapy');
   const [engagement, setEngagement] = useState(50);
   const [activities, setActivities] = useState([]);
@@ -34,6 +35,7 @@ const SessionLog = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiSummary, setAiSummary] = useState(null);
   const [isApproved, setIsApproved] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const availableActivities = [
     "Picture Exchange", "Sound Imitation", "Blocks Stacking", "Sensory Play", "Social Story"
@@ -68,13 +70,13 @@ const SessionLog = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (aiSummary && !isApproved) {
       alert("Please review and approve the AI summary before saving.");
       return;
     }
 
-    addSession({
+    const sessionData = {
       childId: selectedChild,
       type: sessionType,
       engagement: parseInt(engagement),
@@ -84,11 +86,36 @@ const SessionLog = () => {
       wins: aiSummary?.wins,
       emotionalState: mood,
       status: 'completed',
-      duration: 45 // Default duration, can be made configurable later
-    });
+      duration: 45,
+      date: new Date().toISOString()
+    };
 
-    alert("Session Saved & Published to Parent Portal!");
-    navigate('/therapist/dashboard');
+    setIsLoading(true);
+
+    try {
+      console.log('🚀 Initiating Production-Level Session Publish...');
+
+      // 1. Persist to MongoDB
+      const savedSession = await sessionAPI.create(sessionData);
+      console.log('✅ MongoDB Persistence Successful:', savedSession);
+
+      // 2. Synchronize Local State
+      addSession({
+        ...sessionData,
+        id: savedSession.id || savedSession._id
+      });
+
+      alert("🎉 Session Saved & Published Successfully to MongoDB!");
+      navigate('/therapist/dashboard');
+    } catch (error) {
+      console.error('❌ Failed to Save Session:', error);
+      const errorMsg = typeof error === 'object'
+        ? (error.detail || JSON.stringify(error))
+        : error;
+      alert(`Critical Error: ${errorMsg}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const toggleActivity = (activity) => {
@@ -276,8 +303,12 @@ const SessionLog = () => {
                   </div>
                 </div>
 
-                <Button className="w-full" onClick={handleSave} disabled={!isApproved}>
-                  <Save className="mr-2 h-4 w-4" /> Save & Publish Session
+                <Button className="w-full" onClick={handleSave} disabled={!isApproved || isLoading}>
+                  {isLoading ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Publishing...</>
+                  ) : (
+                    <><Save className="mr-2 h-4 w-4" /> Save & Publish Session</>
+                  )}
                 </Button>
 
               </CardContent>

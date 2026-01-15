@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AppProvider } from './lib/context';
 import Landing from './pages/Landing';
 import ParentPortal from './pages/parent/ParentPortal';
+import ParentLogin from './pages/parent/ParentLogin';
 import TherapistPortal from './pages/therapist/TherapistPortal';
 import TherapistLogin from './pages/therapist/TherapistLogin';
 import AdminPortal from './pages/admin/AdminPortal';
@@ -39,8 +40,18 @@ function App() {
                         }
                     />
 
-                    {/* Portals */}
-                    <Route path="/parent/*" element={<ParentPortal />} />
+                    {/* Parent Module */}
+                    <Route path="/parent/login" element={<ParentLogin />} />
+                    <Route
+                        path="/parent/*"
+                        element={
+                            <ProtectedRoute redirectTo="/parent/login">
+                                <ParentPortal />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Admin Portal */}
                     <Route path="/admin/*" element={<AdminPortal />} />
 
                     {/* Fallback */}

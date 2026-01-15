@@ -1,28 +1,27 @@
 """
-Doctor data models for request/response validation
+Parent data models for request/response validation
 """
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, EmailStr, Field, validator
 from datetime import datetime, timezone
 
 
-class DoctorLogin(BaseModel):
-    """Doctor login request model"""
-    email: EmailStr = Field(..., description="Doctor's email address")
-    password: str = Field(..., min_length=6, description="Doctor's password")
+class ParentLogin(BaseModel):
+    """Parent login request model"""
+    email: EmailStr = Field(..., description="Parent's email address")
+    password: str = Field(..., min_length=6, description="Parent's password")
 
 
-class DoctorInDB(BaseModel):
-    """Doctor model as stored in database"""
+class ParentInDB(BaseModel):
+    """Parent model as stored in database"""
     id: str = Field(..., alias="_id")
     name: str
     email: EmailStr
     hashed_password: str
-    specialization: str
-    experience_years: int
-    assigned_patients: int
     phone: Optional[str] = None
-    license_number: Optional[str] = None
+    children_ids: List[str] = Field(default_factory=list, description="IDs of children")
+    child_id: Optional[str] = Field(None, description="Primary child ID for portal")
+    relationship: Optional[str] = None  # e.g., "Mother", "Father"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_active: bool = True
@@ -31,18 +30,17 @@ class DoctorInDB(BaseModel):
         populate_by_name = True
 
 
-class DoctorResponse(BaseModel):
-    """Doctor response model (without password)"""
+class ParentResponse(BaseModel):
+    """Parent response model (without password)"""
     id: str
     name: str
     email: str
-    specialization: str
-    experience_years: int
-    assigned_patients: int
     phone: Optional[str] = None
-    license_number: Optional[str] = None
+    children_ids: List[str] = []
+    childId: Optional[str] = None
+    relationship: Optional[str] = None
     is_active: bool = True
-    role: str = "therapist"
+    role: str = "parent"
     
     class Config:
         json_encoders = {
@@ -52,16 +50,14 @@ class DoctorResponse(BaseModel):
         }
 
 
-class DoctorCreate(BaseModel):
-    """Doctor creation model"""
+class ParentCreate(BaseModel):
+    """Parent creation model"""
     name: str = Field(..., min_length=2, max_length=100)
     email: EmailStr
     password: str = Field(..., min_length=8)
-    specialization: str
-    experience_years: int = Field(..., ge=0)
-    assigned_patients: int = Field(default=0, ge=0)
     phone: Optional[str] = None
-    license_number: Optional[str] = None
+    children_ids: List[str] = Field(default_factory=list)
+    relationship: Optional[str] = None
     
     @validator('password')
     def validate_password(cls, v):
@@ -81,4 +77,4 @@ class TokenResponse(BaseModel):
     """JWT token response model"""
     access_token: str
     token_type: str = "bearer"
-    doctor: DoctorResponse
+    parent: ParentResponse

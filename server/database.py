@@ -60,6 +60,11 @@ class DatabaseManager:
     def sessions(self):
         """Get sessions collection"""
         return self.get_database()["sessions"]
+    
+    @property
+    def parents(self):
+        """Get parents collection"""
+        return self.get_database()["parents"]
 
 
 # Create global database manager instance

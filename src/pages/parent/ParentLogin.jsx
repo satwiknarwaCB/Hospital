@@ -1,13 +1,13 @@
 /**
- * Therapist Login Page
- * Secure login interface for therapists with modern UI
+ * Parent Login Page
+ * Secure login interface for parents with modern UI
  */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { LogIn, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
+import { LogIn, Mail, Lock, AlertCircle, Loader2, Users } from 'lucide-react';
 
-const TherapistLogin = () => {
+const ParentLogin = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
 
@@ -59,17 +59,28 @@ const TherapistLogin = () => {
         e.preventDefault();
         setApiError('');
 
+        console.log('🔵 Parent Login: Form submitted');
+        console.log('📧 Email:', formData.email);
+
         if (!validateForm()) {
+            console.log('❌ Validation failed');
             return;
         }
 
         setIsLoading(true);
+        console.log('🔄 Starting login process...');
 
         try {
-            await login(formData.email, formData.password);
-            // Redirect to therapist dashboard on success
-            navigate('/therapist/patients');
+            console.log('📡 Calling login API with role: parent');
+            const result = await login(formData.email, formData.password, 'parent');
+            console.log('✅ Login successful:', result);
+            console.log('🔑 Token stored in localStorage');
+
+            // Redirect to dashboard on success
+            console.log('🚀 Redirecting to /parent/dashboard');
+            navigate('/parent/dashboard');
         } catch (error) {
+            console.error('❌ Login error:', error);
             setApiError(error.message || 'Login failed. Please check your credentials.');
         } finally {
             setIsLoading(false);
@@ -80,22 +91,22 @@ const TherapistLogin = () => {
     const fillDemoCredentials = (email) => {
         setFormData({
             email: email,
-            password: 'Therapist@123',
+            password: 'Parent@123',
         });
         setErrors({});
         setApiError('');
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-secondary-100 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-purple-50 flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 {/* Logo and Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-2xl mb-4 shadow-lg">
-                        <LogIn className="w-8 h-8 text-white" />
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-500 rounded-2xl mb-4 shadow-lg">
+                        <Users className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-3xl font-bold text-neutral-800 mb-2">Therapist Workspace</h1>
-                    <p className="text-neutral-500">Sign in to access your patient dashboard</p>
+                    <h1 className="text-3xl font-bold text-neutral-800 mb-2">Parent Portal</h1>
+                    <p className="text-neutral-500">Sign in to track your child's progress</p>
                 </div>
 
                 {/* Login Card */}
@@ -128,9 +139,9 @@ const TherapistLogin = () => {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className={`w-full pl-12 pr-4 py-3 border ${errors.email ? 'border-red-300 focus:ring-red-500' : 'border-neutral-300 focus:ring-secondary-500'
+                                    className={`w-full pl-12 pr-4 py-3 border ${errors.email ? 'border-red-300 focus:ring-red-500' : 'border-neutral-300 focus:ring-violet-500'
                                         } rounded-xl focus:ring-2 focus:outline-none transition-all`}
-                                    placeholder="dr.yourname@neurobridge.com"
+                                    placeholder="parent@example.com"
                                 />
                             </div>
                             {errors.email && (
@@ -156,7 +167,7 @@ const TherapistLogin = () => {
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className={`w-full pl-12 pr-4 py-3 border ${errors.password ? 'border-red-300 focus:ring-red-500' : 'border-neutral-300 focus:ring-secondary-500'
+                                    className={`w-full pl-12 pr-4 py-3 border ${errors.password ? 'border-red-300 focus:ring-red-500' : 'border-neutral-300 focus:ring-violet-500'
                                         } rounded-xl focus:ring-2 focus:outline-none transition-all`}
                                     placeholder="••••••••"
                                 />
@@ -173,7 +184,7 @@ const TherapistLogin = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-gradient-to-r from-secondary-500 to-secondary-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+                            className="w-full bg-gradient-to-r from-violet-500 to-purple-500 text-white py-3 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
                         >
                             {isLoading ? (
                                 <>
@@ -190,46 +201,46 @@ const TherapistLogin = () => {
                     </form>
 
                     {/* Demo Credentials */}
-                    <div className="mt-6 p-4 bg-secondary-50 rounded-xl border border-secondary-100">
-                        <p className="text-xs font-medium text-secondary-700 mb-3">Demo Credentials:</p>
+                    <div className="mt-6 p-4 bg-violet-50 rounded-xl border border-violet-100">
+                        <p className="text-xs font-medium text-violet-700 mb-3">Demo Credentials:</p>
 
-                        {/* Dr. Rajesh Kumar */}
-                        <div className="mb-3 p-3 bg-white rounded-lg border border-secondary-100">
+                        {/* Priya Patel */}
+                        <div className="mb-3 p-3 bg-white rounded-lg border border-violet-100">
                             <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm font-semibold text-secondary-800">Dr. Rajesh Kumar</p>
+                                <p className="text-sm font-semibold text-violet-800">Priya Patel (Mother)</p>
                                 <button
                                     type="button"
-                                    onClick={() => fillDemoCredentials('dr.rajesh@therapist.com')}
-                                    className="text-xs text-secondary-600 hover:text-secondary-700 font-medium hover:underline"
+                                    onClick={() => fillDemoCredentials('priya.patel@parent.com')}
+                                    className="text-xs text-violet-600 hover:text-violet-700 font-medium hover:underline"
                                 >
                                     Quick Fill
                                 </button>
                             </div>
-                            <p className="text-xs text-secondary-600">
-                                <span className="font-medium">Email:</span> dr.rajesh@therapist.com
+                            <p className="text-xs text-violet-600">
+                                <span className="font-medium">Email:</span> priya.patel@parent.com
                             </p>
-                            <p className="text-xs text-secondary-600">
-                                <span className="font-medium">Password:</span> Therapist@123
+                            <p className="text-xs text-violet-600">
+                                <span className="font-medium">Password:</span> Parent@123
                             </p>
                         </div>
 
-                        {/* Dr. Meera Singh */}
-                        <div className="p-3 bg-white rounded-lg border border-secondary-100">
+                        {/* Arun Sharma */}
+                        <div className="p-3 bg-white rounded-lg border border-violet-100">
                             <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm font-semibold text-secondary-800">Dr. Meera Singh</p>
+                                <p className="text-sm font-semibold text-violet-800">Arun Sharma (Father)</p>
                                 <button
                                     type="button"
-                                    onClick={() => fillDemoCredentials('dr.meera@therapist.com')}
-                                    className="text-xs text-secondary-600 hover:text-secondary-700 font-medium hover:underline"
+                                    onClick={() => fillDemoCredentials('arun.sharma@parent.com')}
+                                    className="text-xs text-violet-600 hover:text-violet-700 font-medium hover:underline"
                                 >
                                     Quick Fill
                                 </button>
                             </div>
-                            <p className="text-xs text-secondary-600">
-                                <span className="font-medium">Email:</span> dr.meera@therapist.com
+                            <p className="text-xs text-violet-600">
+                                <span className="font-medium">Email:</span> arun.sharma@parent.com
                             </p>
-                            <p className="text-xs text-secondary-600">
-                                <span className="font-medium">Password:</span> Therapist@123
+                            <p className="text-xs text-violet-600">
+                                <span className="font-medium">Password:</span> Parent@123
                             </p>
                         </div>
                     </div>
@@ -237,11 +248,11 @@ const TherapistLogin = () => {
 
                 {/* Footer */}
                 <p className="text-center text-sm text-neutral-500 mt-6">
-                    © 2026 NeuroBridge™ Therapy Portal. All rights reserved.
+                    © 2026 Therapy Portal. All rights reserved.
                 </p>
             </div>
         </div>
     );
 };
 
-export default TherapistLogin;
+export default ParentLogin;

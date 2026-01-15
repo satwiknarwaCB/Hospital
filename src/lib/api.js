@@ -18,7 +18,18 @@ const apiClient = axios.create({
 // Request interceptor to add JWT token
 apiClient.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('doctor_token');
+        // Try to get token based on the endpoint
+        let token = null;
+
+        if (config.url.includes('/api/parent')) {
+            token = localStorage.getItem('parent_token');
+        } else if (config.url.includes('/api/doctor')) {
+            token = localStorage.getItem('doctor_token');
+        } else {
+            // Fallback: try both
+            token = localStorage.getItem('parent_token') || localStorage.getItem('doctor_token');
+        }
+
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -35,12 +46,27 @@ apiClient.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             // Token expired or invalid - clear storage and redirect to login
-            localStorage.removeItem('doctor_token');
-            localStorage.removeItem('doctor_data');
+            const currentPath = window.location.pathname;
 
-            // Only redirect if not already on login page
-            if (window.location.pathname !== '/doctor/login') {
-                window.location.href = '/doctor/login';
+            // Determine which role based on current path
+            if (currentPath.includes('/parent')) {
+                localStorage.removeItem('parent_token');
+                localStorage.removeItem('parent_data');
+                if (currentPath !== '/parent/login') {
+                    window.location.href = '/parent/login';
+                }
+            } else if (currentPath.includes('/doctor')) {
+                localStorage.removeItem('doctor_token');
+                localStorage.removeItem('doctor_data');
+                if (currentPath !== '/doctor/login') {
+                    window.location.href = '/doctor/login';
+                }
+            } else {
+                // Clear both just in case
+                localStorage.removeItem('doctor_token');
+                localStorage.removeItem('doctor_data');
+                localStorage.removeItem('parent_token');
+                localStorage.removeItem('parent_data');
             }
         }
         return Promise.reject(error);
@@ -89,6 +115,94 @@ export const doctorAuthAPI = {
         const response = await apiClient.get('/api/doctor/me');
         return response.data;
     },
+};
+
+// Parent Authentication API
+export const parentAuthAPI = {
+    /**
+     * Login with email and password
+     * @param {string} email - Parent's email
+     * @param {string} password - Parent's password
+     * @returns {Promise} - Login response with token and parent data
+     */
+    login: async (email, password) => {
+        const response = await apiClient.post('/api/parent/login', {
+            email,
+            password,
+        });
+        return response.data;
+    },
+
+    /**
+     * Logout (clears token on server if needed)
+     * @returns {Promise} - Logout response
+     */
+    logout: async () => {
+        const response = await apiClient.post('/api/parent/logout');
+        return response.data;
+    },
+
+    /**
+     * Get current parent profile
+     * @returns {Promise} - Parent profile data
+     */
+    getProfile: async () => {
+        const response = await apiClient.get('/api/parent/profile');
+        return response.data;
+    },
+
+    /**
+     * Get current parent (alias)
+     * @returns {Promise} - Parent profile data
+     */
+    getMe: async () => {
+        const response = await apiClient.get('/api/parent/me');
+        return response.data;
+    },
+};
+
+// Session API
+export const sessionAPI = {
+    /**
+     * Log a new therapy session record
+     * @param {Object} sessionData - Validated session inputs
+     */
+    create: async (sessionData) => {
+        try {
+            console.log('📡 POST /api/sessions', sessionData);
+            const response = await apiClient.post('/api/sessions', sessionData);
+            return response.data;
+        } catch (error) {
+            console.error('❌ POST /api/sessions failed:', error);
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Retrieve session history for a specific child
+     * @param {string} childId 
+     */
+    getByChild: async (childId) => {
+        try {
+            const response = await apiClient.get(`/api/sessions/child/${childId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Retrieve dashboard sessions for a specific therapist
+     * @param {string} therapistId 
+     */
+    getByTherapist: async (therapistId) => {
+        try {
+            const response = await apiClient.get(`/api/sessions/therapist/${therapistId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    }
 };
 
 export default apiClient;
