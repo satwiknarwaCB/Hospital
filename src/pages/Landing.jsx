@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Stethoscope, Building2, ArrowRight, ShieldCheck, Activity, ChevronRight } from 'lucide-react';
+import { User, Stethoscope, Building2, ArrowRight, ShieldCheck, Activity, ChevronRight, Play, CheckCircle2, Heart, Award, Users } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { USERS, CHILDREN } from '../data/mockData';
@@ -11,250 +11,93 @@ const Landing = () => {
     const { login } = useApp();
     const [selectedRole, setSelectedRole] = useState(null);
 
-    // Get users by role
-    const parents = USERS.filter(u => u.role === 'parent');
-    const therapists = USERS.filter(u => u.role === 'therapist');
-    const admins = USERS.filter(u => u.role === 'admin');
+    return (
 
-    const handleUserLogin = (role, userId) => {
-        const success = login(role, userId);
-        if (success) {
-            navigate(`/${role}/dashboard`);
-        } else {
-            alert('Login failed. Please try again.');
-        }
-    };
-
-    const getChildForParent = (parentId) => {
-        const parent = USERS.find(u => u.id === parentId);
-        return CHILDREN.find(c => c.id === parent?.childId);
-    };
-
-    // Role Selection View
-    if (!selectedRole) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-100 flex flex-col items-center justify-center p-4">
-                <div className="max-w-4xl w-full space-y-8">
-                    {/* Header */}
-                    <div className="text-center space-y-4">
-                        <div className="inline-flex items-center justify-center p-3 bg-white rounded-full shadow-md mb-4">
-                            <Activity className="h-8 w-8 text-primary-600" />
-                        </div>
-                        <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-700 to-primary-500">
-                            NeuroBridge™
-                        </h1>
-                        <p className="text-xl text-neutral-600 max-w-2xl mx-auto">
-                            The intelligent platform connecting parents, therapists, and clinical directors for transparent, measurable autism therapy.
-                        </p>
-                    </div>
-
-                    {/* Role Selection */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-                        {/* Parent */}
-                        <Card
-                            clickable
-                            className="border-t-4 border-t-primary-500 hover:-translate-y-1 transition-transform"
-                            onClick={() => navigate('/parent/login')}
-                        >
-                            <CardHeader>
-                                <div className="h-12 w-12 rounded-lg bg-primary-100 text-primary-600 flex items-center justify-center mb-4">
-                                    <User className="h-6 w-6" />
-                                </div>
-                                <CardTitle>Parent Access</CardTitle>
-                                <CardDescription>Track progress & daily updates</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <ul className="text-sm text-neutral-500 space-y-2 mb-6">
-                                    <li className="flex items-center"><ArrowRight className="h-4 w-4 mr-2 text-primary-400" /> View Therapy Session Summaries</li>
-                                    <li className="flex items-center"><ArrowRight className="h-4 w-4 mr-2 text-primary-400" /> Check Growth Milestones</li>
-                                    <li className="flex items-center"><ArrowRight className="h-4 w-4 mr-2 text-primary-400" /> Access Home Activities</li>
-                                </ul>
-                                <Button className="w-full">
-                                    Sign In as Parent <ChevronRight className="ml-2 h-4 w-4" />
-                                </Button>
-                            </CardContent>
-                        </Card>
-
-                        {/* Therapist */}
-                        <Card
-                            clickable
-                            className="border-t-4 border-t-secondary-500 hover:-translate-y-1 transition-transform"
-                            onClick={() => navigate('/therapist/login')}
-                        >
-                            <CardHeader>
-                                <div className="h-12 w-12 rounded-lg bg-secondary-100 text-secondary-600 flex items-center justify-center mb-4">
-                                    <Stethoscope className="h-6 w-6" />
-                                </div>
-                                <CardTitle>Therapist Workspace</CardTitle>
-                                <CardDescription>Log sessions & analyze data</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <ul className="text-sm text-neutral-500 space-y-2 mb-6">
-                                    <li className="flex items-center"><ArrowRight className="h-4 w-4 mr-2 text-secondary-400" /> Quick Session Logging</li>
-                                    <li className="flex items-center"><ArrowRight className="h-4 w-4 mr-2 text-secondary-400" /> Patient Analytics Dashboard</li>
-                                    <li className="flex items-center"><ArrowRight className="h-4 w-4 mr-2 text-secondary-400" /> AI-Assisted Planning</li>
-                                </ul>
-                                <Button variant="secondary" className="w-full">
-                                    Sign In as Therapist <ChevronRight className="ml-2 h-4 w-4" />
-                                </Button>
-                            </CardContent>
-                        </Card>
-
-                        {/* Admin */}
-                        <Card
-                            clickable
-                            className="border-t-4 border-t-neutral-600 hover:-translate-y-1 transition-transform"
-                            onClick={() => handleUserLogin('admin', 'a1')}
-                        >
-                            <CardHeader>
-                                <div className="h-12 w-12 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center mb-4">
-                                    <Building2 className="h-6 w-6" />
-                                </div>
-                                <CardTitle>CDC Admin</CardTitle>
-                                <CardDescription>Clinical oversight & operations</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <ul className="text-sm text-neutral-500 space-y-2 mb-6">
-                                    <li className="flex items-center"><ArrowRight className="h-4 w-4 mr-2 text-neutral-400" /> Operational Metrics</li>
-                                    <li className="flex items-center"><ArrowRight className="h-4 w-4 mr-2 text-neutral-400" /> Compliance & Audit Logs</li>
-                                    <li className="flex items-center"><ArrowRight className="h-4 w-4 mr-2 text-neutral-400" /> Staff Management</li>
-                                </ul>
-                                <Button variant="outline" className="w-full">Login as Admin</Button>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="mt-16 flex justify-center space-x-8 text-neutral-400 text-sm">
-                        <div className="flex items-center">
-                            <ShieldCheck className="h-4 w-4 mr-2" /> HIPAA Compliant
-                        </div>
-                        <div className="flex items-center">
-                            <ShieldCheck className="h-4 w-4 mr-2" /> 256-bit Encryption
-                        </div>
-                    </div>
+        <div className="flex flex-col min-h-screen">
+            {/* Hero Section */}
+            <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-gradient-to-b from-primary-50 to-white">
+                <div className="absolute top-0 left-0 w-full h-full -z-10 opacity-30">
+                    <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary-200 rounded-full blur-3xl animate-pulse" />
+                    <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-secondary-200 rounded-full blur-3xl" />
                 </div>
-            </div>
-        );
-    }
 
-    // User Selection View for Parents
-    if (selectedRole === 'parent') {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-100 flex flex-col items-center justify-center p-4">
-                <div className="max-w-3xl w-full space-y-8">
-                    <div className="text-center space-y-4">
-                        <button
-                            onClick={() => setSelectedRole(null)}
-                            className="text-primary-600 hover:text-primary-800 flex items-center justify-center mx-auto mb-4"
-                        >
-                            <ArrowRight className="h-4 w-4 mr-1 rotate-180" /> Back to Role Selection
-                        </button>
-                        <div className="inline-flex items-center justify-center p-3 bg-primary-100 rounded-full shadow-md mb-4">
-                            <User className="h-8 w-8 text-primary-600" />
+                <div className="container mx-auto px-4 md:px-6">
+                    <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+                        <div className="flex-1 text-center lg:text-left space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-100 text-primary-700 text-sm font-semibold">
+                                <Award className="h-4 w-4" /> Leading Autism Therapy Platform
+                            </div>
+                            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-neutral-900 leading-tight">
+                                Connecting Therapy with <span className="text-primary-600">Measurable Progress</span>
+                            </h1>
+                            <p className="text-xl text-neutral-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                                NeuroBridge™ provides a transparent, data-driven ecosystem where parents, therapists, and clinicians collaborate seamlessly for better outcomes.
+                            </p>
+                            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                                <Button size="lg" className="h-14 px-8 text-lg bg-primary-600 hover:bg-primary-700 shadow-lg shadow-primary-200 group" onClick={() => navigate('/login')}>
+                                    Get Started <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                </Button>
+                                <Button variant="outline" size="lg" className="h-14 px-8 text-lg hover:bg-neutral-50">
+                                    <Play className="mr-2 h-5 w-5 text-primary-600 fill-primary-600" /> Watch Demo
+                                </Button>
+                            </div>
+                            <div className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-neutral-500 font-medium">
+                                <div className="flex items-center gap-2"><CheckCircle2 className="h-5 w-5 text-green-500" /> HIPAA Compliant</div>
+                                <div className="flex items-center gap-2"><CheckCircle2 className="h-5 w-5 text-green-500" /> Real-time Data</div>
+                                <div className="flex items-center gap-2"><CheckCircle2 className="h-5 w-5 text-green-500" /> AI Insights</div>
+                            </div>
                         </div>
-                        <h1 className="text-3xl font-bold text-neutral-800">Select Parent Account</h1>
-                        <p className="text-neutral-500">Choose which parent account to log in as</p>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {parents.map(parent => {
-                            const child = getChildForParent(parent.id);
-                            return (
-                                <Card
-                                    key={parent.id}
-                                    clickable
-                                    className="hover:shadow-lg hover:-translate-y-1 transition-all border-2 border-transparent hover:border-primary-200"
-                                    onClick={() => handleUserLogin('parent', parent.id)}
-                                >
-                                    <CardContent className="p-6">
-                                        <div className="flex items-center gap-4">
-                                            <img
-                                                src={parent.avatar}
-                                                alt={parent.name}
-                                                className="w-16 h-16 rounded-full object-cover border-2 border-primary-200"
-                                            />
-                                            <div className="flex-1">
-                                                <h3 className="font-semibold text-lg text-neutral-800">{parent.name}</h3>
-                                                <p className="text-sm text-neutral-500">{parent.email}</p>
-                                                {child && (
-                                                    <div className="mt-2 flex items-center gap-2">
-                                                        <img
-                                                            src={child.photoUrl}
-                                                            alt={child.name}
-                                                            className="w-6 h-6 rounded-full"
-                                                        />
-                                                        <span className="text-sm text-primary-600 font-medium">
-                                                            Parent of {child.name}
-                                                        </span>
-                                                    </div>
-                                                )}
+                        <div className="flex-1 w-full max-w-xl lg:max-w-none animate-in fade-in slide-in-from-right-8 duration-1000">
+                            <div className="relative group">
+                                <div className="absolute -inset-1 bg-gradient-to-r from-primary-600 to-secondary-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                                <div className="relative bg-white rounded-2xl overflow-hidden shadow-2xl">
+                                    <img
+                                        src="/hospital_hero.png"
+                                        alt="NeuroBridge Platform"
+                                        className="w-full aspect-video object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-8">
+                                        <div className="flex items-center gap-4 text-white">
+                                            <div className="flex -space-x-2">
+                                                {[1, 2, 3, 4].map(i => (
+                                                    <div key={i} className="h-8 w-8 rounded-full border-2 border-white bg-neutral-200" />
+                                                ))}
                                             </div>
-                                            <ChevronRight className="h-5 w-5 text-neutral-300" />
+                                            <span className="text-sm font-medium">Trusted by 500+ Families & Clinics</span>
                                         </div>
-                                    </CardContent>
-                                </Card>
-                            );
-                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        );
-    }
+            </section>
 
-    // User Selection View for Therapists
-    if (selectedRole === 'therapist') {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-secondary-100 flex flex-col items-center justify-center p-4">
-                <div className="max-w-3xl w-full space-y-8">
-                    <div className="text-center space-y-4">
-                        <button
-                            onClick={() => setSelectedRole(null)}
-                            className="text-secondary-600 hover:text-secondary-800 flex items-center justify-center mx-auto mb-4"
-                        >
-                            <ArrowRight className="h-4 w-4 mr-1 rotate-180" /> Back to Role Selection
-                        </button>
-                        <div className="inline-flex items-center justify-center p-3 bg-secondary-100 rounded-full shadow-md mb-4">
-                            <Stethoscope className="h-8 w-8 text-secondary-600" />
-                        </div>
-                        <h1 className="text-3xl font-bold text-neutral-800">Select Therapist Account</h1>
-                        <p className="text-neutral-500">Choose which therapist account to log in as</p>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {therapists.map(therapist => (
-                            <Card
-                                key={therapist.id}
-                                clickable
-                                className="hover:shadow-lg hover:-translate-y-1 transition-all border-2 border-transparent hover:border-secondary-200"
-                                onClick={() => handleUserLogin('therapist', therapist.id)}
-                            >
-                                <CardContent className="p-6">
-                                    <div className="flex items-center gap-4">
-                                        <img
-                                            src={therapist.avatar}
-                                            alt={therapist.name}
-                                            className="w-16 h-16 rounded-full object-cover border-2 border-secondary-200"
-                                        />
-                                        <div className="flex-1">
-                                            <h3 className="font-semibold text-lg text-neutral-800">{therapist.name}</h3>
-                                            <p className="text-sm text-secondary-600 font-medium">{therapist.specialization}</p>
-                                            <p className="text-xs text-neutral-500 mt-1">
-                                                {therapist.experience} experience • {therapist.caseload?.length || 0} patients
-                                            </p>
-                                        </div>
-                                        <ChevronRight className="h-5 w-5 text-neutral-300" />
-                                    </div>
-                                </CardContent>
-                            </Card>
+            {/* Stats Section */}
+            <section className="py-20 bg-primary-600 text-white overflow-hidden relative">
+                <div className="container mx-auto px-4 md:px-6 relative z-10">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+                        {[
+                            { label: 'Active Patients', val: '2,500+', icon: Users },
+                            { label: 'Licensed Therapists', val: '150+', icon: Stethoscope },
+                            { label: 'Success Sessions', val: '50k+', icon: Activity },
+                            { label: 'Clinical Sites', val: '12', icon: Building2 },
+                        ].map((stat, i) => (
+                            <div key={i} className="space-y-2">
+                                <div className="mx-auto h-12 w-12 rounded-full bg-white/10 flex items-center justify-center mb-4">
+                                    <stat.icon className="h-6 w-6" />
+                                </div>
+                                <div className="text-4xl font-bold">{stat.val}</div>
+                                <div className="text-primary-100">{stat.label}</div>
+                            </div>
                         ))}
                     </div>
                 </div>
-            </div>
-        );
-    }
-
-    return null;
+            </section>
+        </div>
+    );
 };
 
 export default Landing;

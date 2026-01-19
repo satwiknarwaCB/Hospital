@@ -3,11 +3,12 @@
  * Manages doctor and parent authentication state and operations
  */
 import { useState, useEffect } from 'react';
-import { doctorAuthAPI, parentAuthAPI } from '../lib/api';
+import { doctorAuthAPI, parentAuthAPI, adminAuthAPI } from '../lib/api';
 
 export const useAuth = () => {
     const [doctor, setDoctor] = useState(null);
     const [parent, setParent] = useState(null);
+    const [admin, setAdmin] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -48,6 +49,20 @@ export const useAuth = () => {
             }
         }
 
+        // Check for admin token
+        const adminToken = localStorage.getItem('admin_token');
+        const adminData = localStorage.getItem('admin_data');
+
+        if (adminToken && adminData) {
+            try {
+                setAdmin(JSON.parse(adminData));
+            } catch (err) {
+                console.error('Error parsing admin data:', err);
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_data');
+            }
+        }
+
         setLoading(false);
     };
 
@@ -58,14 +73,26 @@ export const useAuth = () => {
      * @param {string} role - User role ('doctor' or 'parent')
      * @returns {Promise<Object>} - User data
      */
-    const login = async (email, password, role = 'doctor') => {
+    const login = async (email, password, role = null) => {
         try {
-            console.log(`🔐 useAuth.login called with role: ${role}`);
+            // Automatic role detection if not provided
+            let detectedRole = role;
+            if (!detectedRole) {
+                if (email.includes('@parent.com')) {
+                    detectedRole = 'parent';
+                } else if (email.includes('@neurobridge.com')) {
+                    detectedRole = 'admin';
+                } else {
+                    detectedRole = 'doctor'; // Default to doctor/therapist
+                }
+            }
+
+            console.log(`🔐 useAuth.login called with detected role: ${detectedRole}`);
             setLoading(true);
             setError(null);
 
             let response;
-            if (role === 'parent') {
+            if (detectedRole === 'parent') {
                 console.log('📡 Calling parentAuthAPI.login...');
                 response = await parentAuthAPI.login(email, password);
                 console.log('✅ API response received:', response);
@@ -85,6 +112,26 @@ export const useAuth = () => {
                 window.dispatchEvent(new Event('auth-change'));
                 console.log('✅ Parent login complete');
                 return response.parent;
+            } else if (detectedRole === 'admin') {
+                console.log('📡 Calling adminAuthAPI.login...');
+                response = await adminAuthAPI.login(email, password);
+
+                // Store token and admin data
+                localStorage.setItem('admin_token', response.access_token);
+                localStorage.setItem('admin_data', JSON.stringify(response.admin));
+                setAdmin(response.admin);
+
+                // Clear other roles
+                localStorage.removeItem('doctor_token');
+                localStorage.removeItem('doctor_data');
+                setDoctor(null);
+                localStorage.removeItem('parent_token');
+                localStorage.removeItem('parent_data');
+                setParent(null);
+
+                setLoading(false);
+                window.dispatchEvent(new Event('auth-change'));
+                return response.admin;
             } else {
                 console.log('📡 Calling doctorAuthAPI.login...');
                 response = await doctorAuthAPI.login(email, password);
@@ -93,10 +140,13 @@ export const useAuth = () => {
                 localStorage.setItem('doctor_data', JSON.stringify(response.doctor));
                 setDoctor(response.doctor);
 
-                // Clear parent data if exists
+                // Clear other roles
                 localStorage.removeItem('parent_token');
                 localStorage.removeItem('parent_data');
                 setParent(null);
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_data');
+                setAdmin(null);
 
                 setLoading(false);
                 window.dispatchEvent(new Event('auth-change'));
@@ -126,6 +176,11 @@ export const useAuth = () => {
                 localStorage.removeItem('parent_token');
                 localStorage.removeItem('parent_data');
                 setParent(null);
+            } else if (logoutRole === 'admin') {
+                // No server logout needed for now
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_data');
+                setAdmin(null);
             } else {
                 await doctorAuthAPI.logout();
                 localStorage.removeItem('doctor_token');
@@ -202,10 +257,33 @@ export const useAuth = () => {
         }
     };
 
+    /**
+     * Fetch current admin profile from API
+     * @returns {Promise<Object>} - Admin profile data
+     */
+    const getAdminProfile = async () => {
+        try {
+            setLoading(true);
+            const profile = await adminAuthAPI.getProfile();
+
+            // Update local storage with fresh data
+            localStorage.setItem('admin_data', JSON.stringify(profile));
+            setAdmin(profile);
+            setLoading(false);
+
+            return profile;
+        } catch (err) {
+            setError(err.message);
+            setLoading(false);
+            throw err;
+        }
+    };
+
     return {
         doctor,
         parent,
-        user: parent || doctor, // Convenience property for current user
+        admin,
+        user: parent || doctor || admin, // Convenience property for current user
         loading,
         error,
         login,
@@ -214,6 +292,7 @@ export const useAuth = () => {
         isAuthenticated,
         getDoctorProfile,
         getParentProfile,
+        getAdminProfile,
     };
 };
 

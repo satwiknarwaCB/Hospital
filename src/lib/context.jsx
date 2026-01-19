@@ -42,6 +42,7 @@ export const AppProvider = ({ children }) => {
         const syncAuth = () => {
             const doctorData = localStorage.getItem('doctor_data');
             const parentData = localStorage.getItem('parent_data');
+            const adminData = localStorage.getItem('admin_data');
 
             if (parentData) {
                 try {
@@ -69,6 +70,18 @@ export const AppProvider = ({ children }) => {
                     setIsAuthenticated(true);
                 } catch (err) {
                     console.error('Error syncing doctor auth:', err);
+                }
+            } else if (adminData) {
+                try {
+                    const admin = JSON.parse(adminData);
+                    const user = users.find(u => u.email === admin.email) || admin;
+
+                    if (!user.role) user.role = 'admin';
+
+                    setCurrentUser(user);
+                    setIsAuthenticated(true);
+                } catch (err) {
+                    console.error('Error syncing admin auth:', err);
                 }
             } else {
                 setCurrentUser(null);

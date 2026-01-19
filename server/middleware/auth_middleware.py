@@ -9,6 +9,7 @@ from database import db_manager
 from utils.auth import decode_access_token
 from models.doctor import DoctorResponse
 from models.parent import ParentResponse
+from models.admin import AdminResponse
 
 
 # HTTP Bearer token scheme
@@ -179,3 +180,43 @@ async def get_current_active_parent(
             detail="Inactive parent account"
         )
     return current_parent
+
+
+async def get_current_admin(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> AdminResponse:
+    """
+    Dependency to get the current authenticated admin
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    token = credentials.credentials
+    payload = decode_access_token(token)
+    if payload is None:
+        raise credentials_exception
+    
+    admin_id: str = payload.get("sub")
+    if admin_id is None:
+        raise credentials_exception
+    
+    admin_data = db_manager.admins.find_one({"_id": admin_id})
+    if admin_data is None:
+        raise credentials_exception
+    
+    if not admin_data.get("is_active", True):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin account is deactivated"
+        )
+    
+    return AdminResponse(
+        id=str(admin_data["_id"]),
+        name=admin_data["name"],
+        email=admin_data["email"],
+        role="admin",
+        is_active=admin_data.get("is_active", True)
+    )

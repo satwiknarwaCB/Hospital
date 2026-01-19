@@ -5,7 +5,7 @@
 import axios from 'axios';
 
 // API base URL - update this to match your backend
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -25,9 +25,13 @@ apiClient.interceptors.request.use(
             token = localStorage.getItem('parent_token');
         } else if (config.url.includes('/api/doctor')) {
             token = localStorage.getItem('doctor_token');
+        } else if (config.url.includes('/api/admin')) {
+            token = localStorage.getItem('admin_token');
         } else {
-            // Fallback: try both
-            token = localStorage.getItem('parent_token') || localStorage.getItem('doctor_token');
+            // Fallback: try all
+            token = localStorage.getItem('parent_token') ||
+                localStorage.getItem('doctor_token') ||
+                localStorage.getItem('admin_token');
         }
 
         if (token) {
@@ -161,7 +165,37 @@ export const parentAuthAPI = {
     },
 };
 
+// Admin Authentication API
+export const adminAuthAPI = {
+    /**
+     * Login with email and password
+     * @param {string} email - Admin's email
+     * @param {string} password - Admin's password
+     * @returns {Promise} - Login response with token and admin data
+     */
+    login: async (email, password) => {
+        const response = await apiClient.post('/api/admin/login', {
+            email,
+            password,
+        });
+        return response.data;
+    },
+
+    /**
+     * Get current admin profile
+     * @returns {Promise} - Admin profile data
+     */
+    getProfile: async () => {
+        const response = await apiClient.get('/api/admin/profile');
+        return response.data;
+    },
+};
+
 // Session API
+export const appointmentAPI = {
+    create: (data) => apiClient.post('/api/appointments/', data),
+};
+
 export const sessionAPI = {
     /**
      * Log a new therapy session record
