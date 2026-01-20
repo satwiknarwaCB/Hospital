@@ -60,8 +60,18 @@ const Landing = () => {
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-8">
                                         <div className="flex items-center gap-4 text-white">
                                             <div className="flex -space-x-2">
-                                                {[1, 2, 3, 4].map(i => (
-                                                    <div key={i} className="h-8 w-8 rounded-full border-2 border-white bg-neutral-200" />
+                                                {[
+                                                    '/therapy_child_1.png',
+                                                    '/therapy_session_2.png',
+                                                    '/family_clinic_3.png',
+                                                    '/therapist_professional_4.png'
+                                                ].map((img, i) => (
+                                                    <img
+                                                        key={i}
+                                                        src={img}
+                                                        alt={`Therapy testimonial ${i + 1}`}
+                                                        className="h-8 w-8 rounded-full border-2 border-white object-cover"
+                                                    />
                                                 ))}
                                             </div>
                                             <span className="text-sm font-medium">Trusted by 500+ Families & Clinics</span>

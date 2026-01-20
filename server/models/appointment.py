@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import datetime
 from typing import Optional
 
@@ -13,8 +13,8 @@ class AppointmentCreate(BaseModel):
     date: str = Field(..., description="Appointment Date (YYYY-MM-DD)")
     mode: str = Field(..., description="Mode of consultation (Online/In-Person)")
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "name": "John Doe",
                 "email": "john@example.com",
@@ -24,6 +24,7 @@ class AppointmentCreate(BaseModel):
                 "mode": "In-Person"
             }
         }
+    )
 
 class Appointment(AppointmentCreate):
     """
@@ -32,3 +33,8 @@ class Appointment(AppointmentCreate):
     id: str
     status: str = "pending"
     created_at: datetime
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        from_attributes=True
+    )
