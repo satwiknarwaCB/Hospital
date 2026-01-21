@@ -3,7 +3,7 @@
 // Production-Ready Global State Provider
 // ============================================================
 
-import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
     USERS,
     CHILDREN,
@@ -14,9 +14,10 @@ import {
     MESSAGES,
     CONSENT_RECORDS,
     AUDIT_LOGS,
-    CDC_METRICS
+    CDC_METRICS,
+    SKILL_PROGRESS
 } from '../data/mockData';
-import { sessionAPI } from './api';
+import { sessionAPI, communityAPI, messagesAPI } from './api';
 
 const AppContext = createContext();
 
@@ -32,6 +33,32 @@ export const AppProvider = ({ children }) => {
     const [consentRecords] = useState(CONSENT_RECORDS);
     const [auditLogs, setAuditLogs] = useState(AUDIT_LOGS);
     const [cdcMetrics] = useState(CDC_METRICS);
+    const [skillProgress, setSkillProgress] = useState(() => {
+        const saved = localStorage.getItem('neurobridge_skill_progress');
+        return saved ? JSON.parse(saved) : SKILL_PROGRESS;
+    });
+    const [communityUnreadCount, setCommunityUnreadCount] = useState(0);
+    const [privateUnreadCount, setPrivateUnreadCount] = useState(0);
+    const notifiedMessageIds = useRef(new Set());
+
+    // Sync skill progress to localStorage and across tabs
+    useEffect(() => {
+        localStorage.setItem('neurobridge_skill_progress', JSON.stringify(skillProgress));
+    }, [skillProgress]);
+
+    useEffect(() => {
+        const handleStorage = (e) => {
+            if (e.key === 'neurobridge_skill_progress' && e.newValue) {
+                try {
+                    setSkillProgress(JSON.parse(e.newValue));
+                } catch (err) {
+                    console.error('Error syncing skill progress across tabs:', err);
+                }
+            }
+        };
+        window.addEventListener('storage', handleStorage);
+        return () => window.removeEventListener('storage', handleStorage);
+    }, []);
 
     // ============ Auth State ============
     const [currentUser, setCurrentUser] = useState(null);
@@ -47,11 +74,10 @@ export const AppProvider = ({ children }) => {
             if (parentData) {
                 try {
                     const parent = JSON.parse(parentData);
-                    // Find user in static mock data to get full object if needed,
-                    // or just use the data from localStorage
-                    const user = users.find(u => u.email === parent.email) || parent;
+                    const mockUser = users.find(u => u.email === parent.email) || {};
+                    // Prioritize cloud data (Real ID) over mock data
+                    const user = { ...mockUser, ...parent };
 
-                    // Ensure role is set for portal permission checks
                     if (!user.role) user.role = 'parent';
 
                     setCurrentUser(user);
@@ -62,7 +88,9 @@ export const AppProvider = ({ children }) => {
             } else if (doctorData) {
                 try {
                     const doctor = JSON.parse(doctorData);
-                    const user = users.find(u => u.email === doctor.email) || doctor;
+                    const mockUser = users.find(u => u.email === doctor.email) || {};
+                    // Prioritize cloud data (Real ID) over mock data
+                    const user = { ...mockUser, ...doctor };
 
                     if (!user.role) user.role = 'therapist';
 
@@ -103,6 +131,43 @@ export const AppProvider = ({ children }) => {
         };
     }, [users]);
 
+    // Production-Level Message Synchronization
+    useEffect(() => {
+        const syncMessagesFromCloud = async () => {
+            if (!isAuthenticated || !currentUser) return;
+
+            try {
+                const cloudMessages = await messagesAPI.getByUser(currentUser.id);
+                if (cloudMessages && cloudMessages.length > 0) {
+                    // Normalize snake_case from MongoDB to camelCase for the frontend
+                    const normalizedMessages = cloudMessages.map(m => ({
+                        ...m,
+                        id: m.id || m._id,
+                        senderId: m.senderId || m.sender_id,
+                        recipientId: m.recipientId || m.recipient_id,
+                        childId: m.childId || m.child_id,
+                        threadId: m.threadId || m.thread_id,
+                        senderName: m.senderName || m.sender_name,
+                        senderRole: m.senderRole || m.sender_role
+                    }));
+
+                    setMessages(prev => {
+                        const cloudIds = new Set(normalizedMessages.map(m => m.id));
+                        const legacyMessages = prev.filter(m => !cloudIds.has(m.id) && !cloudIds.has(m._id));
+                        return [...normalizedMessages, ...legacyMessages];
+                    });
+                }
+            } catch (err) {
+                console.warn('Silent failure syncing messages:', err);
+            }
+        };
+
+        syncMessagesFromCloud();
+        // Poll for new messages every 15s
+        const interval = setInterval(syncMessagesFromCloud, 15000);
+        return () => clearInterval(interval);
+    }, [isAuthenticated, currentUser]);
+
     // Production-Level Session Synchronization
     useEffect(() => {
         const syncSessionsFromCloud = async () => {
@@ -135,7 +200,95 @@ export const AppProvider = ({ children }) => {
         syncSessionsFromCloud();
     }, [isAuthenticated, currentUser]);
 
-    // ============ UI State ============
+    // Global Message & Community Polling for Notifications
+    useEffect(() => {
+        if (!isAuthenticated || !currentUser) return;
+
+        const pollUnreadCounts = async () => {
+            try {
+                // 1. Unread count for private messages is derived from synchronized messages state
+                // This is handled automatically by the syncMessagesFromCloud effect above
+
+                // 2. Poll Community Messages separately
+                const community = await communityAPI.getDefault();
+                if (community) {
+                    const messagesData = await communityAPI.getMessages(community.id, 20, 0);
+                    const communityMessages = messagesData.messages || [];
+
+                    const lastSeen = localStorage.getItem(`last_seen_community_${community.id}`) || 0;
+                    const unreadList = communityMessages.filter(m =>
+                        new Date(m.timestamp).getTime() > parseInt(lastSeen) &&
+                        m.sender_id !== currentUser.id && m.senderId !== currentUser.id
+                    );
+
+                    setCommunityUnreadCount(unreadList.length);
+
+                    // Trigger toast for new community messages
+                    unreadList.forEach(m => {
+                        const mId = m.id || m._id;
+                        if (!notifiedMessageIds.current.has(mId)) {
+                            addNotification({
+                                type: 'message',
+                                title: `New Community Message`,
+                                message: `${m.sender_name || 'Someone'} posted: ${m.content.substring(0, 40)}...`,
+                                messageId: mId
+                            });
+                            notifiedMessageIds.current.add(mId);
+                        }
+                    });
+                }
+            } catch (err) {
+                console.warn('Silent failure polling for notifications:', err);
+            }
+        };
+
+        pollUnreadCounts();
+        const interval = setInterval(pollUnreadCounts, 10000); // 10s poll
+        return () => clearInterval(interval);
+    }, [isAuthenticated, currentUser]);
+
+    // Update private unread count whenever messages change
+    useEffect(() => {
+        if (!currentUser) return;
+        const count = messages.filter(m =>
+            (m.recipientId === currentUser.id || m.recipient_id === currentUser.id) &&
+            !m.read
+        ).length;
+        setPrivateUnreadCount(count);
+    }, [messages, currentUser]);
+
+    // Track newly received messages to show notifications
+    useEffect(() => {
+        if (!isAuthenticated || !currentUser) return;
+
+        // 1. Private Messages Notifications (Now using normalized IDs)
+        const incomingUnread = messages.filter(m =>
+            (m.recipientId === currentUser.id) &&
+            !m.read
+        );
+
+        incomingUnread.forEach(m => {
+            const mId = m.id || m._id;
+            if (!notifiedMessageIds.current.has(mId)) {
+                addNotification({
+                    type: 'message',
+                    title: `New Message from ${m.senderName || 'Parent'}`,
+                    message: m.content.substring(0, 60) + (m.content.length > 60 ? '...' : ''),
+                    messageId: mId
+                });
+                notifiedMessageIds.current.add(mId);
+            }
+        });
+
+        // 2. Clean up notified IDs if they are no longer unread or no longer in messages
+        const currentUnreadIds = new Set(incomingUnread.map(m => m.id || m._id));
+        notifiedMessageIds.current.forEach(id => {
+            if (!currentUnreadIds.has(id) && !messages.some(m => (m.id || m._id) === id)) {
+                // Keep it in the set to avoid re-notifying if it comes back, 
+                // but this logic is just a simple tracker for now
+            }
+        });
+    }, [messages, isAuthenticated, currentUser]);
     const [notifications, setNotifications] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -369,22 +522,59 @@ export const AppProvider = ({ children }) => {
         return messages.filter(m => m.recipientId === userId && !m.read).length;
     }, [messages]);
 
-    const sendMessage = useCallback((message) => {
-        const newMessage = {
-            ...message,
-            id: `msg${Date.now()}`,
-            timestamp: new Date().toISOString(),
-            read: false,
-            type: message.type || 'message'
-        };
+    const sendMessage = useCallback(async (message) => {
+        try {
+            // Persist to Backend
+            const backendMessage = {
+                thread_id: message.threadId,
+                sender_id: message.senderId,
+                sender_name: message.senderName,
+                sender_role: message.senderRole,
+                recipient_id: message.recipientId,
+                child_id: message.childId,
+                content: message.content,
+                type: message.type || 'message'
+            };
 
-        setMessages(prev => [newMessage, ...prev]);
-        return newMessage;
+            const savedMessage = await messagesAPI.send(backendMessage);
+
+            // Update Local State
+            const newMessage = {
+                ...message,
+                id: savedMessage._id || savedMessage.id || `msg${Date.now()}`,
+                timestamp: savedMessage.timestamp || new Date().toISOString(),
+                read: false,
+                type: message.type || 'message'
+            };
+
+            setMessages(prev => [newMessage, ...prev]);
+            return newMessage;
+        } catch (err) {
+            console.error('Failed to send message via API:', err);
+            // Fallback to local state if API fails
+            const fallbackMsg = {
+                ...message,
+                id: `msg${Date.now()}`,
+                timestamp: new Date().toISOString(),
+                read: false
+            };
+            setMessages(prev => [fallbackMsg, ...prev]);
+            return fallbackMsg;
+        }
     }, []);
 
-    const markMessageRead = useCallback((messageId) => {
+    const markMessageRead = useCallback(async (messageId) => {
+        try {
+            // Try to notify backend if it's a backend message (ObjectId-like strings are usually longer)
+            if (messageId.length > 20) {
+                await messagesAPI.markRead(messageId);
+            }
+        } catch (err) {
+            console.warn('Silent failure marking message as read on backend:', err);
+        }
+
         setMessages(prev => prev.map(m =>
-            m.id === messageId ? { ...m, read: true } : m
+            m.id === messageId || m._id === messageId ? { ...m, read: true } : m
         ));
     }, []);
 
@@ -400,15 +590,25 @@ export const AppProvider = ({ children }) => {
     }, []);
 
     // ============ Notification Actions ============
+    const removeNotification = useCallback((id) => {
+        setNotifications(prev => prev.filter(n => n.id !== id));
+    }, []);
+
     const addNotification = useCallback((notification) => {
+        const id = `notif${Date.now()}`;
         const newNotification = {
             ...notification,
-            id: `notif${Date.now()}`,
+            id,
             timestamp: new Date().toISOString(),
             read: false
         };
         setNotifications(prev => [newNotification, ...prev]);
-    }, []);
+
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            removeNotification(id);
+        }, 5000);
+    }, [removeNotification]);
 
     const clearNotifications = useCallback(() => {
         setNotifications([]);
@@ -422,6 +622,33 @@ export const AppProvider = ({ children }) => {
             engagement: s.engagement || 0
         })).reverse();
     }, [getChildSessions]);
+
+    const getChildProgress = useCallback((childId) => {
+        return skillProgress.filter(p => p.childId === childId);
+    }, [skillProgress]);
+
+    const updateSkillProgress = useCallback((skillId, updates) => {
+        setSkillProgress(prev => prev.map(skill => {
+            if (skill.id === skillId) {
+                const newProgress = {
+                    ...skill,
+                    ...updates,
+                    lastUpdated: new Date().toISOString().split('T')[0],
+                    history: [
+                        {
+                            date: new Date().toISOString().split('T')[0],
+                            status: updates.status || skill.status,
+                            progress: updates.progress !== undefined ? updates.progress : skill.progress,
+                            remarks: updates.therapistNotes || updates.parentNote || 'Status updated'
+                        },
+                        ...skill.history
+                    ]
+                };
+                return newProgress;
+            }
+            return skill;
+        }));
+    }, []);
 
     const getTherapistStats = useCallback((therapistId) => {
         const therapistSessions = sessions.filter(s => s.therapistId === therapistId);
@@ -459,6 +686,9 @@ export const AppProvider = ({ children }) => {
         isAuthenticated,
         notifications,
         isLoading,
+        communityUnreadCount,
+        privateUnreadCount,
+        setCommunityUnreadCount,
 
         // Auth Actions
         login,
@@ -503,11 +733,17 @@ export const AppProvider = ({ children }) => {
 
         // Notification Actions
         addNotification,
+        removeNotification,
         clearNotifications,
 
         // Analytics
         getEngagementTrend,
         getTherapistStats,
+
+        // Progress Tracking
+        skillProgress,
+        getChildProgress,
+        updateSkillProgress,
 
         // UI Actions
         setIsLoading
@@ -520,7 +756,8 @@ export const AppProvider = ({ children }) => {
         getLatestSkillScores, getSkillHistory, getChildRoadmap, updateRoadmapProgress,
         completeMilestone, getChildHomeActivities, logActivityCompletion, getActivityAdherence,
         getChildMessages, getUnreadCount, sendMessage, markMessageRead, addAuditLog,
-        addNotification, clearNotifications, getEngagementTrend, getTherapistStats
+        addNotification, clearNotifications, getEngagementTrend, getTherapistStats,
+        skillProgress, getChildProgress, updateSkillProgress
     ]);
 
     return (

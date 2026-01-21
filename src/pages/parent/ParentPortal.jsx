@@ -17,7 +17,9 @@ import {
     MapPin,
     Calendar,
     X,
-    CheckCircle2
+    CheckCircle2,
+    Users,
+    Activity
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -25,6 +27,7 @@ import { useApp } from '../../lib/context';
 
 // Import all parent pages
 import ProgressAnalytics from './ProgressAnalytics';
+import ChildProgressTracking from './ChildProgressTracking';
 import GrowthRoadmap from './GrowthRoadmap';
 import HomeActivities from './HomeActivities';
 import SessionHistory from './SessionHistory';
@@ -100,8 +103,8 @@ const SessionDetailModal = ({ session, child, onClose }) => {
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-neutral-700">Status:</span>
                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${session.status === 'scheduled'
-                                    ? 'bg-blue-100 text-blue-700'
-                                    : 'bg-green-100 text-green-700'
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-green-100 text-green-700'
                                 }`}>
                                 {session.status === 'scheduled' ? 'Scheduled' : 'Completed'}
                             </span>
@@ -132,7 +135,7 @@ const SessionDetailModal = ({ session, child, onClose }) => {
                                             <div className="flex-1 h-2 bg-neutral-100 rounded-full overflow-hidden">
                                                 <div
                                                     className={`h-full rounded-full ${session.engagement >= 80 ? 'bg-green-500' :
-                                                            session.engagement >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                                        session.engagement >= 60 ? 'bg-yellow-500' : 'bg-red-500'
                                                         }`}
                                                     style={{ width: `${session.engagement}%` }}
                                                 />
@@ -522,14 +525,18 @@ const ParentDashboard = () => {
 // Parent Portal Router
 // ============================================================
 const ParentPortal = () => {
+    const { privateUnreadCount, communityUnreadCount } = useApp();
+    const totalMessagesUnread = (privateUnreadCount || 0) + (communityUnreadCount || 0);
+
     const sidebarItems = [
         { label: 'Dashboard', path: '/parent/dashboard', icon: LayoutDashboard },
         { label: 'Progress', path: '/parent/progress', icon: TrendingUp },
+        { label: 'Daily Progress Tracking', path: '/parent/daily-progress', icon: Activity },
         { label: 'Roadmap', path: '/parent/roadmap', icon: Target },
         { label: 'Home Activities', path: '/parent/activities', icon: Home },
         { label: 'Session History', path: '/parent/history', icon: History },
         { label: 'Upcoming Session', path: '/parent/upcoming', icon: Calendar },
-        { label: 'Messages', path: '/parent/messages', icon: MessageCircle },
+        { label: 'Messages', path: '/parent/messages', icon: MessageCircle, badge: totalMessagesUnread },
     ];
 
     return (
@@ -537,6 +544,7 @@ const ParentPortal = () => {
             <Route element={<DashboardLayout title="Parent Portal" sidebarItems={sidebarItems} roleColor="bg-primary-600" />}>
                 <Route path="dashboard" element={<ParentDashboard />} />
                 <Route path="progress" element={<ProgressAnalytics />} />
+                <Route path="daily-progress" element={<ChildProgressTracking role="parent" />} />
                 <Route path="roadmap" element={<GrowthRoadmap />} />
                 <Route path="activities" element={<HomeActivities />} />
                 <Route path="history" element={<SessionHistory />} />

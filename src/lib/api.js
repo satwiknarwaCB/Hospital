@@ -239,4 +239,184 @@ export const sessionAPI = {
     }
 };
 
+// Community API
+export const communityAPI = {
+    /**
+     * Get all communities (therapist/admin only)
+     * @returns {Promise} - List of communities
+     */
+    getAll: async () => {
+        try {
+            const response = await apiClient.get('/api/communities/');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Get default parent support community
+     * @returns {Promise} - Default community data
+     */
+    getDefault: async () => {
+        try {
+            const response = await apiClient.get('/api/communities/default');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Get specific community by ID
+     * @param {string} communityId - Community ID
+     * @returns {Promise} - Community data
+     */
+    getById: async (communityId) => {
+        try {
+            const response = await apiClient.get(`/api/communities/${communityId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Get community messages with pagination
+     * @param {string} communityId - Community ID
+     * @param {number} limit - Number of messages to fetch
+     * @param {number} offset - Offset for pagination
+     * @returns {Promise} - Messages list response
+     */
+    getMessages: async (communityId, limit = 50, offset = 0) => {
+        try {
+            const response = await apiClient.get(`/api/communities/${communityId}/messages`, {
+                params: { limit, offset }
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Send a message to the community
+     * @param {string} communityId - Community ID
+     * @param {string} content - Message content
+     * @param {Array} attachments - Optional attachment URLs
+     * @returns {Promise} - Created message
+     */
+    sendMessage: async (communityId, content, attachments = []) => {
+        try {
+            const response = await apiClient.post(`/api/communities/${communityId}/messages`, {
+                content,
+                attachments
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Get community members
+     * @param {string} communityId - Community ID
+     * @returns {Promise} - List of members
+     */
+    getMembers: async (communityId) => {
+        try {
+            const response = await apiClient.get(`/api/communities/${communityId}/members`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Join a community
+     * @param {string} communityId - Community ID
+     * @returns {Promise} - Join response
+     */
+    join: async (communityId) => {
+        try {
+            const response = await apiClient.post(`/api/communities/${communityId}/join`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Leave a community
+     * @param {string} communityId - Community ID
+     * @returns {Promise} - Leave response
+     */
+    leave: async (communityId) => {
+        try {
+            const response = await apiClient.delete(`/api/communities/${communityId}/leave`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    }
+};
+
+// Direct Messages API
+export const messagesAPI = {
+    /**
+     * Send a direct message
+     * @param {Object} messageData - Message content and recipient info
+     * @returns {Promise} - Created message
+     */
+    send: async (messageData) => {
+        try {
+            const response = await apiClient.post('/api/messages/', messageData);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Get all messages for a specific user
+     * @param {string} userId - User ID
+     * @returns {Promise} - List of messages
+     */
+    getByUser: async (userId) => {
+        try {
+            const response = await apiClient.get(`/api/messages/user/${userId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Mark a message as read
+     * @param {string} messageId - Message ID
+     * @returns {Promise} - Success response
+     */
+    markRead: async (messageId) => {
+        try {
+            const response = await apiClient.patch(`/api/messages/${messageId}/read`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Get unread messages count for current user
+     * @returns {Promise} - Count object {count: number}
+     */
+    getUnreadCount: async () => {
+        try {
+            const response = await apiClient.get('/api/messages/unread/count');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    }
+};
+
 export default apiClient;

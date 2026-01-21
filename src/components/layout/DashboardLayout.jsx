@@ -1,12 +1,14 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, LogOut, Menu, X, Bell, MessageSquare } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/Button';
+import { useApp } from '../../lib/context';
 
-const DashboardLayout = ({ title, sidebarItems, roleColor = "bg-primary-700", onLogout }) => {
+const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primary-700", onLogout }) => {
     const [isSidebarOpen, setSidebarOpen] = React.useState(true);
     const location = useLocation();
+    const { notifications, removeNotification } = useApp();
 
     const handleLogout = () => {
         if (onLogout) {
@@ -45,7 +47,12 @@ const DashboardLayout = ({ title, sidebarItems, roleColor = "bg-primary-700", on
                                 )}
                             >
                                 {item.icon && <item.icon className={cn("mr-3 h-5 w-5", isActive ? "text-primary-600" : "text-neutral-400")} />}
-                                {item.label}
+                                <span className="flex-1">{item.label}</span>
+                                {item.badge > 0 && (
+                                    <span className="ml-auto px-2 py-0.5 text-[10px] font-bold bg-primary-500 text-white rounded-full">
+                                        {item.badge}
+                                    </span>
+                                )}
                             </Link>
                         )
                     })}
@@ -80,8 +87,44 @@ const DashboardLayout = ({ title, sidebarItems, roleColor = "bg-primary-700", on
                 </header>
 
                 {/* Scrollable Content */}
-                <main className="flex-1 p-4 lg:p-8 overflow-auto">
-                    <Outlet />
+                <main className="flex-1 p-4 lg:p-8 overflow-auto relative">
+                    {children || <Outlet />}
+
+                    {/* Global Notifications Toast Stack */}
+                    <div className="fixed bottom-6 right-6 z-[60] flex flex-col gap-3 max-w-sm w-full">
+                        {notifications.map((notif) => (
+                            <div
+                                key={notif.id}
+                                className={cn(
+                                    "bg-white rounded-xl shadow-2xl border-l-4 p-4 flex gap-4 items-start animate-in slide-in-from-right duration-300",
+                                    notif.type === 'success' ? 'border-l-green-500' :
+                                        notif.type === 'error' ? 'border-l-red-500' : 'border-l-primary-500'
+                                )}
+                            >
+                                <div className={cn(
+                                    "p-2 rounded-lg",
+                                    notif.type === 'success' ? 'bg-green-50 text-green-600' :
+                                        notif.type === 'error' ? 'bg-red-50 text-red-600' : 'bg-primary-50 text-primary-600'
+                                )}>
+                                    {notif.type === 'message' || notif.title?.includes('message') ? (
+                                        <MessageSquare className="h-5 w-5" />
+                                    ) : (
+                                        <Bell className="h-5 w-5" />
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="text-sm font-bold text-neutral-900">{notif.title}</h4>
+                                    <p className="text-xs text-neutral-500 mt-1 line-clamp-2">{notif.message || notif.content}</p>
+                                </div>
+                                <button
+                                    onClick={() => removeNotification(notif.id)}
+                                    className="text-neutral-400 hover:text-neutral-600 transition-colors"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
                 </main>
             </div>
         </div>

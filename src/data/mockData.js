@@ -774,3 +774,333 @@ export const ACTIVITY_LIBRARY = [
     { id: 'act14', name: 'Gross Motor Activities', domain: 'Motor', therapyType: 'ot' },
     { id: 'act15', name: 'Peer Interaction', domain: 'Social', therapyType: 'social' }
 ];
+// ============ SKILL PROGRESS (Child Progress Tracking) ============
+/**
+ * Daily, Weekly, and Monthly tracking for real-life functional skills.
+ * Includes status, progress, history, and therapist-parent communication notes.
+ */
+export const SKILL_PROGRESS = [
+    // Aarav Patel (c1) - 10 Core Functional Skills
+    {
+        id: 'sp1',
+        childId: 'c1',
+        skillName: 'Holding a Spoon',
+        category: 'Adaptive / OT',
+        icon: 'spoon',
+        status: 'In Progress',
+        progress: 65,
+        therapistNotes: 'Aarav is showing better grip stability. Still needs slight physical prompting for 3-finger grip.',
+        successNote: 'Held spoon independently for 2 minutes during lunch! 🥣',
+        lastUpdated: '2025-12-23',
+        history: [
+            { date: '2025-12-23', status: 'In Progress', progress: 65, remarks: 'Improved grip' },
+            { date: '2025-12-16', status: 'In Progress', progress: 50, remarks: 'Starting to hold' },
+            { date: '2025-12-01', status: 'Not Started', progress: 10, remarks: 'Initial assessment' }
+        ]
+    },
+    {
+        id: 'sp2',
+        childId: 'c1',
+        skillName: 'Eating with a Spoon',
+        category: 'Adaptive / OT',
+        icon: 'utensils',
+        status: 'In Progress',
+        progress: 40,
+        therapistNotes: 'Coordination between scooping and bringing to mouth is improving.',
+        successNote: 'Successfully scooped 3 bites without spilling!',
+        lastUpdated: '2025-12-23',
+        history: [
+            { date: '2025-12-23', status: 'In Progress', progress: 40, remarks: 'Better scooping' },
+            { date: '2025-12-16', status: 'In Progress', progress: 30, remarks: 'Frequent spilling' }
+        ]
+    },
+    {
+        id: 'sp3',
+        childId: 'c1',
+        skillName: 'Drinking Water from a Glass',
+        category: 'Adaptive / OT',
+        icon: 'cup',
+        status: 'In Progress',
+        progress: 75,
+        therapistNotes: 'Controls the tilt well. Occasionally bites the rim.',
+        successNote: 'Drank half a glass without any water spilling on shirt.',
+        lastUpdated: '2025-12-22',
+        history: [
+            { date: '2025-12-22', status: 'In Progress', progress: 75 },
+            { date: '2025-12-15', status: 'In Progress', progress: 60 }
+        ]
+    },
+    {
+        id: 'sp4',
+        childId: 'c1',
+        skillName: 'Buttoning Clothes',
+        category: 'Adaptive / OT',
+        icon: 'shirt',
+        status: 'Not Started',
+        progress: 15,
+        therapistNotes: 'Fine motor strength is building up. Will focus on larger buttons first next week.',
+        successNote: 'Attempted to push a large button through the hole with assist.',
+        lastUpdated: '2025-12-21',
+        history: [
+            { date: '2025-12-21', status: 'Not Started', progress: 15 }
+        ]
+    },
+    {
+        id: 'sp5',
+        childId: 'c1',
+        skillName: 'Maintaining Eye Contact',
+        category: 'Social / Behavioral',
+        icon: 'eye',
+        status: 'Achieved',
+        progress: 90,
+        therapistNotes: 'Consistency in eye contact during greetings is excellent.',
+        successNote: 'Maintained 5s eye contact independently during session.',
+        lastUpdated: '2025-12-23',
+        history: [
+            { date: '2025-12-23', status: 'Achieved', progress: 90 },
+            { date: '2025-12-16', status: 'In Progress', progress: 70 },
+            { date: '2025-12-01', status: 'In Progress', progress: 45 }
+        ]
+    },
+    {
+        id: 'sp6',
+        childId: 'c1',
+        skillName: 'Following One-step Instructions',
+        category: 'Cognitive / Speech',
+        icon: 'list',
+        status: 'Achieved',
+        progress: 100,
+        therapistNotes: 'Follows "Sit down", "Give me", "Look" commands perfectly.',
+        successNote: 'Instantly sat down when I said "Sit on the chair".',
+        lastUpdated: '2025-12-22',
+        history: [
+            { date: '2025-12-22', status: 'Achieved', progress: 100 },
+            { date: '2025-12-05', status: 'In Progress', progress: 80 }
+        ]
+    },
+    {
+        id: 'sp7',
+        childId: 'c1',
+        skillName: 'Following Two-step Instructions',
+        category: 'Cognitive / Speech',
+        icon: 'list-ordered',
+        status: 'In Progress',
+        progress: 55,
+        therapistNotes: 'Working on processing the second part of the instruction. Visual cues help.',
+        successNote: 'Successfully "Picked up block and put in box" with one prompt.',
+        lastUpdated: '2025-12-23',
+        history: [
+            { date: '2025-12-23', status: 'In Progress', progress: 55 },
+            { date: '2025-12-16', status: 'In Progress', progress: 40 }
+        ]
+    },
+    {
+        id: 'sp8',
+        childId: 'c1',
+        skillName: 'Sound / Word Imitation',
+        category: 'Communication / Speech',
+        icon: 'mic',
+        status: 'In Progress',
+        progress: 80,
+        therapistNotes: 'Imitating "B", "P", "M" sounds consistently. Moving to 2-word phrases.',
+        successNote: 'Clearly repeated "Ba-ba" and "Ma-ma" today! 🗣️',
+        lastUpdated: '2025-12-23',
+        history: [
+            { date: '2025-12-23', status: 'In Progress', progress: 80 },
+            { date: '2025-12-16', status: 'In Progress', progress: 65 }
+        ]
+    },
+    {
+        id: 'sp9',
+        childId: 'c1',
+        skillName: 'Sitting Tolerance',
+        category: 'Behavioral',
+        icon: 'clock',
+        status: 'In Progress',
+        progress: 60,
+        therapistNotes: 'Currently sitting for 12-15 minutes. Goal is 25 minutes of table time.',
+        successNote: 'Sat for 15 minutes straight during sensory play!',
+        lastUpdated: '2025-12-23',
+        history: [
+            { date: '2025-12-23', status: 'In Progress', progress: 60 },
+            { date: '2025-12-16', status: 'In Progress', progress: 45 },
+            { date: '2025-12-02', status: 'In Progress', progress: 30 }
+        ]
+    },
+    {
+        id: 'sp10',
+        childId: 'c1',
+        skillName: 'Social Interaction',
+        category: 'Social / Behavioral',
+        icon: 'users',
+        status: 'In Progress',
+        progress: 35,
+        therapistNotes: 'Starting parallel play. Needs encouragement for turn-taking.',
+        successNote: 'Played alongside another child for 5 minutes without friction.',
+        lastUpdated: '2025-12-23',
+        history: [
+            { date: '2025-12-23', status: 'In Progress', progress: 35 },
+            { date: '2025-12-16', status: 'In Progress', progress: 20 }
+        ]
+    },
+    // Diya Sharma (c2) - 10 Core Functional Skills
+    {
+        id: 'sp11',
+        childId: 'c2',
+        skillName: 'Holding a Spoon',
+        category: 'Adaptive / OT',
+        icon: 'spoon',
+        status: 'Achieved',
+        progress: 95,
+        therapistNotes: 'Diya has excellent spoon control. Transitioning to smaller utensils.',
+        successNote: 'Used a small tea spoon independently today!',
+        lastUpdated: '2025-12-23',
+        history: [
+            { date: '2025-12-23', status: 'Achieved', progress: 95 },
+            { date: '2025-12-10', status: 'In Progress', progress: 80 }
+        ]
+    },
+    {
+        id: 'sp12',
+        childId: 'c2',
+        skillName: 'Eating with a Spoon',
+        category: 'Adaptive / OT',
+        icon: 'utensils',
+        status: 'In Progress',
+        progress: 70,
+        therapistNotes: 'Self-feeding is becoming much cleaner. Working on speed.',
+        successNote: 'Completed entire bowl of cereal without any help.',
+        lastUpdated: '2025-12-23',
+        history: [
+            { date: '2025-12-23', status: 'In Progress', progress: 70 },
+            { date: '2025-12-12', status: 'In Progress', progress: 55 }
+        ]
+    },
+    {
+        id: 'sp13',
+        childId: 'c2',
+        skillName: 'Drinking Water from a Glass',
+        category: 'Adaptive / OT',
+        icon: 'cup',
+        status: 'Achieved',
+        progress: 100,
+        therapistNotes: 'Mastered. No biting or spilling observed in multiple sessions.',
+        successNote: 'Drank from an open glass with one hand!',
+        lastUpdated: '2025-12-22',
+        history: [
+            { date: '2025-12-22', status: 'Achieved', progress: 100 },
+            { date: '2025-12-05', status: 'In Progress', progress: 85 }
+        ]
+    },
+    {
+        id: 'sp14',
+        childId: 'c2',
+        skillName: 'Buttoning Clothes',
+        category: 'Adaptive / OT',
+        icon: 'shirt',
+        status: 'In Progress',
+        progress: 45,
+        therapistNotes: 'Can do large coat buttons. Working on shirt buttons now.',
+        successNote: 'Successfully unbuttoned three shirt buttons independently.',
+        lastUpdated: '2025-12-23',
+        history: [
+            { date: '2025-12-23', status: 'In Progress', progress: 45 },
+            { date: '2025-12-15', status: 'Not Started', progress: 20 }
+        ]
+    },
+    {
+        id: 'sp15',
+        childId: 'c2',
+        skillName: 'Maintaining Eye Contact',
+        category: 'Social / Behavioral',
+        icon: 'eye',
+        status: 'In Progress',
+        progress: 65,
+        therapistNotes: 'Good focus when interested. Working on eye contact during listening.',
+        successNote: 'Maintained eye contact for 4s during the story-telling.',
+        lastUpdated: '2025-12-23',
+        history: [
+            { date: '2025-12-23', status: 'In Progress', progress: 65 },
+            { date: '2025-12-14', status: 'In Progress', progress: 50 }
+        ]
+    },
+    {
+        id: 'sp16',
+        childId: 'c2',
+        skillName: 'Following One-step Instructions',
+        category: 'Cognitive / Speech',
+        icon: 'list',
+        status: 'Achieved',
+        progress: 100,
+        therapistNotes: 'Consistent mastery across different environments.',
+        successNote: 'Followed "Throw this in the bin" from across the room.',
+        lastUpdated: '2025-12-20',
+        history: [
+            { date: '2025-12-20', status: 'Achieved', progress: 100 }
+        ]
+    },
+    {
+        id: 'sp17',
+        childId: 'c2',
+        skillName: 'Following Two-step Instructions',
+        category: 'Cognitive / Speech',
+        icon: 'list-ordered',
+        status: 'In Progress',
+        progress: 75,
+        therapistNotes: 'Processes complex commands well. Occasionally skips the second step if distracted.',
+        successNote: 'Followed "Wash your hands and sit at the table" perfectly!',
+        lastUpdated: '2025-12-23',
+        history: [
+            { date: '2025-12-23', status: 'In Progress', progress: 75 },
+            { date: '2025-12-10', status: 'In Progress', progress: 60 }
+        ]
+    },
+    {
+        id: 'sp18',
+        childId: 'c2',
+        skillName: 'Sound / Word Imitation',
+        category: 'Communication / Speech',
+        icon: 'mic',
+        status: 'Achieved',
+        progress: 95,
+        therapistNotes: 'Excellent phonetic imitation. Starting sentence formation.',
+        successNote: 'Correctly imitated complex 3-syllable words today.',
+        lastUpdated: '2025-12-22',
+        history: [
+            { date: '2025-12-22', status: 'Achieved', progress: 95 },
+            { date: '2025-12-08', status: 'In Progress', progress: 80 }
+        ]
+    },
+    {
+        id: 'sp19',
+        childId: 'c2',
+        skillName: 'Sitting Tolerance',
+        category: 'Behavioral',
+        icon: 'clock',
+        status: 'Achieved',
+        progress: 90,
+        therapistNotes: 'Can sit for 20-25 minutes now. Focus is sustained.',
+        successNote: 'Sat through the entire 20-minute coloring activity!',
+        lastUpdated: '2025-12-23',
+        history: [
+            { date: '2025-12-23', status: 'Achieved', progress: 90 },
+            { date: '2025-12-11', status: 'In Progress', progress: 75 }
+        ]
+    },
+    {
+        id: 'sp20',
+        childId: 'c2',
+        skillName: 'Social Interaction',
+        category: 'Social / Behavioral',
+        icon: 'users',
+        status: 'In Progress',
+        progress: 55,
+        therapistNotes: 'Engaging in reciprocal play. Learning to share toys.',
+        successNote: 'Handed a toy to a peer spontaneously during play time! ✨',
+        lastUpdated: '2025-12-23',
+        history: [
+            { date: '2025-12-23', status: 'In Progress', progress: 55 },
+            { date: '2025-12-13', status: 'In Progress', progress: 40 }
+        ]
+    }
+];

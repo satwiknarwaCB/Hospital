@@ -12,6 +12,8 @@ from routes.parent_auth import router as parent_auth_router
 from routes.admin_auth import router as admin_auth_router
 from routes.appointments import router as appointments_router
 from routes.sessions import router as sessions_router
+from routes.communities import router as communities_router
+from routes.messages import router as messages_router
 
 
 @asynccontextmanager
@@ -54,6 +56,8 @@ app.include_router(parent_auth_router)
 app.include_router(admin_auth_router)
 app.include_router(appointments_router)
 app.include_router(sessions_router)
+app.include_router(communities_router)
+app.include_router(messages_router)
 
 
 # Health check endpoint

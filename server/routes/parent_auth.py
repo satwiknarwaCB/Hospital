@@ -7,6 +7,7 @@ from database import db_manager
 from models.parent import ParentLogin, ParentResponse, TokenResponse
 from utils.auth import verify_password, create_access_token
 from middleware.auth_middleware import get_current_parent
+from datetime import datetime, timezone
 
 
 router = APIRouter(prefix="/api/parent", tags=["Parent Authentication"])
@@ -71,6 +72,43 @@ async def login(credentials: ParentLogin):
         is_active=bool(parent_data.get("is_active", True)),
         role="parent"
     )
+    
+    # Auto-join parent to default community
+    try:
+        from bson import ObjectId
+        
+        # Get or create default community
+        default_community = db_manager.communities.find_one({"name": "Parent Support Community"})
+        
+        if not default_community:
+            # Create default community
+            default_community = {
+                "_id": str(ObjectId()),
+                "name": "Parent Support Community",
+                "description": "A safe space for parents to connect, share experiences, and support each other on their journey.",
+                "created_by": "system",
+                "member_ids": [],
+                "is_active": True,
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc)
+            }
+            db_manager.communities.insert_one(default_community)
+        
+        community_id = str(default_community["_id"])
+        member_ids = default_community.get("member_ids", [])
+        
+        # Add parent to community if not already a member
+        if parent_id not in member_ids:
+            db_manager.communities.update_one(
+                {"_id": community_id},
+                {
+                    "$push": {"member_ids": parent_id},
+                    "$set": {"updated_at": datetime.now(timezone.utc)}
+                }
+            )
+    except Exception as e:
+        # Log error but don't fail login
+        print(f"Warning: Failed to auto-join community: {str(e)}")
     
     return TokenResponse(
         access_token=access_token,

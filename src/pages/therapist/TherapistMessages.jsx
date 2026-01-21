@@ -18,6 +18,8 @@ import {
 import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useApp } from '../../lib/context';
+import CommunityChat from '../../components/CommunityChat';
+import { communityAPI } from '../../lib/api';
 
 // Message Bubble Component
 const MessageBubble = ({ message, isOwn }) => {
@@ -35,7 +37,9 @@ const MessageBubble = ({ message, isOwn }) => {
                         <div className="h-6 w-6 rounded-full bg-primary-100 flex items-center justify-center">
                             <User className="h-3 w-3 text-primary-600" />
                         </div>
-                        <span className="text-xs font-medium text-neutral-600">{message.senderName}</span>
+                        <span className="text-xs font-medium text-neutral-600">
+                            {message.senderName} ({message.senderRole === 'therapist' ? 'Therapist' : 'Parent'})
+                        </span>
                     </div>
                 )}
 
@@ -94,7 +98,7 @@ const ParentThreadItem = ({ thread, isActive, onClick, currentUserId }) => {
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                         <span className="font-medium text-neutral-800 truncate">
-                            {thread.parentName}
+                            {thread.parentName} (Parent)
                         </span>
                         <span className="text-xs text-neutral-400 flex-shrink-0">
                             {new Date(latestMessage.timestamp).toLocaleDateString()}
@@ -121,13 +125,53 @@ const ParentThreadItem = ({ thread, isActive, onClick, currentUserId }) => {
 
 // Main Therapist Messages Component
 const TherapistMessages = () => {
-    const { currentUser, kids, users, messages: allMessages, sendMessage, markMessageRead } = useApp();
+    const {
+        currentUser,
+        kids,
+        users,
+        messages: allMessages,
+        sendMessage,
+        markMessageRead,
+        communityUnreadCount,
+        setCommunityUnreadCount
+    } = useApp();
     const [activeThread, setActiveThread] = useState(null);
     const [newMessage, setNewMessage] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [activeTab, setActiveTab] = useState('conversations'); // 'conversations' or 'community'
+    const [defaultCommunity, setDefaultCommunity] = useState(null);
+    const [loadingCommunity, setLoadingCommunity] = useState(false);
     const messagesEndRef = useRef(null);
-
     const therapistId = currentUser?.id || 't1';
+
+    // Track community unread count
+    useEffect(() => {
+        if (activeTab === 'community' && defaultCommunity) {
+            setCommunityUnreadCount(0);
+            localStorage.setItem(`last_seen_community_${defaultCommunity.id}`, Date.now().toString());
+        }
+    }, [activeTab, defaultCommunity]);
+
+    // Load default community
+    useEffect(() => {
+        const loadCommunity = async () => {
+            try {
+                setLoadingCommunity(true);
+                const communities = await communityAPI.getAll();
+                if (communities && communities.length > 0) {
+                    setDefaultCommunity(communities[0]);
+                }
+            } catch (error) {
+                console.error('Failed to load community:', error);
+            } finally {
+                setLoadingCommunity(false);
+            }
+        };
+
+        if (activeTab === 'community') {
+            loadCommunity();
+        }
+    }, [activeTab]);
 
     // Get all children assigned to this therapist
     const myPatients = kids.filter(k => k.therapistId === therapistId);
@@ -231,8 +275,8 @@ const TherapistMessages = () => {
                 <div>
                     <h2 className="text-2xl font-bold text-neutral-800">Messages</h2>
                     <p className="text-neutral-500">
-                        Communication with parents
-                        {totalUnread > 0 && (
+                        {activeTab === 'conversations' ? 'Communication with parents' : 'Parent support community'}
+                        {activeTab === 'conversations' && totalUnread > 0 && (
                             <span className="ml-2 px-2 py-0.5 bg-secondary-100 text-secondary-700 rounded-full text-sm font-medium">
                                 {totalUnread} unread
                             </span>
@@ -241,118 +285,186 @@ const TherapistMessages = () => {
                 </div>
             </div>
 
+            {/* Tab Navigation */}
+            <div className="flex gap-2 mb-4">
+                <button
+                    onClick={() => setActiveTab('conversations')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${activeTab === 'conversations'
+                        ? 'bg-secondary-600 text-white shadow-md'
+                        : 'bg-white text-neutral-600 hover:bg-neutral-50 border border-neutral-200'
+                        }`}
+                >
+                    <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        <span>Parent Conversations</span>
+                        {totalUnread > 0 && activeTab !== 'conversations' && (
+                            <span className="px-1.5 py-0.5 bg-secondary-500 text-white rounded-full text-xs">
+                                {totalUnread}
+                            </span>
+                        )}
+                    </div>
+                </button>
+                <button
+                    onClick={() => setActiveTab('community')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${activeTab === 'community'
+                        ? 'bg-secondary-600 text-white shadow-md'
+                        : 'bg-white text-neutral-600 hover:bg-neutral-50 border border-neutral-200'
+                        }`}
+                >
+                    <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        <span>Parent Community</span>
+                        {communityUnreadCount > 0 && activeTab !== 'community' && (
+                            <span className="px-1.5 py-0.5 bg-secondary-500 text-white rounded-full text-xs">
+                                {communityUnreadCount}
+                            </span>
+                        )}
+                    </div>
+                </button>
+            </div>
+
             {/* Main Content */}
-            <div className="flex-1 flex bg-white rounded-xl border border-neutral-200 overflow-hidden">
-                {/* Thread List */}
-                <div className={`w-full md:w-80 border-r border-neutral-200 flex flex-col ${activeThread ? 'hidden md:flex' : 'flex'}`}>
-                    {/* Search */}
-                    <div className="p-3 border-b border-neutral-200">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                            <input
-                                type="text"
-                                placeholder="Search conversations..."
-                                className="w-full pl-10 pr-4 py-2 bg-neutral-50 border-0 rounded-lg text-sm focus:ring-2 focus:ring-secondary-200 focus:outline-none"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
+            {activeTab === 'conversations' ? (
+                <div className="flex-1 flex bg-white rounded-xl border border-neutral-200 overflow-hidden">{/* Thread List */}
+                    {/* Thread List */}
+                    <div className={`w-full md:w-80 border-r border-neutral-200 flex flex-col ${activeThread ? 'hidden md:flex' : 'flex'}`}>
+                        {/* Search */}
+                        <div className="p-3 border-b border-neutral-200">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search conversations..."
+                                    className="w-full pl-10 pr-4 py-2 bg-neutral-50 border-0 rounded-lg text-sm focus:ring-2 focus:ring-secondary-200 focus:outline-none"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Thread List */}
+                        <div className="flex-1 overflow-y-auto">
+                            {filteredThreads.length > 0 ? (
+                                filteredThreads.map(thread => (
+                                    <ParentThreadItem
+                                        key={thread.id}
+                                        thread={thread}
+                                        isActive={activeThread === thread.id}
+                                        onClick={() => setActiveThread(thread.id)}
+                                        currentUserId={therapistId}
+                                    />
+                                ))
+                            ) : (
+                                <div className="p-8 text-center text-neutral-400">
+                                    <Users className="h-10 w-10 mx-auto mb-2" />
+                                    <p>No parent conversations yet</p>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* Thread List */}
-                    <div className="flex-1 overflow-y-auto">
-                        {filteredThreads.length > 0 ? (
-                            filteredThreads.map(thread => (
-                                <ParentThreadItem
-                                    key={thread.id}
-                                    thread={thread}
-                                    isActive={activeThread === thread.id}
-                                    onClick={() => setActiveThread(thread.id)}
-                                    currentUserId={therapistId}
-                                />
-                            ))
+                    {/* Chat View */}
+                    <div className={`flex-1 flex flex-col ${activeThread ? 'flex' : 'hidden md:flex'}`}>
+                        {currentThread ? (
+                            <>
+                                {/* Chat Header */}
+                                <div className="p-4 border-b border-neutral-200 flex items-center gap-3">
+                                    <button
+                                        className="md:hidden text-neutral-400 hover:text-neutral-600"
+                                        onClick={() => setActiveThread(null)}
+                                    >
+                                        <ArrowLeft className="h-5 w-5" />
+                                    </button>
+                                    <img
+                                        src={currentThread.childPhoto}
+                                        alt={currentThread.childName}
+                                        className="h-10 w-10 rounded-full object-cover"
+                                    />
+                                    <div>
+                                        <p className="font-medium text-neutral-800">{currentThread.parentName} (Parent)</p>
+                                        <p className="text-xs text-neutral-500">
+                                            Parent of {currentThread.childName}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Messages */}
+                                <div className="flex-1 overflow-y-auto p-4">
+                                    {currentThread.messages.map(message => (
+                                        <MessageBubble
+                                            key={message.id}
+                                            message={message}
+                                            isOwn={message.senderId === therapistId}
+                                        />
+                                    ))}
+                                    <div ref={messagesEndRef} />
+                                </div>
+
+                                {/* Input */}
+                                <div className="p-4 border-t border-neutral-200">
+                                    <div className="flex items-center gap-2">
+                                        <button className="p-2 text-neutral-400 hover:text-neutral-600 transition-colors">
+                                            <Paperclip className="h-5 w-5" />
+                                        </button>
+                                        <input
+                                            type="text"
+                                            placeholder="Type a message..."
+                                            className="flex-1 p-3 bg-neutral-50 rounded-full border-0 focus:ring-2 focus:ring-secondary-200 focus:outline-none"
+                                            value={newMessage}
+                                            onChange={(e) => setNewMessage(e.target.value)}
+                                            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                                        />
+                                        <Button
+                                            variant="secondary"
+                                            className="rounded-full px-4"
+                                            onClick={handleSend}
+                                            disabled={!newMessage.trim()}
+                                        >
+                                            <Send className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </>
                         ) : (
-                            <div className="p-8 text-center text-neutral-400">
-                                <Users className="h-10 w-10 mx-auto mb-2" />
-                                <p>No parent conversations yet</p>
+                            <div className="flex-1 flex items-center justify-center text-neutral-400">
+                                <div className="text-center">
+                                    <MessageSquare className="h-16 w-16 mx-auto mb-4 text-neutral-200" />
+                                    <p className="text-lg font-medium text-neutral-500">Select a conversation</p>
+                                    <p className="text-sm">Choose a parent from the list</p>
+                                </div>
                             </div>
                         )}
                     </div>
                 </div>
-
-                {/* Chat View */}
-                <div className={`flex-1 flex flex-col ${activeThread ? 'flex' : 'hidden md:flex'}`}>
-                    {currentThread ? (
-                        <>
-                            {/* Chat Header */}
-                            <div className="p-4 border-b border-neutral-200 flex items-center gap-3">
-                                <button
-                                    className="md:hidden text-neutral-400 hover:text-neutral-600"
-                                    onClick={() => setActiveThread(null)}
-                                >
-                                    <ArrowLeft className="h-5 w-5" />
-                                </button>
-                                <img
-                                    src={currentThread.childPhoto}
-                                    alt={currentThread.childName}
-                                    className="h-10 w-10 rounded-full object-cover"
-                                />
-                                <div>
-                                    <p className="font-medium text-neutral-800">{currentThread.parentName}</p>
-                                    <p className="text-xs text-neutral-500">
-                                        Parent of {currentThread.childName}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Messages */}
-                            <div className="flex-1 overflow-y-auto p-4">
-                                {currentThread.messages.map(message => (
-                                    <MessageBubble
-                                        key={message.id}
-                                        message={message}
-                                        isOwn={message.senderId === therapistId}
-                                    />
-                                ))}
-                                <div ref={messagesEndRef} />
-                            </div>
-
-                            {/* Input */}
-                            <div className="p-4 border-t border-neutral-200">
-                                <div className="flex items-center gap-2">
-                                    <button className="p-2 text-neutral-400 hover:text-neutral-600 transition-colors">
-                                        <Paperclip className="h-5 w-5" />
-                                    </button>
-                                    <input
-                                        type="text"
-                                        placeholder="Type a message..."
-                                        className="flex-1 p-3 bg-neutral-50 rounded-full border-0 focus:ring-2 focus:ring-secondary-200 focus:outline-none"
-                                        value={newMessage}
-                                        onChange={(e) => setNewMessage(e.target.value)}
-                                        onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                                    />
-                                    <Button
-                                        variant="secondary"
-                                        className="rounded-full px-4"
-                                        onClick={handleSend}
-                                        disabled={!newMessage.trim()}
-                                    >
-                                        <Send className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="flex-1 flex items-center justify-center text-neutral-400">
+            ) : (
+                /* Community View */
+                <div className="flex-1 flex bg-white rounded-xl border border-neutral-200 overflow-hidden">
+                    {defaultCommunity ? (
+                        <CommunityChat
+                            communityId={defaultCommunity.id}
+                            currentUserId={therapistId}
+                            currentUserName={currentUser?.name || 'Therapist'}
+                            currentUserRole="therapist"
+                        />
+                    ) : loadingCommunity ? (
+                        <div className="flex-1 flex items-center justify-center">
                             <div className="text-center">
-                                <MessageSquare className="h-16 w-16 mx-auto mb-4 text-neutral-200" />
-                                <p className="text-lg font-medium text-neutral-500">Select a conversation</p>
-                                <p className="text-sm">Choose a parent from the list</p>
+                                <Users className="h-12 w-12 text-neutral-300 mx-auto mb-3 animate-pulse" />
+                                <p className="text-neutral-500">Loading community...</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex-1 flex items-center justify-center">
+                            <div className="text-center">
+                                <Users className="h-12 w-12 text-neutral-300 mx-auto mb-3" />
+                                <p className="text-neutral-500 font-medium mb-2">No community available</p>
+                                <p className="text-neutral-400 text-sm">Community will be created automatically</p>
                             </div>
                         </div>
                     )}
                 </div>
-            </div>
+            )}
+
         </div>
     );
 };

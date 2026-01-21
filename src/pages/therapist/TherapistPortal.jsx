@@ -14,7 +14,8 @@ import {
     Brain,
     Target,
     MessageSquare,
-    LogOut
+    LogOut,
+    Activity
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -28,6 +29,7 @@ import TherapyIntelligence from './TherapyIntelligence';
 import RoadmapEditor from './RoadmapEditor';
 import ScheduleManagement from './ScheduleManagement';
 import TherapistMessages from './TherapistMessages';
+import TherapistProgressTracking from './TherapistProgressTracking';
 
 // ============================================================
 // Therapist Layout Wrapper with Logout
@@ -41,14 +43,18 @@ const TherapistLayoutWrapper = ({ children }) => {
         navigate('/therapist/login');
     };
 
+    const { privateUnreadCount, communityUnreadCount } = useApp();
+    const totalMessagesUnread = (privateUnreadCount || 0) + (communityUnreadCount || 0);
+
     const sidebarItems = [
         { label: 'Dashboard', path: '/therapist/dashboard', icon: LayoutDashboard },
         { label: 'My Patients', path: '/therapist/patients', icon: Users },
         { label: 'Schedule', path: '/therapist/schedule', icon: Calendar },
         { label: 'Session Logs', path: '/therapist/logs', icon: ClipboardList },
-        { label: 'Messages', path: '/therapist/messages', icon: MessageSquare },
+        { label: 'Messages', path: '/therapist/messages', icon: MessageSquare, badge: totalMessagesUnread },
         { label: 'AI Intelligence', path: '/therapist/intelligence', icon: Brain },
         { label: 'Roadmap Editor', path: '/therapist/roadmap', icon: Target },
+        { label: 'Patient Progress', path: '/therapist/progress', icon: Activity },
     ];
 
     return (
@@ -68,10 +74,19 @@ const TherapistLayoutWrapper = ({ children }) => {
 // ============================================================
 const TherapistDashboard = () => {
     const navigate = useNavigate();
-    const { currentUser, kids, sessions, getTherapistStats, getLatestSkillScores } = useApp();
+    const {
+        currentUser,
+        kids,
+        sessions,
+        getTherapistStats,
+        getLatestSkillScores,
+        privateUnreadCount,
+        communityUnreadCount
+    } = useApp();
 
     const therapistId = currentUser?.id || 't1';
     const stats = getTherapistStats(therapistId);
+    const totalUnread = (privateUnreadCount || 0) + (communityUnreadCount || 0);
 
     // Get today's sessions (matching mock data date)
     const today = new Date().toISOString().split('T')[0];
@@ -99,7 +114,7 @@ const TherapistDashboard = () => {
             </div>
 
             {/* Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                 <Card className="border-l-4 border-l-secondary-500 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/therapist/patients')}>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-lg">Active Patients</CardTitle>
@@ -125,6 +140,17 @@ const TherapistDashboard = () => {
                     <CardContent>
                         <p className="text-3xl font-bold text-neutral-800">{todaySessions.length - completedSessions.length}</p>
                         <p className="text-sm text-neutral-500">High Priority</p>
+                    </CardContent>
+                </Card>
+                <Card className={`border-l-4 ${totalUnread > 0 ? 'border-l-violet-500 bg-violet-50' : 'border-l-neutral-300'} hover:shadow-lg transition-shadow cursor-pointer`} onClick={() => navigate('/therapist/messages')}>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">New Messages</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className={`text-3xl font-bold ${totalUnread > 0 ? 'text-violet-600' : 'text-neutral-800'}`}>
+                            {totalUnread}
+                        </p>
+                        <p className="text-sm text-neutral-500">{totalUnread === 1 ? 'Unread Message' : 'Unread Messages'}</p>
                     </CardContent>
                 </Card>
                 <Card className={`border-l-4 ${patientsNeedingAttention.length > 0 ? 'border-l-red-500 bg-red-50' : 'border-l-green-500 bg-green-50'}`}>
@@ -168,6 +194,15 @@ const TherapistDashboard = () => {
                         <div>
                             <h3 className="font-semibold">Schedule</h3>
                             <p className="text-sm text-secondary-200">Manage appointments</p>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-indigo-500 to-blue-600 text-white" onClick={() => navigate('/therapist/progress')}>
+                    <CardContent className="p-6 flex items-center gap-4">
+                        <Activity className="h-10 w-10 text-indigo-200" />
+                        <div>
+                            <h3 className="font-semibold">Patient Progress</h3>
+                            <p className="text-sm text-indigo-200">Manage mastery levels</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -266,6 +301,7 @@ const TherapistPortal = () => {
                 <Route path="intelligence" element={<TherapyIntelligence />} />
                 <Route path="roadmap" element={<RoadmapEditor />} />
                 <Route path="messages" element={<TherapistMessages />} />
+                <Route path="progress" element={<TherapistProgressTracking />} />
                 <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Route>
         </Routes>

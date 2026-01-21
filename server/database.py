@@ -76,6 +76,16 @@ class DatabaseManager:
         """Get appointments collection"""
         return self.get_database()["appointments"]
 
+    @property
+    def communities(self):
+        """Get communities collection"""
+        return self.get_database()["communities"]
+    
+    @property
+    def community_messages(self):
+        """Get community messages collection"""
+        return self.get_database()["community_messages"]
+
 
 # Create global database manager instance
 db_manager = DatabaseManager()
