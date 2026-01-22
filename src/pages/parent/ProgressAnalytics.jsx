@@ -8,6 +8,7 @@ import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Info, Calendar
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useApp } from '../../lib/context';
+import ActualProgress from '../../components/ActualProgress';
 
 // Simple Progress Bar Component
 const ProgressBar = ({ value, max = 100, color = 'primary', showLabel = true }) => {
@@ -173,6 +174,7 @@ const ProgressAnalytics = () => {
     const { currentUser, kids, getLatestSkillScores, getSkillHistory } = useApp();
     const [expandedDomain, setExpandedDomain] = useState(null);
     const [timeRange, setTimeRange] = useState('month');
+    const [activeView, setActiveView] = useState('analytics'); // 'analytics' or 'actual'
 
     // Get current child
     const child = kids.find(k => k.id === currentUser?.childId);
@@ -277,98 +279,126 @@ const ProgressAnalytics = () => {
                 </div>
             </div>
 
-            {/* Overall Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-primary-500 to-primary-600 text-white">
-                    <CardContent className="p-4">
-                        <p className="text-primary-100 text-sm">Overall Score</p>
-                        <p className="text-3xl font-bold mt-1">{overallStats.average}%</p>
-                    </CardContent>
-                </Card>
-                <Card className="border-l-4 border-l-green-500">
-                    <CardContent className="p-4">
-                        <p className="text-neutral-500 text-sm">Improving</p>
-                        <p className="text-2xl font-bold text-green-600 mt-1">{overallStats.improving} areas</p>
-                    </CardContent>
-                </Card>
-                <Card className="border-l-4 border-l-yellow-500">
-                    <CardContent className="p-4">
-                        <p className="text-neutral-500 text-sm">Stable</p>
-                        <p className="text-2xl font-bold text-yellow-600 mt-1">{overallStats.stable} areas</p>
-                    </CardContent>
-                </Card>
-                <Card className="border-l-4 border-l-red-500">
-                    <CardContent className="p-4">
-                        <p className="text-neutral-500 text-sm">Needs Focus</p>
-                        <p className="text-2xl font-bold text-red-600 mt-1">{overallStats.attention} areas</p>
-                    </CardContent>
-                </Card>
+            {/* View Selection Buttons */}
+            <div className="flex items-center gap-4 p-1 bg-neutral-100 rounded-2xl w-fit">
+                <button
+                    onClick={() => setActiveView('analytics')}
+                    className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeView === 'analytics'
+                            ? 'bg-white text-primary-600 shadow-sm'
+                            : 'text-neutral-500 hover:text-neutral-700'
+                        }`}
+                >
+                    1️⃣ Progress Analytics
+                </button>
+                <button
+                    onClick={() => setActiveView('actual')}
+                    className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeView === 'actual'
+                            ? 'bg-white text-primary-600 shadow-sm'
+                            : 'text-neutral-500 hover:text-neutral-700'
+                        }`}
+                >
+                    2️⃣ Actual Progress
+                </button>
             </div>
 
-            {/* AI Insight */}
-            <Card className="bg-gradient-to-r from-violet-50 to-purple-50 border-violet-200">
-                <CardContent className="p-4 flex items-start gap-3">
-                    <div className="p-2 bg-violet-100 rounded-lg">
-                        <Info className="h-5 w-5 text-violet-600" />
+            {activeView === 'analytics' ? (
+                <>
+                    {/* Overall Summary */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <Card className="bg-gradient-to-br from-primary-500 to-primary-600 text-white">
+                            <CardContent className="p-4">
+                                <p className="text-primary-100 text-sm">Overall Score</p>
+                                <p className="text-3xl font-bold mt-1">{overallStats.average}%</p>
+                            </CardContent>
+                        </Card>
+                        <Card className="border-l-4 border-l-green-500">
+                            <CardContent className="p-4">
+                                <p className="text-neutral-500 text-sm">Improving</p>
+                                <p className="text-2xl font-bold text-green-600 mt-1">{overallStats.improving} areas</p>
+                            </CardContent>
+                        </Card>
+                        <Card className="border-l-4 border-l-yellow-500">
+                            <CardContent className="p-4">
+                                <p className="text-neutral-500 text-sm">Stable</p>
+                                <p className="text-2xl font-bold text-yellow-600 mt-1">{overallStats.stable} areas</p>
+                            </CardContent>
+                        </Card>
+                        <Card className="border-l-4 border-l-red-500">
+                            <CardContent className="p-4">
+                                <p className="text-neutral-500 text-sm">Needs Focus</p>
+                                <p className="text-2xl font-bold text-red-600 mt-1">{overallStats.attention} areas</p>
+                            </CardContent>
+                        </Card>
                     </div>
+
+                    {/* AI Insight */}
+                    <Card className="bg-gradient-to-r from-violet-50 to-purple-50 border-violet-200">
+                        <CardContent className="p-4 flex items-start gap-3">
+                            <div className="p-2 bg-violet-100 rounded-lg">
+                                <Info className="h-5 w-5 text-violet-600" />
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-violet-900">AI Insight</h4>
+                                <p className="text-violet-700 text-sm mt-1">
+                                    {overallStats.improving >= 3
+                                        ? `Great progress this ${timeRange}! ${child.name} is showing improvement in ${overallStats.improving} skill areas. Keep up the excellent work with home practice!`
+                                        : overallStats.attention >= 2
+                                            ? `${child.name} may benefit from extra focus on a few areas this ${timeRange}. The therapy team will address these in upcoming sessions.`
+                                            : `${child.name} is making steady progress across most skill areas. Consistency in therapy and home activities is key!`
+                                    }
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Skill Domains */}
                     <div>
-                        <h4 className="font-semibold text-violet-900">AI Insight</h4>
-                        <p className="text-violet-700 text-sm mt-1">
-                            {overallStats.improving >= 3
-                                ? `Great progress this ${timeRange}! ${child.name} is showing improvement in ${overallStats.improving} skill areas. Keep up the excellent work with home practice!`
-                                : overallStats.attention >= 2
-                                    ? `${child.name} may benefit from extra focus on a few areas this ${timeRange}. The therapy team will address these in upcoming sessions.`
-                                    : `${child.name} is making steady progress across most skill areas. Consistency in therapy and home activities is key!`
-                            }
-                        </p>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Skill Domains */}
-            <div>
-                <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-neutral-500" />
-                    Skill Development by Domain
-                </h3>
-                <div className="space-y-3">
-                    {skillData.map((skill) => (
-                        <SkillDomainCard
-                            key={skill.id}
-                            domain={skill.domain}
-                            currentScore={skill.score}
-                            trend={skill.trend}
-                            weeklyChange={skill.weeklyChange}
-                            historicalData={skill.historicalData}
-                            isExpanded={expandedDomain === skill.domain}
-                            onToggle={() => setExpandedDomain(
-                                expandedDomain === skill.domain ? null : skill.domain
-                            )}
-                        />
-                    ))}
-                </div>
-            </div>
-
-            {/* Legend */}
-            <Card className="bg-neutral-50">
-                <CardContent className="p-4">
-                    <h4 className="font-medium text-neutral-700 mb-3">Understanding the Scores</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-green-500" />
-                            <span className="text-neutral-600">70-100%: On track for age</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                            <span className="text-neutral-600">50-69%: Developing well</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-red-500" />
-                            <span className="text-neutral-600">0-49%: Focus area</span>
+                        <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+                            <Calendar className="h-5 w-5 text-neutral-500" />
+                            Skill Development by Domain
+                        </h3>
+                        <div className="space-y-3">
+                            {skillData.map((skill) => (
+                                <SkillDomainCard
+                                    key={skill.id}
+                                    domain={skill.domain}
+                                    currentScore={skill.score}
+                                    trend={skill.trend}
+                                    weeklyChange={skill.weeklyChange}
+                                    historicalData={skill.historicalData}
+                                    isExpanded={expandedDomain === skill.domain}
+                                    onToggle={() => setExpandedDomain(
+                                        expandedDomain === skill.domain ? null : skill.domain
+                                    )}
+                                />
+                            ))}
                         </div>
                     </div>
-                </CardContent>
-            </Card>
+
+                    {/* Legend */}
+                    <Card className="bg-neutral-50">
+                        <CardContent className="p-4">
+                            <h4 className="font-medium text-neutral-700 mb-3">Understanding the Scores</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-green-500" />
+                                    <span className="text-neutral-600">70-100%: On track for age</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                                    <span className="text-neutral-600">50-69%: Developing well</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-red-500" />
+                                    <span className="text-neutral-600">0-49%: Focus area</span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </>
+            ) : (
+                <ActualProgress childId={childId} role="parent" />
+            )}
         </div>
     );
 };

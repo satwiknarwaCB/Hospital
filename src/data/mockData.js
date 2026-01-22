@@ -1104,3 +1104,31 @@ export const SKILL_PROGRESS = [
         ]
     }
 ];
+
+// ============ SKILL GOALS (Planned Targets) ============
+export const SKILL_GOALS = [
+    {
+        id: 'sg1',
+        childId: 'c1',
+        skillId: 'sp1', // Holding a Spoon
+        skillName: 'Holding a Spoon',
+        duration: '1 Month',
+        startDate: '2025-12-01',
+        deadline: '2026-01-01',
+        targets: [25, 50, 75, 100], // Weekly targets
+        status: 'In Progress',
+        notes: 'Goal is to achieve stable 3-finger grip by end of month.'
+    },
+    {
+        id: 'sg2',
+        childId: 'c1',
+        skillId: 'sp8', // Sound / Word Imitation
+        skillName: 'Sound / Word Imitation',
+        duration: '1 Month',
+        startDate: '2025-12-01',
+        deadline: '2026-01-01',
+        targets: [20, 45, 70, 95],
+        status: 'In Progress',
+        notes: 'Focus on bilabial sounds (B, P, M).'
+    }
+];

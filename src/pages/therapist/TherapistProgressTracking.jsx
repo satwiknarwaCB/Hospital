@@ -15,11 +15,13 @@ import {
     HeartPulse
 } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/Card';
+import ActualProgress from '../../components/ActualProgress';
 
 const TherapistProgressTracking = () => {
     const { currentUser, kids } = useApp();
     const [selectedChildId, setSelectedChildId] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [activeView, setActiveView] = useState('clinical'); // 'clinical' or 'actual'
 
     // Filter kids assigned to this therapist or all if admin (demo logic)
     const therapistKids = kids.filter(k =>
@@ -57,8 +59,8 @@ const TherapistProgressTracking = () => {
                             key={child.id}
                             onClick={() => setSelectedChildId(child.id)}
                             className={`w-full text-left p-4 rounded-2xl transition-all duration-300 border-2 ${selectedChildId === child.id
-                                    ? 'bg-primary-50 border-primary-200 shadow-sm'
-                                    : 'bg-white border-transparent hover:bg-neutral-50'
+                                ? 'bg-primary-50 border-primary-200 shadow-sm'
+                                : 'bg-white border-transparent hover:bg-neutral-50'
                                 }`}
                         >
                             <div className="flex items-center justify-between">
@@ -90,10 +92,38 @@ const TherapistProgressTracking = () => {
             <div className="flex-1 bg-white rounded-[2.5rem] border border-neutral-200/50 shadow-sm overflow-hidden flex flex-col">
                 {selectedChildId ? (
                     <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                        <ChildProgressTracking
-                            forceChildId={selectedChildId}
-                            role="therapist"
-                        />
+                        <div className="flex items-center gap-4 mb-8 p-1 bg-neutral-100 rounded-2xl w-fit">
+                            <button
+                                onClick={() => setActiveView('clinical')}
+                                className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeView === 'clinical'
+                                    ? 'bg-white text-primary-600 shadow-sm'
+                                    : 'text-neutral-500 hover:text-neutral-700'
+                                    }`}
+                            >
+                                1️⃣ Child Progress Tracking
+                            </button>
+                            <button
+                                onClick={() => setActiveView('actual')}
+                                className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeView === 'actual'
+                                    ? 'bg-white text-primary-600 shadow-sm'
+                                    : 'text-neutral-500 hover:text-neutral-700'
+                                    }`}
+                            >
+                                2️⃣ Actual Progress (Planned vs Achieved)
+                            </button>
+                        </div>
+
+                        {activeView === 'clinical' ? (
+                            <ChildProgressTracking
+                                forceChildId={selectedChildId}
+                                role="therapist"
+                            />
+                        ) : (
+                            <ActualProgress
+                                childId={selectedChildId}
+                                role="therapist"
+                            />
+                        )}
                     </div>
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-neutral-50/50">

@@ -15,7 +15,8 @@ import {
     CONSENT_RECORDS,
     AUDIT_LOGS,
     CDC_METRICS,
-    SKILL_PROGRESS
+    SKILL_PROGRESS,
+    SKILL_GOALS
 } from '../data/mockData';
 import { sessionAPI, communityAPI, messagesAPI } from './api';
 
@@ -37,6 +38,10 @@ export const AppProvider = ({ children }) => {
         const saved = localStorage.getItem('neurobridge_skill_progress');
         return saved ? JSON.parse(saved) : SKILL_PROGRESS;
     });
+    const [skillGoals, setSkillGoals] = useState(() => {
+        const saved = localStorage.getItem('neurobridge_skill_goals');
+        return saved ? JSON.parse(saved) : SKILL_GOALS;
+    });
     const [communityUnreadCount, setCommunityUnreadCount] = useState(0);
     const [privateUnreadCount, setPrivateUnreadCount] = useState(0);
     const notifiedMessageIds = useRef(new Set());
@@ -45,6 +50,10 @@ export const AppProvider = ({ children }) => {
     useEffect(() => {
         localStorage.setItem('neurobridge_skill_progress', JSON.stringify(skillProgress));
     }, [skillProgress]);
+
+    useEffect(() => {
+        localStorage.setItem('neurobridge_skill_goals', JSON.stringify(skillGoals));
+    }, [skillGoals]);
 
     useEffect(() => {
         const handleStorage = (e) => {
@@ -56,8 +65,23 @@ export const AppProvider = ({ children }) => {
                 }
             }
         };
+
+        const handleGoalsStorage = (e) => {
+            if (e.key === 'neurobridge_skill_goals' && e.newValue) {
+                try {
+                    setSkillGoals(JSON.parse(e.newValue));
+                } catch (err) {
+                    console.error('Error syncing skill goals across tabs:', err);
+                }
+            }
+        };
+
         window.addEventListener('storage', handleStorage);
-        return () => window.removeEventListener('storage', handleStorage);
+        window.addEventListener('storage', handleGoalsStorage);
+        return () => {
+            window.removeEventListener('storage', handleStorage);
+            window.removeEventListener('storage', handleGoalsStorage);
+        };
     }, []);
 
     // ============ Auth State ============
@@ -650,6 +674,24 @@ export const AppProvider = ({ children }) => {
         }));
     }, []);
 
+    const getChildGoals = useCallback((childId) => {
+        return skillGoals.filter(g => g.childId === childId);
+    }, [skillGoals]);
+
+    const updateSkillGoal = useCallback((goalId, updates) => {
+        setSkillGoals(prev => prev.map(goal =>
+            goal.id === goalId ? { ...goal, ...updates } : goal
+        ));
+    }, []);
+
+    const addSkillGoal = useCallback((newGoal) => {
+        setSkillGoals(prev => [...prev, {
+            id: `sg${Date.now()}`,
+            ...newGoal,
+            startDate: new Date().toISOString().split('T')[0]
+        }]);
+    }, []);
+
     const getTherapistStats = useCallback((therapistId) => {
         const therapistSessions = sessions.filter(s => s.therapistId === therapistId);
         const patients = kids.filter(k => k.therapistId === therapistId);
@@ -745,6 +787,12 @@ export const AppProvider = ({ children }) => {
         getChildProgress,
         updateSkillProgress,
 
+        // Skill Goals (Planned Targets)
+        skillGoals,
+        getChildGoals,
+        updateSkillGoal,
+        addSkillGoal,
+
         // UI Actions
         setIsLoading
     }), [
@@ -757,7 +805,8 @@ export const AppProvider = ({ children }) => {
         completeMilestone, getChildHomeActivities, logActivityCompletion, getActivityAdherence,
         getChildMessages, getUnreadCount, sendMessage, markMessageRead, addAuditLog,
         addNotification, clearNotifications, getEngagementTrend, getTherapistStats,
-        skillProgress, getChildProgress, updateSkillProgress
+        skillProgress, getChildProgress, updateSkillProgress,
+        skillGoals, getChildGoals, updateSkillGoal, addSkillGoal
     ]);
 
     return (
