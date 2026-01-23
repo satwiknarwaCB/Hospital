@@ -25,12 +25,19 @@ import {
     List,
     GlassWater,
     Users,
-    ArrowUpCircle
+    ArrowUpCircle,
+    Plus,
+    PlusCircle,
+    Trash2,
+    X,
+    Save,
+    Edit3,
+    Heart,
+    ShieldCheck
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useApp } from '../../lib/context';
-import { X, Save, Edit3, Heart, ShieldCheck } from 'lucide-react';
 
 // ============================================================
 // Constants & Utilities
@@ -83,7 +90,7 @@ const ProgressBar = ({ progress, status }) => {
 const UpdateProgressModal = ({ skill, onClose, onSave, role }) => {
     const [progress, setProgress] = useState(skill.progress);
     const [status, setStatus] = useState(skill.status);
-    const [note, setNote] = useState('');
+    const [note, setNote] = useState(role === 'parent' ? (skill.parentNote || '') : (skill.therapistNotes || ''));
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -116,7 +123,6 @@ const UpdateProgressModal = ({ skill, onClose, onSave, role }) => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    {/* Status Toggle */}
                     <div className="space-y-3">
                         <label className="text-sm font-bold text-neutral-700">Current Status</label>
                         <div className="flex p-1 bg-neutral-100 rounded-xl gap-1">
@@ -136,7 +142,6 @@ const UpdateProgressModal = ({ skill, onClose, onSave, role }) => {
                         </div>
                     </div>
 
-                    {/* Progress Slider */}
                     <div className="space-y-3">
                         <div className="flex justify-between items-center">
                             <label className="text-sm font-bold text-neutral-700">Mastery Level</label>
@@ -156,7 +161,6 @@ const UpdateProgressModal = ({ skill, onClose, onSave, role }) => {
                         </div>
                     </div>
 
-                    {/* Note Field */}
                     <div className="space-y-3">
                         <label className="text-sm font-bold text-neutral-700">
                             {role === 'parent' ? 'Parent Observation (Inform Therapist)' : 'Therapist Clinical Notes'}
@@ -212,7 +216,9 @@ const DailyProgressView = ({ records, onUpdate, role }) => {
                                             <div className="flex-1">
                                                 <div className="flex items-center justify-between mb-1">
                                                     <h4 className="font-bold text-neutral-800 text-lg tracking-tight">{record.skillName}</h4>
-                                                    <StatusBadge status={record.status} />
+                                                    <div className="flex items-center gap-2">
+                                                        <StatusBadge status={record.status} />
+                                                    </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{record.category}</p>
@@ -307,7 +313,7 @@ const WeeklyProgressView = ({ records }) => {
                     <CardContent className="p-5">
                         <div className="flex items-center justify-between mb-4">
                             <ArrowUpCircle className="h-6 w-6 text-green-100" />
-                            <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">Growth</span>
+                            <span className="text-[10px) font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">Growth</span>
                         </div>
                         <p className="text-4xl font-black mb-1">{improvedCount}</p>
                         <p className="text-sm font-medium text-green-50">Skills Showing Improvement</p>
@@ -475,7 +481,9 @@ const ChildProgressTracking = ({ forceChildId = null, role = 'parent' }) => {
     const [selectedSkillForUpdate, setSelectedSkillForUpdate] = useState(null);
 
     const child = kids.find(k => k.id === (forceChildId || currentUser?.childId));
-    const records = getChildProgress(child?.id || 'c1');
+    const records = getChildProgress(child?.id || 'c1')
+        .filter(r => !r.isGoalOnly && !r.skillId?.startsWith('custom-'))
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
 
     if (!child) return null;
 
@@ -493,28 +501,15 @@ const ChildProgressTracking = ({ forceChildId = null, role = 'parent' }) => {
 
     return (
         <div className="pb-12 space-y-8">
-            <header className="mb-0">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <h1 className="text-3xl font-black text-neutral-900 tracking-tight">Child Progress Tracking</h1>
-                            <div className="px-2 py-0.5 bg-primary-100 text-primary-600 rounded text-[10px] font-black uppercase tracking-widest">
-                                {role === 'therapist' ? 'Clinical Management' : 'Parent Insight'}
-                            </div>
-                        </div>
-                        <p className="text-neutral-500">
-                            Detailed analysis of <span className="text-primary-600 font-bold">{child.name}</span>'s therapy journey.
-                        </p>
-                    </div>
-                </div>
-            </header>
 
-            {/* Tab Navigation */}
-            <nav className="p-1.5 bg-neutral-100/80 backdrop-blur rounded-2xl flex gap-1 sticky top-0 z-10 shadow-sm border border-neutral-200/50">
-                <TabButton value="daily" label="Daily" />
-                <TabButton value="weekly" label="Weekly" />
-                <TabButton value="monthly" label="Monthly" />
-            </nav>
+            {/* Tab Navigation & Actions */}
+            <div className="flex flex-col md:flex-row gap-4">
+                <nav className="flex-1 p-1.5 bg-neutral-100/80 backdrop-blur rounded-2xl flex gap-1 sticky top-0 z-10 shadow-sm border border-neutral-200/50">
+                    <TabButton value="daily" label="Daily" />
+                    <TabButton value="weekly" label="Weekly" />
+                    <TabButton value="monthly" label="Monthly" />
+                </nav>
+            </div>
 
             {/* View Transitions */}
             <div className="animate-in fade-in slide-in-from-bottom-3 duration-700">

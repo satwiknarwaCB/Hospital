@@ -220,3 +220,47 @@ async def get_current_admin(
         role="admin",
         is_active=admin_data.get("is_active", True)
     )
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> dict:
+    """
+    Generic dependency that allows any authenticated user (Parent, Doctor, or Admin)
+    Returns a unified user dict for easier access in routes
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    token = credentials.credentials
+    payload = decode_access_token(token)
+    if payload is None:
+        raise credentials_exception
+    
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise credentials_exception
+    
+    # Check if doctor/therapist
+    doctor = db_manager.doctors.find_one({"_id": user_id})
+    if doctor:
+        if not doctor.get("is_active", True):
+            raise HTTPException(status_code=403, detail="Doctor account is deactivated")
+        return {"id": str(doctor["_id"]), "name": doctor["name"], "role": "therapist", "email": doctor["email"]}
+        
+    # Check if parent
+    parent = db_manager.parents.find_one({"_id": user_id})
+    if parent:
+        if not parent.get("is_active", True):
+            raise HTTPException(status_code=403, detail="Parent account is deactivated")
+        return {"id": str(parent["_id"]), "name": parent["name"], "role": "parent", "email": parent["email"]}
+        
+    # Check if admin
+    admin = db_manager.admins.find_one({"_id": user_id})
+    if admin:
+        if not admin.get("is_active", True):
+            raise HTTPException(status_code=403, detail="Admin account is deactivated")
+        return {"id": str(admin["_id"]), "name": admin["name"], "role": "admin", "email": admin["email"]}
+        
+    raise credentials_exception

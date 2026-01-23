@@ -30,8 +30,7 @@ import ProgressAnalytics from './ProgressAnalytics';
 import ChildProgressTracking from './ChildProgressTracking';
 import GrowthRoadmap from './GrowthRoadmap';
 import HomeActivities from './HomeActivities';
-import SessionHistory from './SessionHistory';
-import UpcomingSessions from './UpcomingSessions';
+import ParentSessions from './ParentSessions';
 import Messages from './Messages';
 
 // ============================================================
@@ -349,7 +348,7 @@ const ParentDashboard = () => {
                                     <Button
                                         className="flex-1"
                                         variant="outline"
-                                        onClick={() => setSelectedSession(lastSession)}
+                                        onClick={() => navigate('/parent/sessions', { state: { activeTab: 'history', sessionId: lastSession.id } })}
                                     >
                                         View Full Report
                                     </Button>
@@ -453,7 +452,7 @@ const ParentDashboard = () => {
                                 <Button
                                     variant="outline"
                                     className="w-full mt-6"
-                                    onClick={() => setSelectedSession(nextSession)}
+                                    onClick={() => navigate('/parent/sessions', { state: { activeTab: 'upcoming', sessionId: nextSession.id } })}
                                 >
                                     View Details
                                 </Button>
@@ -531,11 +530,9 @@ const ParentPortal = () => {
     const sidebarItems = [
         { label: 'Dashboard', path: '/parent/dashboard', icon: LayoutDashboard },
         { label: 'Progress', path: '/parent/progress', icon: TrendingUp },
-        { label: 'Daily Progress Tracking', path: '/parent/daily-progress', icon: Activity },
         { label: 'Roadmap', path: '/parent/roadmap', icon: Target },
         { label: 'Home Activities', path: '/parent/activities', icon: Home },
-        { label: 'Session History', path: '/parent/history', icon: History },
-        { label: 'Upcoming Session', path: '/parent/upcoming', icon: Calendar },
+        { label: 'Sessions', path: '/parent/sessions', icon: Calendar },
         { label: 'Messages', path: '/parent/messages', icon: MessageCircle, badge: totalMessagesUnread },
     ];
 
@@ -544,11 +541,9 @@ const ParentPortal = () => {
             <Route element={<DashboardLayout title="Parent Portal" sidebarItems={sidebarItems} roleColor="bg-primary-600" />}>
                 <Route path="dashboard" element={<ParentDashboard />} />
                 <Route path="progress" element={<ProgressAnalytics />} />
-                <Route path="daily-progress" element={<ChildProgressTracking role="parent" />} />
                 <Route path="roadmap" element={<GrowthRoadmap />} />
                 <Route path="activities" element={<HomeActivities />} />
-                <Route path="history" element={<SessionHistory />} />
-                <Route path="upcoming" element={<UpcomingSessions />} />
+                <Route path="sessions" element={<ParentSessions />} />
                 <Route path="messages" element={<Messages />} />
                 <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Route>

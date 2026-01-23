@@ -41,7 +41,39 @@ def ensure_demo_users():
             )
             print(f"✅ Parent {p['name']} exists. Password and Child ID updated.")
 
-    # --- 2. ENSURE ADMIN ---
+    # --- 2. ENSURE THERAPISTS ---
+    therapists = [
+        {"name": "Dr. Rajesh Kumar", "email": "dr.rajesh@therapist.com", "password": "Therapist@123", "specialization": "Speech & Language Therapy"},
+        {"name": "Dr. Meera Singh", "email": "dr.meera@therapist.com", "password": "Therapist@123", "specialization": "Occupational Therapy"}
+    ]
+
+    for t in therapists:
+        existing = db_manager.doctors.find_one({"email": t["email"]})
+        if not existing:
+            print(f"⚠️ Therapist {t['email']} missing. Creating...")
+            hashed = hash_password(t["password"])
+            db_manager.doctors.insert_one({
+                "_id": t["email"].split("@")[0].replace(".", "_"),
+                "name": t["name"],
+                "email": t["email"],
+                "hashed_password": hashed,
+                "specialization": t["specialization"],
+                "experience_years": 10,
+                "assigned_patients": 0,
+                "created_at": datetime.utcnow(),
+                "role": "therapist",
+                "is_active": True
+            })
+            print(f"✅ Created Therapist: {t['name']}")
+        else:
+            hashed = hash_password(t["password"])
+            db_manager.doctors.update_one(
+                {"email": t["email"]},
+                {"$set": {"hashed_password": hashed}}
+            )
+            print(f"✅ Therapist {t['name']} exists. Password updated.")
+
+    # --- 3. ENSURE ADMIN ---
     admins = [
         {"name": "Director Anjali Sharma", "email": "anjali.sharma@neurobridge.com", "password": "Admin@123"}
     ]
@@ -61,7 +93,6 @@ def ensure_demo_users():
             })
             print(f"✅ Created Admin: {a['name']}")
         else:
-            # Update password to ensure it matches demo credentials
             hashed = hash_password(a["password"])
             db_manager.admins.update_one(
                 {"email": a["email"]},

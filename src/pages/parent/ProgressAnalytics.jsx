@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button';
 import { useApp } from '../../lib/context';
 import ActualProgress from '../../components/ActualProgress';
+import ChildProgressTracking from './ChildProgressTracking';
 
 // Simple Progress Bar Component
 const ProgressBar = ({ value, max = 100, color = 'primary', showLabel = true }) => {
@@ -174,7 +175,7 @@ const ProgressAnalytics = () => {
     const { currentUser, kids, getLatestSkillScores, getSkillHistory } = useApp();
     const [expandedDomain, setExpandedDomain] = useState(null);
     const [timeRange, setTimeRange] = useState('month');
-    const [activeView, setActiveView] = useState('analytics'); // 'analytics' or 'actual'
+    const [activeView, setActiveView] = useState('analytics'); // 'analytics', 'daily', or 'actual'
 
     // Get current child
     const child = kids.find(k => k.id === currentUser?.childId);
@@ -284,20 +285,29 @@ const ProgressAnalytics = () => {
                 <button
                     onClick={() => setActiveView('analytics')}
                     className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeView === 'analytics'
-                            ? 'bg-white text-primary-600 shadow-sm'
-                            : 'text-neutral-500 hover:text-neutral-700'
+                        ? 'bg-white text-primary-600 shadow-sm'
+                        : 'text-neutral-500 hover:text-neutral-700'
                         }`}
                 >
-                    1️⃣ Progress Analytics
+                    Progress Analytics
+                </button>
+                <button
+                    onClick={() => setActiveView('daily')}
+                    className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeView === 'daily'
+                        ? 'bg-white text-primary-600 shadow-sm'
+                        : 'text-neutral-500 hover:text-neutral-700'
+                        }`}
+                >
+                    Daily Tracking
                 </button>
                 <button
                     onClick={() => setActiveView('actual')}
                     className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeView === 'actual'
-                            ? 'bg-white text-primary-600 shadow-sm'
-                            : 'text-neutral-500 hover:text-neutral-700'
+                        ? 'bg-white text-primary-600 shadow-sm'
+                        : 'text-neutral-500 hover:text-neutral-700'
                         }`}
                 >
-                    2️⃣ Actual Progress
+                    Actual Progress (Planned vs Achieved)
                 </button>
             </div>
 
@@ -396,6 +406,8 @@ const ProgressAnalytics = () => {
                         </CardContent>
                     </Card>
                 </>
+            ) : activeView === 'daily' ? (
+                <ChildProgressTracking role="parent" />
             ) : (
                 <ActualProgress childId={childId} role="parent" />
             )}

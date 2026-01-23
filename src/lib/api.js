@@ -419,4 +419,86 @@ export const messagesAPI = {
     }
 };
 
+// Progress Tracking API
+export const progressAPI = {
+    // === Goals ===
+    createGoal: async (goalData) => {
+        try {
+            console.log('🌐 API: Sending goal data to backend:', goalData);
+            const response = await apiClient.post('/api/progress/goals', goalData);
+            console.log('✅ API: Goal created successfully:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('❌ API: Failed to create goal:', error);
+            console.error('❌ API: Error response:', error.response);
+            console.error('❌ API: Error data:', error.response?.data);
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getGoalsByChild: async (childId) => {
+        try {
+            const response = await apiClient.get(`/api/progress/goals/child/${childId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    updateGoal: async (goalId, updates) => {
+        try {
+            const response = await apiClient.put(`/api/progress/goals/${goalId}`, updates);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    deleteGoal: async (goalId) => {
+        try {
+            const response = await apiClient.delete(`/api/progress/goals/${goalId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    // === Actual Progress ===
+    createProgress: async (progressData) => {
+        try {
+            const response = await apiClient.post('/api/progress/actual', progressData);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getProgressByChild: async (childId) => {
+        try {
+            const response = await apiClient.get(`/api/progress/actual/child/${childId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    updateProgress: async (progressId, updates) => {
+        try {
+            const response = await apiClient.put(`/api/progress/actual/${progressId}`, updates);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    deleteProgress: async (progressId) => {
+        try {
+            const response = await apiClient.delete(`/api/progress/actual/${progressId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    }
+};
+
 export default apiClient;

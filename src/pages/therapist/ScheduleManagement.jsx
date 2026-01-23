@@ -450,18 +450,12 @@ const ScheduleManagement = () => {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold text-neutral-800">Schedule</h2>
-                    <p className="text-neutral-500">Manage your therapy sessions</p>
-                </div>
+            <div className="flex justify-end">
                 <Button onClick={() => setShowNewSession(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     New Session
                 </Button>
             </div>
-
             {/* Today's Overview */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card className="bg-gradient-to-br from-primary-500 to-primary-600 text-white">

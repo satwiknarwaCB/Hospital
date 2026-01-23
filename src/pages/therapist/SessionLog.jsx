@@ -128,10 +128,6 @@ const SessionLog = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-neutral-800">Log New Session</h2>
-        <Button variant="ghost" onClick={() => navigate(-1)}><X className="h-6 w-6" /></Button>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* LEFT COLUMN: INPUTS */}

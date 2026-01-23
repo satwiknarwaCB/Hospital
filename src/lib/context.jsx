@@ -18,7 +18,7 @@ import {
     SKILL_PROGRESS,
     SKILL_GOALS
 } from '../data/mockData';
-import { sessionAPI, communityAPI, messagesAPI } from './api';
+import { sessionAPI, communityAPI, messagesAPI, progressAPI } from './api';
 
 const AppContext = createContext();
 
@@ -98,9 +98,12 @@ export const AppProvider = ({ children }) => {
             if (parentData) {
                 try {
                     const parent = JSON.parse(parentData);
-                    const mockUser = users.find(u => u.email === parent.email) || {};
-                    // Prioritize cloud data (Real ID) over mock data
+                    const mockUser = users.find(u => u.email?.toLowerCase() === parent.email?.toLowerCase());
                     const user = { ...mockUser, ...parent };
+                    if (mockUser) {
+                        user.id = mockUser.id;
+                        user.email = mockUser.email;
+                    }
 
                     if (!user.role) user.role = 'parent';
 
@@ -112,9 +115,12 @@ export const AppProvider = ({ children }) => {
             } else if (doctorData) {
                 try {
                     const doctor = JSON.parse(doctorData);
-                    const mockUser = users.find(u => u.email === doctor.email) || {};
-                    // Prioritize cloud data (Real ID) over mock data
+                    const mockUser = users.find(u => u.email?.toLowerCase() === doctor.email?.toLowerCase());
                     const user = { ...mockUser, ...doctor };
+                    if (mockUser) {
+                        user.id = mockUser.id;
+                        user.email = mockUser.email;
+                    }
 
                     if (!user.role) user.role = 'therapist';
 
@@ -223,6 +229,165 @@ export const AppProvider = ({ children }) => {
 
         syncSessionsFromCloud();
     }, [isAuthenticated, currentUser]);
+
+    // Production-Level Progress Synchronization
+    useEffect(() => {
+        const syncProgressFromCloud = async () => {
+            if (!isAuthenticated || !currentUser) return;
+
+            try {
+                // For Parent View: Fetch their child's data
+                if (currentUser.role === 'parent' && currentUser.childId) {
+                    const [goals, progress] = await Promise.all([
+                        progressAPI.getGoalsByChild(currentUser.childId),
+                        progressAPI.getProgressByChild(currentUser.childId)
+                    ]);
+
+                    if (goals.length > 0) {
+                        setSkillGoals(prev => {
+                            // Normalize Goal IDs
+                            const normalizedGoals = goals.map(g => ({
+                                ...g,
+                                id: g.id || g._id,
+                                dbId: g._id
+                            }));
+                            const cloudIds = new Set(normalizedGoals.map(g => g.id));
+                            const legacy = prev.filter(g => !cloudIds.has(g.id));
+                            return [...normalizedGoals, ...legacy];
+                        });
+                    }
+
+                    if (progress.length > 0) {
+                        setSkillProgress(prev => {
+                            // Normalize: Ensure EVERY record has a GLOBALLY UNIQUE id (childId + skillId)
+                            const normalizedProgress = progress.map(p => ({
+                                ...p,
+                                id: `${p.childId}-${p.skillId}`, // CRITICAL: This is the source of truth for uniqueness
+                                dbId: p._id // Keep reference to backend _id for API calls
+                            }));
+
+                            // Therapist-style merging for Parents: Ensure cloud data doesn't erase clinical mock data
+                            const skillMap = new Map();
+
+                            // 1. Seed with existing local/legacy records
+                            prev.forEach(mock => {
+                                if (mock.childId === currentUser.childId) {
+                                    skillMap.set(mock.skillName, mock);
+                                }
+                            });
+
+                            // 2. Merge in normalized cloud records
+                            normalizedProgress.forEach(cloud => {
+                                const mock = skillMap.get(cloud.skillName);
+                                if (mock) {
+                                    // Deep merge logic: prefer cloud data, but keep mock data if cloud is empty
+                                    const isCloudEmpty = (!cloud.progress || cloud.progress === 0) && (!cloud.therapistNotes || cloud.therapistNotes.trim() === "");
+                                    const isMockFull = (mock.progress > 0) || (mock.therapistNotes && mock.therapistNotes.trim() !== "");
+
+                                    if (isCloudEmpty && isMockFull) {
+                                        skillMap.set(cloud.skillName, { ...mock, dbId: cloud.dbId || cloud._id });
+                                    } else {
+                                        skillMap.set(cloud.skillName, { ...mock, ...cloud }); // Merge fields
+                                    }
+                                } else {
+                                    skillMap.set(cloud.skillName, cloud);
+                                }
+                            });
+
+                            const others = prev.filter(p => p.childId !== currentUser.childId);
+                            return [...others, ...Array.from(skillMap.values())].sort((a, b) => (a.order || 0) - (b.order || 0));
+                        });
+                    }
+                }
+
+                // Therapist View: Fetch for their active caseload
+                if (currentUser.role === 'therapist') {
+                    const therapistKids = kids.filter(k => k.therapistId === currentUser.id);
+                    for (const kid of therapistKids) {
+                        try {
+                            const [goals, progress] = await Promise.all([
+                                progressAPI.getGoalsByChild(kid.id),
+                                progressAPI.getProgressByChild(kid.id)
+                            ]);
+
+                            if (goals.length > 0) {
+                                setSkillGoals(prev => {
+                                    const normalizedGoals = goals.map(g => ({
+                                        ...g,
+                                        id: g.id || g._id,
+                                        dbId: g._id
+                                    }));
+
+                                    const others = prev.filter(g => g.childId !== kid.id);
+                                    const cloudIds = new Set(normalizedGoals.map(g => g.id));
+                                    const legacy = prev.filter(g => g.childId === kid.id && !cloudIds.has(g.id));
+
+                                    return [...others, ...normalizedGoals, ...legacy];
+                                });
+                            }
+
+                            if (progress.length > 0) {
+                                setSkillProgress(prev => {
+                                    // Normalize for Therapist View: childId + skillId
+                                    const normalizedProgress = progress.map(p => ({
+                                        ...p,
+                                        id: `${p.childId}-${p.skillId}`,
+                                        dbId: p._id
+                                    }));
+
+                                    const others = prev.filter(p => p.childId !== kid.id);
+                                    const kidLegacy = prev.filter(p => p.childId === kid.id);
+
+                                    // Use a Map to guarantee uniqueness by skillName for this child
+                                    const skillMap = new Map();
+
+                                    // 1. Seed with local records (clinical mock data)
+                                    kidLegacy.forEach(mock => {
+                                        const existing = skillMap.get(mock.skillName);
+                                        // Prefer records that actually have progress data
+                                        if (!existing || (!existing.progress && mock.progress)) {
+                                            skillMap.set(mock.skillName, mock);
+                                        }
+                                    });
+
+                                    // For each legacy record, if it exists in cloud, merge. If not, keep.
+                                    // 2. Merge in cloud records
+                                    normalizedProgress.forEach(cloud => {
+                                        const mock = skillMap.get(cloud.skillName);
+                                        if (mock) {
+                                            const isCloudEmpty = (!cloud.progress || cloud.progress === 0) && (!cloud.therapistNotes || cloud.therapistNotes.trim() === "");
+                                            const isMockFull = (mock.progress > 0) || (mock.therapistNotes && mock.therapistNotes.trim() !== "");
+
+                                            if (isCloudEmpty && isMockFull) {
+                                                // Map exists but cloud is empty - preserve mock clinical data but link to cloud DB ID
+                                                skillMap.set(cloud.skillName, { ...mock, dbId: cloud.dbId || cloud._id });
+                                            } else {
+                                                // Cloud has data or mock was also empty - prefer cloud
+                                                skillMap.set(cloud.skillName, cloud);
+                                            }
+                                        } else {
+                                            skillMap.set(cloud.skillName, cloud);
+                                        }
+                                    });
+
+                                    const merged = [...others, ...Array.from(skillMap.values())];
+                                    return merged.sort((a, b) => (a.order || 0) - (b.order || 0));
+                                });
+                            }
+                        } catch (e) {
+                            console.warn(`Failed to sync progress for child ${kid.id}`, e);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('❌ Cloud Progress Sync Failed:', err);
+            }
+        };
+
+        syncProgressFromCloud();
+        const interval = setInterval(syncProgressFromCloud, 30000);
+        return () => clearInterval(interval);
+    }, [isAuthenticated, currentUser, kids]);
 
     // Global Message & Community Polling for Notifications
     useEffect(() => {
@@ -619,7 +784,7 @@ export const AppProvider = ({ children }) => {
     }, []);
 
     const addNotification = useCallback((notification) => {
-        const id = `notif${Date.now()}`;
+        const id = `notif${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         const newNotification = {
             ...notification,
             id,
@@ -651,45 +816,180 @@ export const AppProvider = ({ children }) => {
         return skillProgress.filter(p => p.childId === childId);
     }, [skillProgress]);
 
-    const updateSkillProgress = useCallback((skillId, updates) => {
-        setSkillProgress(prev => prev.map(skill => {
-            if (skill.id === skillId) {
-                const newProgress = {
-                    ...skill,
-                    ...updates,
-                    lastUpdated: new Date().toISOString().split('T')[0],
-                    history: [
-                        {
-                            date: new Date().toISOString().split('T')[0],
-                            status: updates.status || skill.status,
-                            progress: updates.progress !== undefined ? updates.progress : skill.progress,
-                            remarks: updates.therapistNotes || updates.parentNote || 'Status updated'
-                        },
-                        ...skill.history
-                    ]
+    const updateSkillProgress = useCallback(async (skillId, updates) => {
+        const updateTime = new Date().toISOString().split('T')[0];
+
+        // Find the current record to build history and check cloud status
+        const currentRecord = skillProgress.find(p => p.id === skillId);
+        if (!currentRecord) {
+            console.warn(`⚠️ [Sync] No record found for ID: ${skillId}`);
+            return;
+        }
+
+        const newHistoryItem = {
+            date: updateTime,
+            status: updates.status || currentRecord.status,
+            progress: updates.progress !== undefined ? updates.progress : currentRecord.progress,
+            remarks: updates.therapistNotes || updates.parentNote || 'Progress updated',
+            updatedBy: updates.updatedByRole || (currentUser?.role || 'system')
+        };
+
+        const fullUpdates = {
+            ...updates,
+            lastUpdated: updateTime,
+            history: [newHistoryItem, ...(currentRecord.history || [])]
+        };
+
+        // Optimistic Update
+        setSkillProgress(prev => {
+            console.log(`🎯 [Sync] Local optimistic update for ${skillId}`);
+            return prev.map(skill => {
+                if (skill.id === skillId) {
+                    return { ...skill, ...fullUpdates };
+                }
+                return skill;
+            });
+        });
+
+        // Backend Sync
+        try {
+            const hasCloudRecord = currentRecord.dbId || currentRecord._id;
+
+            if (hasCloudRecord) {
+                // Already in MongoDB, just update
+                const dbId = currentRecord.dbId || currentRecord._id;
+                await progressAPI.updateProgress(dbId, fullUpdates);
+                console.log(`✅ [MongoDB] Sync successful for ${skillId}`);
+            } else {
+                // This is a Mock record, "Promote" it to MongoDB
+                const fullRecord = {
+                    ...currentRecord,
+                    ...fullUpdates,
+                    skillId: currentRecord.skillId || currentRecord.id // Explicitly map 'id' to 'skillId'
                 };
-                return newProgress;
+
+                const saved = await progressAPI.createProgress(fullRecord);
+
+                // Update local state with the real MongoDB _id
+                setSkillProgress(prev => prev.map(p =>
+                    p.id === skillId ? { ...p, dbId: saved._id || saved.id, _id: saved._id || saved.id, skillId: fullRecord.skillId } : p
+                ));
+                console.log(`🚀 [MongoDB] Record promoted and synced successfully for ${skillId}`);
             }
-            return skill;
-        }));
-    }, []);
+        } catch (err) {
+            console.error("❌ [MongoDB] Sync failure:", err);
+        }
+    }, [skillProgress, currentUser]);
 
     const getChildGoals = useCallback((childId) => {
         return skillGoals.filter(g => g.childId === childId);
     }, [skillGoals]);
 
-    const updateSkillGoal = useCallback((goalId, updates) => {
+    const updateSkillGoal = useCallback(async (goalId, updates) => {
+        // Optimistic
         setSkillGoals(prev => prev.map(goal =>
             goal.id === goalId ? { ...goal, ...updates } : goal
         ));
+
+        try {
+            await progressAPI.updateGoal(goalId, updates);
+        } catch (err) {
+            console.error("Failed to persist goal update:", err);
+        }
     }, []);
 
-    const addSkillGoal = useCallback((newGoal) => {
-        setSkillGoals(prev => [...prev, {
-            id: `sg${Date.now()}`,
-            ...newGoal,
-            startDate: new Date().toISOString().split('T')[0]
-        }]);
+    const addSkillGoal = useCallback(async (newGoal) => {
+        try {
+            console.log('📝 Creating new goal:', newGoal);
+            const savedGoal = await progressAPI.createGoal(newGoal);
+            console.log('✅ Goal created:', savedGoal);
+
+            setSkillGoals(prev => [...prev, savedGoal]);
+
+            // Also ensure a corresponding progress record exists
+            try {
+                const progressData = {
+                    childId: newGoal.childId,
+                    skillId: newGoal.skillId,
+                    skillName: newGoal.skillName,
+                    status: 'In Progress',
+                    progress: 0,
+                    weeklyActuals: [],
+                    history: [],
+                    isGoalOnly: true // Hide from Child Progress Tracking cards
+                };
+                console.log('📝 Creating progress record:', progressData);
+                const savedProgress = await progressAPI.createProgress(progressData);
+                console.log('✅ Progress record created:', savedProgress);
+
+                // Update local state with the new progress record
+                setSkillProgress(prev => [...prev, savedProgress]);
+            } catch (progressErr) {
+                console.warn('Progress record creation failed (may already exist):', progressErr);
+                // Create local fallback progress record
+                setSkillProgress(prev => [...prev, {
+                    id: `sp${Date.now()}`,
+                    childId: newGoal.childId,
+                    skillId: newGoal.skillId,
+                    skillName: newGoal.skillName,
+                    status: 'In Progress',
+                    progress: 0,
+                    weeklyActuals: [],
+                    history: [],
+                    therapistNotes: '',
+                    lastUpdated: new Date().toISOString().split('T')[0],
+                    isGoalOnly: true
+                }]);
+            }
+
+            return savedGoal;
+
+        } catch (err) {
+            console.error("❌ Failed to create goal:", err);
+            // Fallback for demo - create local goal
+            const localGoal = {
+                id: `sg${Date.now()}`,
+                ...newGoal,
+                startDate: newGoal.startDate || new Date().toISOString().split('T')[0]
+            };
+            setSkillGoals(prev => [...prev, localGoal]);
+
+            // Also create local progress record
+            setSkillProgress(prev => [...prev, {
+                id: `sp${Date.now()}`,
+                childId: newGoal.childId,
+                skillId: newGoal.skillId,
+                skillName: newGoal.skillName,
+                status: 'In Progress',
+                progress: 0,
+                weeklyActuals: [],
+                history: [],
+                therapistNotes: '',
+                lastUpdated: new Date().toISOString().split('T')[0]
+            }]);
+
+            return localGoal;
+        }
+    }, []);
+
+    const deleteSkillGoal = useCallback(async (goalId) => {
+        setSkillGoals(prev => prev.filter(g => g.id !== goalId));
+        try {
+            await progressAPI.deleteGoal(goalId);
+        } catch (err) {
+            console.error("Failed to delete goal:", err);
+        }
+    }, []);
+
+    const deleteSkillProgress = useCallback(async (skillId) => {
+        // Optimistic
+        setSkillProgress(prev => prev.filter(p => p.id !== skillId));
+
+        try {
+            await progressAPI.deleteProgress(skillId);
+        } catch (err) {
+            console.error("Failed to delete progress record:", err);
+        }
     }, []);
 
     const getTherapistStats = useCallback((therapistId) => {
@@ -792,6 +1092,8 @@ export const AppProvider = ({ children }) => {
         getChildGoals,
         updateSkillGoal,
         addSkillGoal,
+        deleteSkillGoal,
+        deleteSkillProgress,
 
         // UI Actions
         setIsLoading

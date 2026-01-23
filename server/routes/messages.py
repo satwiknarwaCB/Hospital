@@ -48,7 +48,7 @@ async def get_user_messages(
     }).sort("timestamp", -1)
     
     messages = []
-    async for doc in cursor:
+    for doc in cursor:
         doc["_id"] = str(doc["_id"])
         messages.append(doc)
         

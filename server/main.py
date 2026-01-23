@@ -14,6 +14,7 @@ from routes.appointments import router as appointments_router
 from routes.sessions import router as sessions_router
 from routes.communities import router as communities_router
 from routes.messages import router as messages_router
+from routes.progress import router as progress_router
 
 
 @asynccontextmanager
@@ -58,6 +59,7 @@ app.include_router(appointments_router)
 app.include_router(sessions_router)
 app.include_router(communities_router)
 app.include_router(messages_router)
+app.include_router(progress_router)
 
 
 # Health check endpoint

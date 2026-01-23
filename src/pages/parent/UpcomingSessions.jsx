@@ -115,13 +115,6 @@ const UpcomingSessions = () => {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold text-neutral-800">Upcoming Sessions</h2>
-                    <p className="text-neutral-500">Scheduled therapy sessions for {child.name}</p>
-                </div>
-            </div>
 
             {/* Session List */}
             <div className="grid grid-cols-1 gap-6">

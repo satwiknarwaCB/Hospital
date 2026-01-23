@@ -387,17 +387,6 @@ const SessionHistory = () => {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold text-neutral-800">Session History</h2>
-                    <p className="text-neutral-500">View all past therapy sessions for {child.name}</p>
-                </div>
-                <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export Report
-                </Button>
-            </div>
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4">

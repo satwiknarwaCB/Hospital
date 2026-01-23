@@ -22,12 +22,10 @@ import { Button } from '../../components/ui/Button';
 import { useApp } from '../../lib/context';
 import { useAuth } from '../../hooks/useAuth';
 
-// Import all therapist pages
-import SessionLog from './SessionLog';
+import Sessions from './Sessions';
 import MyPatients from './MyPatients';
 import TherapyIntelligence from './TherapyIntelligence';
 import RoadmapEditor from './RoadmapEditor';
-import ScheduleManagement from './ScheduleManagement';
 import TherapistMessages from './TherapistMessages';
 import TherapistProgressTracking from './TherapistProgressTracking';
 
@@ -49,8 +47,7 @@ const TherapistLayoutWrapper = ({ children }) => {
     const sidebarItems = [
         { label: 'Dashboard', path: '/therapist/dashboard', icon: LayoutDashboard },
         { label: 'My Patients', path: '/therapist/patients', icon: Users },
-        { label: 'Schedule', path: '/therapist/schedule', icon: Calendar },
-        { label: 'Session Logs', path: '/therapist/logs', icon: ClipboardList },
+        { label: 'Sessions', path: '/therapist/sessions', icon: Calendar },
         { label: 'Messages', path: '/therapist/messages', icon: MessageSquare, badge: totalMessagesUnread },
         { label: 'AI Intelligence', path: '/therapist/intelligence', icon: Brain },
         { label: 'Roadmap Editor', path: '/therapist/roadmap', icon: Target },
@@ -110,7 +107,7 @@ const TherapistDashboard = () => {
                     <h2 className="text-2xl font-bold text-neutral-800">Welcome back, {currentUser?.name?.split(' ')[0] || 'Doctor'}! 👋</h2>
                     <p className="text-neutral-500">Here's your therapy overview for today.</p>
                 </div>
-                <Button onClick={() => navigate('/therapist/log')}>+ Log New Session</Button>
+                <Button onClick={() => navigate('/therapist/sessions', { state: { activeTab: 'logs' } })}>+ Log New Session</Button>
             </div>
 
             {/* Stats Row */}
@@ -124,7 +121,7 @@ const TherapistDashboard = () => {
                         <p className="text-sm text-neutral-500">Total Caseload</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-primary-500 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/therapist/schedule')}>
+                <Card className="border-l-4 border-l-primary-500 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/therapist/sessions', { state: { activeTab: 'schedule' } })}>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-lg">Today's Sessions</CardTitle>
                     </CardHeader>
@@ -188,12 +185,12 @@ const TherapistDashboard = () => {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-secondary-500 to-secondary-600 text-white" onClick={() => navigate('/therapist/schedule')}>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-secondary-500 to-secondary-600 text-white" onClick={() => navigate('/therapist/sessions', { state: { activeTab: 'schedule' } })}>
                     <CardContent className="p-6 flex items-center gap-4">
                         <Calendar className="h-10 w-10 text-secondary-200" />
                         <div>
-                            <h3 className="font-semibold">Schedule</h3>
-                            <p className="text-sm text-secondary-200">Manage appointments</p>
+                            <h3 className="font-semibold">Sessions</h3>
+                            <p className="text-sm text-secondary-200">Manage calendar & logs</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -213,7 +210,7 @@ const TherapistDashboard = () => {
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                         <span>Today's Schedule</span>
-                        <Button variant="ghost" size="sm" onClick={() => navigate('/therapist/schedule')}>
+                        <Button variant="ghost" size="sm" onClick={() => navigate('/therapist/sessions', { state: { activeTab: 'schedule' } })}>
                             View All →
                         </Button>
                     </CardTitle>
@@ -240,7 +237,7 @@ const TherapistDashboard = () => {
                                         {session.status === 'completed' ? (
                                             <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Completed</span>
                                         ) : (
-                                            <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); navigate('/therapist/log'); }}>
+                                            <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); navigate('/therapist/sessions', { state: { activeTab: 'logs' } }); }}>
                                                 Start Session
                                             </Button>
                                         )}
@@ -294,10 +291,8 @@ const TherapistPortal = () => {
         <Routes>
             <Route element={<TherapistLayoutWrapper />}>
                 <Route path="dashboard" element={<TherapistDashboard />} />
-                <Route path="log" element={<SessionLog />} />
+                <Route path="sessions" element={<Sessions />} />
                 <Route path="patients" element={<MyPatients />} />
-                <Route path="schedule" element={<ScheduleManagement />} />
-                <Route path="logs" element={<SessionLog />} />
                 <Route path="intelligence" element={<TherapyIntelligence />} />
                 <Route path="roadmap" element={<RoadmapEditor />} />
                 <Route path="messages" element={<TherapistMessages />} />

@@ -1,36 +1,55 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
     Tooltip, Legend, ResponsiveContainer, Cell
 } from 'recharts';
 import {
     Calendar, Target, TrendingUp, AlertCircle, CheckCircle2,
-    ChevronRight, Edit3, Save, X, Plus, Info, Clock
+    ChevronRight, Edit3, Save, X, Plus, Minus, Info, Clock, Activity
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
 import { useApp } from '../lib/context';
 
 const ActualProgress = ({ childId, role = 'parent' }) => {
-    const { getChildGoals, getChildProgress, updateSkillGoal, updateSkillProgress, addSkillGoal } = useApp();
+    const { getChildGoals, getChildProgress, updateSkillGoal, updateSkillProgress, addSkillGoal, deleteSkillGoal, deleteSkillProgress, kids } = useApp();
     const goals = getChildGoals(childId);
     const progressRecords = getChildProgress(childId);
+    const child = kids.find(k => k.id === childId);
 
-    const [selectedGoalId, setSelectedGoalId] = useState(goals[0]?.id || null);
+    const [selectedGoalId, setSelectedGoalId] = useState(null);
+
+    // Reset selected goal when child changes
+    useEffect(() => {
+        if (goals.length > 0) {
+            setSelectedGoalId(goals[0].id);
+        } else {
+            setSelectedGoalId(null);
+        }
+    }, [childId, goals.length]);
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState(null);
 
+    // Individual field states for granular updates
+    const [tempMastery, setTempMastery] = useState(null);
+    const [tempStatus, setTempStatus] = useState(null);
+    const [tempNotes, setTempNotes] = useState(null);
+
     const [isUpdatingActual, setIsUpdatingActual] = useState(false);
-    const [actualData, setActualData] = useState({ progress: 0, notes: '', weeklyActuals: [0, 0, 0, 0] });
+    const [actualData, setActualData] = useState({ progress: 0, notes: '', weeklyActuals: [] });
 
     const [isAddingGoal, setIsAddingGoal] = useState(false);
     const [newGoalData, setNewGoalData] = useState({
         skillName: '',
+        customSkillName: '',
         duration: '1 Month',
         deadline: '',
         targets: [25, 50, 75, 100],
         notes: ''
     });
+    const [isCustomSkill, setIsCustomSkill] = useState(false);
+    const [isSubmittingGoal, setIsSubmittingGoal] = useState(false);
+    const [goalError, setGoalError] = useState('');
 
     const selectedGoal = goals.find(g => g.id === selectedGoalId);
     const relatedProgress = progressRecords.find(p => p.skillName === selectedGoal?.skillName);
@@ -40,15 +59,32 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
         if (!selectedGoal) return [];
 
         const history = relatedProgress?.history || [];
-        const weeklyActuals = relatedProgress?.weeklyActuals || [0, 0, 0, 0];
+        const weeklyActuals = relatedProgress?.weeklyActuals || [];
 
-        const fullData = [
-            { name: 'Start', planned: 0, achieving: 0 },
-            { name: 'Week 1', planned: selectedGoal.targets[0], achieving: weeklyActuals[0] || (history.find(h => h.date.includes('-07'))?.progress || null) },
-            { name: 'Week 2', planned: selectedGoal.targets[1], achieving: weeklyActuals[1] || (history.find(h => h.date.includes('-14'))?.progress || null) },
-            { name: 'Week 3', planned: selectedGoal.targets[2], achieving: weeklyActuals[2] || (history.find(h => h.date.includes('-21'))?.progress || null) },
-            { name: 'Week 4', planned: selectedGoal.targets[3], achieving: weeklyActuals[3] || (history.find(h => h.date.includes('-28')) || relatedProgress?.progress && weeklyActuals.every(v => !v)) ? relatedProgress?.progress : null }
-        ];
+        const startItem = { name: 'Start', planned: 0, achieving: 0 };
+        const weekItems = selectedGoal.targets.map((target, idx) => {
+            const weekNum = idx + 1;
+            let actual = weeklyActuals[idx] || null;
+
+            // Fallback to history for demo if needed
+            if (!actual && actual !== 0) {
+                const hist = history.find(h => h.date.includes(`-${7 * weekNum < 10 ? '0' : ''}${7 * weekNum}`));
+                actual = hist ? hist.progress : null;
+            }
+
+            // Special case for last week if no actuals but overall progress exists
+            if (idx === selectedGoal.targets.length - 1 && (actual === null || actual === undefined) && (relatedProgress?.progress && weeklyActuals.every(v => v === 0 || v === '0'))) {
+                actual = relatedProgress.progress;
+            }
+
+            return {
+                name: `W${weekNum}`,
+                planned: target,
+                achieving: actual
+            };
+        });
+
+        const fullData = [startItem, ...weekItems];
 
         // Find the index of the last week with actual progress > 0
         let lastIndex = 0;
@@ -65,15 +101,15 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
     }, [selectedGoal, relatedProgress]);
 
     const getStatusColor = (planned, achieved, status) => {
-        if (status === 'Achieved' || achieved >= 100) return 'text-green-600 bg-green-50 border-green-100';
-        if (status === 'Backlog' || achieved < planned) return 'text-red-600 bg-red-50 border-red-100';
-        return 'text-yellow-600 bg-yellow-50 border-yellow-100'; // In Progress
+        if (status === 'Achieved' || achieved >= 100) return 'text-emerald-600 bg-emerald-50 border-emerald-100';
+        if (status === 'Backlog' || achieved < (planned * 0.5)) return 'text-rose-600 bg-rose-50 border-rose-100';
+        return 'text-amber-600 bg-amber-50 border-amber-100'; // In Progress
     };
 
     const getChartColor = (planned, achieved, status) => {
-        if (status === 'Achieved' || achieved >= 100) return '#10B981'; // Green
-        if (status === 'Backlog' || achieved < planned) return '#EF4444'; // Red
-        return '#F59E0B'; // Yellow
+        if (status === 'Achieved' || achieved >= 100) return '#10B981'; // Emerald/Green
+        if (status === 'Backlog' || achieved < (planned * 0.5)) return '#EF4444'; // Rose/Red
+        return '#F59E0B'; // Amber/Yellow
     };
 
     const handleEdit = () => {
@@ -84,6 +120,17 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
     const handleSave = () => {
         updateSkillGoal(selectedGoal.id, editData);
         setIsEditing(false);
+    };
+
+    const handleDeleteSkill = () => {
+        if (window.confirm(`Are you sure you want to delete the goal for "${selectedGoal.skillName}"?`)) {
+            deleteSkillGoal(selectedGoal.id);
+            // Also find and delete related progress if it exists
+            if (relatedProgress) {
+                deleteSkillProgress(relatedProgress.id);
+            }
+            setSelectedGoalId(null);
+        }
     };
 
     const handleUpdateActual = () => {
@@ -103,37 +150,106 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
             progress: finalProgress,
             weeklyActuals: weeklyValues,
             therapistNotes: actualData.notes || relatedProgress.therapistNotes,
-            status: finalProgress >= 100 ? 'Achieved' : (finalProgress > 0 ? 'In Progress' : 'Not Started')
+            status: actualData.status || (finalProgress >= 100 ? 'Achieved' : (finalProgress > 0 ? 'In Progress' : 'Not Started'))
         });
+
+        // Also update goal if deadline was changed
+        if (actualData.deadline && actualData.deadline !== selectedGoal.deadline) {
+            updateSkillGoal(selectedGoal.id, { deadline: actualData.deadline });
+        }
+
         setIsUpdatingActual(false);
     };
 
     const openActualUpdate = () => {
+        const targetCount = selectedGoal?.targets?.length || 0;
+        let initialActuals = relatedProgress?.weeklyActuals || [];
+
+        // Match length of targets
+        if (initialActuals.length < targetCount) {
+            const padding = new Array(targetCount - initialActuals.length).fill(0);
+            initialActuals = [...initialActuals, ...padding];
+        } else if (initialActuals.length > targetCount) {
+            initialActuals = initialActuals.slice(0, targetCount);
+        }
+
         setActualData({
             progress: relatedProgress?.progress || 0,
             notes: relatedProgress?.therapistNotes || '',
-            weeklyActuals: relatedProgress?.weeklyActuals || [0, 0, 0, 0]
+            weeklyActuals: initialActuals,
+            status: relatedProgress?.status || 'In Progress',
+            deadline: selectedGoal?.deadline || ''
         });
         setIsUpdatingActual(true);
     };
 
-    const handleAddGoal = () => {
-        const skill = progressRecords.find(p => p.skillName === newGoalData.skillName);
-        addSkillGoal({
-            ...newGoalData,
-            childId,
-            skillId: skill?.id || `temp-${Date.now()}`,
-            status: 'In Progress'
-        });
-        setIsAddingGoal(false);
-        // Reset form
-        setNewGoalData({
-            skillName: '',
-            duration: '1 Month',
-            deadline: '',
-            targets: [25, 50, 75, 100],
-            notes: ''
-        });
+    const handleAddGoal = async () => {
+        setGoalError('');
+        setIsSubmittingGoal(true);
+
+        try {
+            // Determine the skill name
+            const finalSkillName = isCustomSkill ? newGoalData.customSkillName.trim() : newGoalData.skillName;
+
+            // Validation
+            if (!finalSkillName) {
+                setGoalError('Please select or enter a skill name');
+                setIsSubmittingGoal(false);
+                return;
+            }
+
+            if (!newGoalData.deadline) {
+                setGoalError('Please select a target deadline');
+                setIsSubmittingGoal(false);
+                return;
+            }
+
+            // Check if goal already exists for this skill
+            const existingGoal = goals.find(g => g.skillName.toLowerCase() === finalSkillName.toLowerCase());
+            if (existingGoal) {
+                setGoalError(`A goal already exists for "${finalSkillName}"`);
+                setIsSubmittingGoal(false);
+                return;
+            }
+
+            const skill = progressRecords.find(p => p.skillName === finalSkillName);
+
+            // Prepare goal data with only valid fields
+            const goalData = {
+                childId,
+                skillId: skill?.id || `custom-${Date.now()}`,
+                skillName: finalSkillName,
+                duration: newGoalData.duration,
+                startDate: new Date().toISOString().split('T')[0],
+                deadline: newGoalData.deadline,
+                targets: newGoalData.targets,
+                status: 'In Progress',
+                notes: newGoalData.notes || ''
+            };
+
+            console.log('📋 Submitting goal data:', goalData);
+
+            await addSkillGoal(goalData);
+
+            console.log('✅ Goal added successfully!');
+
+            // Reset form
+            setNewGoalData({
+                skillName: '',
+                customSkillName: '',
+                duration: '1 Month',
+                deadline: '',
+                targets: [25, 50, 75, 100],
+                notes: ''
+            });
+            setIsCustomSkill(false);
+            setIsAddingGoal(false);
+            setIsSubmittingGoal(false);
+        } catch (error) {
+            console.error('❌ Failed to add goal:', error);
+            setGoalError(typeof error === 'string' ? error : 'Failed to create goal. Please try again.');
+            setIsSubmittingGoal(false);
+        }
     };
 
     if (goals.length === 0 && !isAddingGoal) {
@@ -155,6 +271,99 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
         );
     }
 
+    if (isUpdatingActual) {
+        return (
+            <Card className="max-w-2xl mx-auto border-none shadow-xl ring-1 ring-neutral-200 animate-in zoom-in-95 duration-200">
+                <CardHeader className="border-b border-neutral-100">
+                    <div className="flex justify-between items-center">
+                        <CardTitle className="text-xl flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5 text-primary-500" />
+                            Log Clinical Progress: {selectedGoal.skillName}
+                        </CardTitle>
+                        <button onClick={() => setIsUpdatingActual(false)} className="text-neutral-400 hover:text-neutral-600">
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Clinical Status</label>
+                            <select
+                                value={actualData.status || (relatedProgress?.status || 'In Progress')}
+                                onChange={(e) => setActualData({ ...actualData, status: e.target.value })}
+                                className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
+                            >
+                                <option value="Not Started">Not Started</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Achieved">Achieved</option>
+                                <option value="Backlog">Backlog</option>
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Target Deadline</label>
+                            <input
+                                type="date"
+                                value={actualData.deadline || (selectedGoal?.deadline || '')}
+                                onChange={(e) => setActualData({ ...actualData, deadline: e.target.value })}
+                                className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Update Weekly Achievement (%)</label>
+                        <div className="grid grid-cols-4 gap-3">
+                            {actualData.weeklyActuals.map((val, i) => (
+                                <div key={i} className="flex flex-col items-center gap-1">
+                                    <span className="text-[10px] text-neutral-400 font-bold">W{i + 1}</span>
+                                    <input
+                                        type="number"
+                                        value={val}
+                                        onChange={(e) => {
+                                            const weeklyActuals = [...actualData.weeklyActuals];
+                                            weeklyActuals[i] = Number(e.target.value);
+                                            setActualData({ ...actualData, weeklyActuals });
+                                        }}
+                                        className="w-full h-12 bg-white border border-neutral-200 rounded-2xl text-lg font-black text-center text-neutral-900 focus:ring-2 focus:ring-primary-500 outline-none shadow-sm"
+                                        placeholder="0"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Clinical Strategy / Session Notes</label>
+                        <textarea
+                            value={actualData.notes}
+                            onChange={(e) => setActualData({ ...actualData, notes: e.target.value })}
+                            placeholder="Document the patient's performance and any adjustments to the strategy..."
+                            className="w-full p-4 bg-neutral-50 border border-neutral-200 rounded-xl text-sm min-h-[100px] focus:ring-2 focus:ring-primary-500 outline-none"
+                        />
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                        <Button
+                            variant="outline"
+                            className="flex-1 py-6 font-bold"
+                            onClick={() => setIsUpdatingActual(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            className="flex-1 py-6 shadow-lg shadow-primary-200 gap-2 font-bold"
+                            onClick={handleUpdateActual}
+                        >
+                            <Save className="h-4 w-4" />
+                            Update Clinical Graph
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
+
     if (isAddingGoal) {
         return (
             <Card className="max-w-2xl mx-auto border-none shadow-xl ring-1 ring-neutral-200 animate-in zoom-in-95 duration-200">
@@ -164,24 +373,45 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                             <Target className="h-5 w-5 text-primary-500" />
                             Define New 1-Month Goal
                         </CardTitle>
-                        <button onClick={() => setIsAddingGoal(false)} className="text-neutral-400 hover:text-neutral-600">
+                        <button onClick={() => {
+                            setIsAddingGoal(false);
+                            setGoalError('');
+                            setIsCustomSkill(false);
+                        }} className="text-neutral-400 hover:text-neutral-600">
                             <X className="h-5 w-5" />
                         </button>
                     </div>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
+                    {goalError && (
+                        <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-start gap-3">
+                            <AlertCircle className="h-5 w-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                            <p className="text-sm text-rose-700 font-medium">{goalError}</p>
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Select Skill</label>
                             <select
-                                value={newGoalData.skillName}
-                                onChange={(e) => setNewGoalData({ ...newGoalData, skillName: e.target.value })}
+                                value={isCustomSkill ? '__custom__' : newGoalData.skillName}
+                                onChange={(e) => {
+                                    if (e.target.value === '__custom__') {
+                                        setIsCustomSkill(true);
+                                        setNewGoalData({ ...newGoalData, skillName: '' });
+                                    } else {
+                                        setIsCustomSkill(false);
+                                        setNewGoalData({ ...newGoalData, skillName: e.target.value });
+                                    }
+                                    setGoalError('');
+                                }}
                                 className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
                             >
                                 <option value="">Choose a skill...</option>
                                 {progressRecords.map(p => (
                                     <option key={p.id} value={p.skillName}>{p.skillName}</option>
                                 ))}
+                                <option value="__custom__">➕ Add Custom Skill</option>
                             </select>
                         </div>
                         <div className="space-y-2">
@@ -189,18 +419,64 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                             <input
                                 type="date"
                                 value={newGoalData.deadline}
-                                onChange={(e) => setNewGoalData({ ...newGoalData, deadline: e.target.value })}
+                                onChange={(e) => {
+                                    setNewGoalData({ ...newGoalData, deadline: e.target.value });
+                                    setGoalError('');
+                                }}
                                 className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
                             />
                         </div>
                     </div>
 
+                    {isCustomSkill && (
+                        <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
+                            <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Custom Skill Name</label>
+                            <input
+                                type="text"
+                                value={newGoalData.customSkillName}
+                                onChange={(e) => {
+                                    setNewGoalData({ ...newGoalData, customSkillName: e.target.value });
+                                    setGoalError('');
+                                }}
+                                placeholder="e.g., Advanced Pincer Grip"
+                                className="w-full p-3 bg-white border-2 border-primary-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
+                                autoFocus
+                            />
+                        </div>
+                    )}
+
                     <div className="space-y-3">
-                        <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Weekly Planned Targets (%)</label>
-                        <div className="grid grid-cols-4 gap-4">
+                        <div className="flex items-center justify-between">
+                            <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Weekly Planned Targets (%)</label>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => {
+                                        if (newGoalData.targets.length > 1) {
+                                            setNewGoalData({ ...newGoalData, targets: newGoalData.targets.slice(0, -1) });
+                                        }
+                                    }}
+                                    className="p-1 hover:bg-rose-50 text-rose-500 rounded-md transition-colors"
+                                    title="Remove Week"
+                                >
+                                    <Minus className="h-4 w-4" />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (newGoalData.targets.length < 8) {
+                                            setNewGoalData({ ...newGoalData, targets: [...newGoalData.targets, 0] });
+                                        }
+                                    }}
+                                    className="p-1 hover:bg-emerald-50 text-emerald-500 rounded-md transition-colors"
+                                    title="Add Week"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-4 gap-3">
                             {newGoalData.targets.map((t, i) => (
-                                <div key={i} className="space-y-1">
-                                    <span className="text-[10px] text-neutral-400 font-bold">WEEK {i + 1}</span>
+                                <div key={i} className="flex flex-col items-center gap-1">
+                                    <span className="text-[10px] text-neutral-400 font-bold">W{i + 1}</span>
                                     <input
                                         type="number"
                                         value={t}
@@ -209,7 +485,8 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                                             targets[i] = Number(e.target.value);
                                             setNewGoalData({ ...newGoalData, targets });
                                         }}
-                                        className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-black text-center focus:ring-2 focus:ring-primary-500 outline-none"
+                                        className="w-full h-12 bg-white border border-neutral-200 rounded-2xl text-lg font-black text-center text-neutral-900 focus:ring-2 focus:ring-primary-500 outline-none shadow-sm"
+                                        placeholder="0"
                                     />
                                 </div>
                             ))}
@@ -227,9 +504,34 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                     </div>
 
                     <div className="flex gap-3 pt-4">
-                        <Button variant="outline" className="flex-1 py-6" onClick={() => setIsAddingGoal(false)}>Cancel</Button>
-                        <Button className="flex-1 py-6 shadow-lg shadow-primary-200" onClick={handleAddGoal} disabled={!newGoalData.skillName || !newGoalData.deadline}>
-                            Create Goal Plan
+                        <Button
+                            variant="outline"
+                            className="flex-1 py-6"
+                            onClick={() => {
+                                setIsAddingGoal(false);
+                                setGoalError('');
+                                setIsCustomSkill(false);
+                            }}
+                            disabled={isSubmittingGoal}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            className="flex-1 py-6 shadow-lg shadow-primary-200 gap-2"
+                            onClick={handleAddGoal}
+                            disabled={isSubmittingGoal || (!isCustomSkill && !newGoalData.skillName) || (isCustomSkill && !newGoalData.customSkillName.trim()) || !newGoalData.deadline}
+                        >
+                            {isSubmittingGoal ? (
+                                <>
+                                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    Creating...
+                                </>
+                            ) : (
+                                <>
+                                    <CheckCircle2 className="h-4 w-4" />
+                                    Create Goal Plan
+                                </>
+                            )}
                         </Button>
                     </div>
                 </CardContent>
@@ -245,7 +547,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                         <button
                             key={goal.id}
                             onClick={() => setSelectedGoalId(goal.id)}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border-2 ${selectedGoalId === goal.id
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border-2 ${selectedGoalId !== null && selectedGoalId === goal.id
                                 ? 'bg-primary-50 border-primary-200 text-primary-600 shadow-sm'
                                 : 'bg-white border-neutral-100 text-neutral-500 hover:bg-neutral-50'
                                 }`}
@@ -262,16 +564,21 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
             </div>
 
             {selectedGoal && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                     {/* Goal Info Card */}
-                    <Card className="lg:col-span-1 border-none bg-neutral-50/50 shadow-none ring-1 ring-neutral-200/50">
+                    <Card className="lg:col-span-2 border-none bg-neutral-50/50 shadow-none ring-1 ring-neutral-200/50">
                         <CardHeader className="pb-2">
                             <div className="flex justify-between items-start">
                                 <CardTitle className="text-lg font-black text-neutral-800">Goal Overview</CardTitle>
                                 {role === 'therapist' && !isEditing && (
-                                    <button onClick={handleEdit} className="text-primary-600 p-1 hover:bg-primary-50 rounded-lg transition-colors">
-                                        <Edit3 className="h-4 w-4" />
-                                    </button>
+                                    <div className="flex gap-1">
+                                        <button onClick={handleEdit} className="text-primary-600 p-1.5 hover:bg-primary-50 rounded-lg transition-colors" title="Edit Goal">
+                                            <Edit3 className="h-4 w-4" />
+                                        </button>
+                                        <button onClick={handleDeleteSkill} className="text-rose-500 p-1.5 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Goal">
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         </CardHeader>
@@ -291,10 +598,10 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                                 <div className="flex-1">
                                     <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">Status</p>
                                     <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black border ${selectedGoal.status === 'Achieved'
-                                        ? 'bg-green-50 text-green-600 border-green-100'
+                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
                                         : selectedGoal.status === 'Backlog'
-                                            ? 'bg-red-50 text-red-600 border-red-100'
-                                            : 'bg-yellow-50 text-yellow-600 border-yellow-100'
+                                            ? 'bg-rose-50 text-rose-600 border-rose-100'
+                                            : 'bg-amber-50 text-amber-600 border-amber-100'
                                         }`}>
                                         {selectedGoal.status.toUpperCase()}
                                     </div>
@@ -314,14 +621,19 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                             </div>
 
                             {isEditing && (
-                                <div className="pt-4 space-y-4 border-t border-neutral-200 mt-4 animate-in slide-in-from-top-2">
+                                <div className="pt-6 space-y-5 border-t border-neutral-200 mt-6 animate-in slide-in-from-top-4 duration-300">
+                                    <h4 className="text-xs font-black text-primary-600 uppercase tracking-widest flex items-center gap-2">
+                                        <Edit3 className="h-3 w-3" />
+                                        Modify Planned Progress
+                                    </h4>
+
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-neutral-700">Status</label>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Goal Status</label>
                                             <select
                                                 value={editData.status}
                                                 onChange={(e) => setEditData({ ...editData, status: e.target.value })}
-                                                className="w-full p-2 bg-white border border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                                                className="w-full p-2.5 bg-white border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
                                             >
                                                 <option value="Not Started">Not Started</option>
                                                 <option value="In Progress">In Progress</option>
@@ -329,23 +641,49 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                                                 <option value="Backlog">Backlog</option>
                                             </select>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-neutral-700">Target Deadline</label>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Target Deadline</label>
                                             <input
                                                 type="date"
                                                 value={editData.deadline}
                                                 onChange={(e) => setEditData({ ...editData, deadline: e.target.value })}
-                                                className="w-full p-2 bg-white border border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                                                className="w-full p-2.5 bg-white border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-neutral-700">Weekly Targets (%)</label>
-                                        <div className="grid grid-cols-4 gap-2">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Modify Weekly Planned Targets (%)</label>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        if (editData.targets.length > 1) {
+                                                            setEditData({ ...editData, targets: editData.targets.slice(0, -1) });
+                                                        }
+                                                    }}
+                                                    className="p-1 hover:bg-rose-50 text-rose-500 rounded-md transition-colors"
+                                                    title="Remove Week"
+                                                >
+                                                    <Minus className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        if (editData.targets.length < 8) {
+                                                            setEditData({ ...editData, targets: [...editData.targets, 0] });
+                                                        }
+                                                    }}
+                                                    className="p-1 hover:bg-emerald-50 text-emerald-500 rounded-md transition-colors"
+                                                    title="Add Week"
+                                                >
+                                                    <Plus className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-4 gap-3">
                                             {editData.targets.map((target, idx) => (
-                                                <div key={idx} className="space-y-1">
-                                                    <span className="text-[9px] text-neutral-400 font-bold uppercase">W{idx + 1}</span>
+                                                <div key={idx} className="flex flex-col items-center gap-1">
+                                                    <span className="text-[10px] text-neutral-400 font-black">W{idx + 1}</span>
                                                     <input
                                                         type="number"
                                                         value={target}
@@ -354,24 +692,28 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                                                             newTargets[idx] = Number(e.target.value);
                                                             setEditData({ ...editData, targets: newTargets });
                                                         }}
-                                                        className="w-full p-2 bg-white border border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none text-center"
+                                                        className="w-full h-12 bg-white border border-neutral-200 rounded-2xl text-lg font-black text-center text-neutral-900 focus:ring-2 focus:ring-primary-500 outline-none shadow-sm"
+                                                        placeholder="0"
                                                     />
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-neutral-700">Modify Notes</label>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Therapeutic Strategy Notes</label>
                                         <textarea
                                             value={editData.notes}
                                             onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
-                                            className="w-full p-3 bg-white border border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none min-h-[80px]"
+                                            className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary-500 outline-none min-h-[100px]"
+                                            placeholder="Update notes..."
                                         />
                                     </div>
-                                    <div className="flex gap-2">
-                                        <Button size="sm" variant="outline" onClick={() => setIsEditing(false)} className="flex-1">Cancel</Button>
-                                        <Button size="sm" onClick={handleSave} className="flex-1 gap-2"><Save className="h-3 w-3" /> Save</Button>
+                                    <div className="flex gap-3 pt-2">
+                                        <Button size="sm" variant="outline" onClick={() => setIsEditing(false)} className="flex-1 py-5 rounded-xl">Cancel</Button>
+                                        <Button size="sm" onClick={handleSave} className="flex-1 py-5 rounded-xl gap-2 shadow-lg shadow-primary-100">
+                                            <Save className="h-4 w-4" /> Save Plan
+                                        </Button>
                                     </div>
                                 </div>
                             )}
@@ -379,7 +721,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                     </Card>
 
                     {/* Analytics Chart Component */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="lg:col-span-3 space-y-6">
                         <Card className="border-none shadow-sm ring-1 ring-neutral-100">
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle className="text-lg flex items-center gap-2">
@@ -435,7 +777,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                                                 name="Actual"
                                                 stroke={getChartColor(chartData[chartData.length - 1]?.planned, chartData[chartData.length - 1]?.achieving, selectedGoal.status)}
                                                 strokeWidth={4}
-                                                dot={{ r: 6, fill: '#4F46E5', strokeWidth: 2, stroke: '#fff' }}
+                                                dot={{ r: 6, fill: getChartColor(chartData[chartData.length - 1]?.planned, chartData[chartData.length - 1]?.achieving, selectedGoal.status), strokeWidth: 2, stroke: '#fff' }}
                                                 activeDot={{ r: 8 }}
                                             />
                                         </LineChart>
@@ -444,8 +786,8 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                             </CardContent>
                         </Card>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Card className={`border-none text-white shadow-xl overflow-hidden relative transition-all duration-500 ${selectedGoal.status === 'Achieved' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' :
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                            <Card key={selectedGoal.id} className={`md:col-span-3 border-none text-white shadow-xl overflow-hidden relative transition-all duration-500 ${selectedGoal.status === 'Achieved' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' :
                                 selectedGoal.status === 'Backlog' ? 'bg-gradient-to-br from-rose-500 to-red-600' :
                                     'bg-gradient-to-br from-indigo-500 via-primary-600 to-blue-700'
                                 }`}>
@@ -453,86 +795,131 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                                     <TrendingUp className="h-24 w-24" />
                                 </div>
                                 <CardContent className="p-6 relative z-10">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <p className="text-white/80 text-[10px] font-black uppercase tracking-[0.2em]">Live Clinical Progress</p>
-                                        {role === 'therapist' && !isUpdatingActual && (
-                                            <button
-                                                onClick={openActualUpdate}
-                                                className="bg-white/20 hover:bg-white/30 p-2 rounded-xl transition-all hover:scale-105 active:scale-95"
-                                            >
-                                                <Edit3 className="h-4 w-4" />
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {!isUpdatingActual ? (
-                                        <>
-                                            <div className="flex items-end gap-2 mb-4">
-                                                <h4 className="text-5xl font-black tracking-tighter">{relatedProgress?.progress || 0}%</h4>
-                                                <div className="flex flex-col mb-1.5">
-                                                    <span className="text-white/60 text-[10px] font-bold uppercase leading-none">Overall</span>
-                                                    <span className="text-white/90 text-xs font-black uppercase tracking-tight">Mastery</span>
+                                    <div className="flex flex-col gap-6">
+                                        {/* Mastery Section */}
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white/20 rounded-full text-[9px] font-black uppercase tracking-wider mb-2">
+                                                        <Clock className="h-2.5 w-2.5" /> Updated
+                                                    </div>
+                                                    <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Log Progress</p>
+                                                    <div className="flex items-end gap-2">
+                                                        <h4 className="text-6xl font-black tracking-tighter leading-none">
+                                                            {tempMastery !== null ? tempMastery : (relatedProgress?.progress || 0)}%
+                                                        </h4>
+                                                        <span className="text-white/90 text-xs font-black uppercase tracking-tight mb-1">Mastery</span>
+                                                    </div>
                                                 </div>
+                                                {role === 'therapist' && (
+                                                    <div className="flex flex-col items-end gap-3">
+                                                        <button
+                                                            onClick={openActualUpdate}
+                                                            className="px-6 py-3 bg-white text-primary-600 text-[10px] font-black rounded-xl shadow-lg hover:bg-neutral-50 transition-all flex items-center gap-2"
+                                                        >
+                                                            <Edit3 className="h-4 w-4" />
+                                                            LOG PROGRESS
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div className="w-full bg-white/20 h-2.5 rounded-full overflow-hidden shadow-inner backdrop-blur-sm">
+                                            <div className="w-full bg-white/20 h-3 rounded-full overflow-hidden shadow-inner backdrop-blur-sm p-0.5">
                                                 <div
-                                                    className="h-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.5)] transition-all duration-1000 ease-out"
-                                                    style={{ width: `${relatedProgress?.progress || 0}%` }}
+                                                    className="h-full bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.5)] transition-all duration-1000 ease-out"
+                                                    style={{ width: `${(tempMastery !== null ? tempMastery : (relatedProgress?.progress || 0))}%` }}
                                                 />
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-white/70 uppercase tracking-widest">Weekly Achievement (%)</label>
-                                                <div className="grid grid-cols-4 gap-2">
-                                                    {actualData.weeklyActuals.map((val, i) => (
-                                                        <div key={i} className="space-y-1">
-                                                            <span className="text-[8px] text-white/50 font-black uppercase">W{i + 1}</span>
-                                                            <input
-                                                                type="number"
-                                                                value={val}
-                                                                onChange={(e) => {
-                                                                    const weeks = [...actualData.weeklyActuals];
-                                                                    weeks[i] = e.target.value;
-                                                                    setActualData({ ...actualData, weeklyActuals: weeks });
-                                                                }}
-                                                                className="w-full bg-white/10 border border-white/20 rounded-xl py-2 text-white text-sm font-black text-center outline-none focus:ring-2 focus:ring-white/50 transition-all backdrop-blur-md"
-                                                            />
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-black text-white/70 uppercase tracking-widest">Clinical Observation</label>
-                                                <textarea
-                                                    value={actualData.notes}
-                                                    onChange={(e) => setActualData({ ...actualData, notes: e.target.value })}
-                                                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-xs font-medium outline-none focus:ring-2 focus:ring-white/50 min-h-[80px] backdrop-blur-md placeholder:text-white/30"
-                                                    placeholder="e.g. Mastered pincer grip today!"
-                                                />
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => setIsUpdatingActual(false)}
-                                                    className="flex-1 py-3 text-xs font-bold hover:bg-white/10 rounded-xl transition-all border border-transparent hover:border-white/20"
-                                                >
-                                                    Cancel
-                                                </button>
-                                                <button
-                                                    onClick={handleUpdateActual}
-                                                    className="flex-1 py-3 bg-white text-primary-600 text-xs font-black rounded-xl hover:bg-neutral-50 transition-all shadow-xl hover:-translate-y-0.5"
-                                                >
-                                                    Update Plan
-                                                </button>
                                             </div>
                                         </div>
-                                    )}
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {/* Status Section */}
+                                            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 space-y-2 relative group">
+                                                <div className="flex justify-between items-center">
+                                                    <label className="text-[10px] font-black text-white/70 uppercase tracking-widest">Current Status</label>
+                                                    {tempStatus !== null ? (
+                                                        <button
+                                                            onClick={() => {
+                                                                updateSkillProgress(relatedProgress.id, { status: tempStatus });
+                                                                setTempStatus(null);
+                                                            }}
+                                                            className="text-[9px] font-black text-white bg-emerald-500/50 px-2 py-0.5 rounded-md"
+                                                        >
+                                                            SAVE
+                                                        </button>
+                                                    ) : (
+                                                        <Clock className="h-3 w-3 text-white/40" />
+                                                    )}
+                                                </div>
+                                                {role === 'therapist' ? (
+                                                    <select
+                                                        value={tempStatus !== null ? tempStatus : (relatedProgress?.status || 'Not Started')}
+                                                        onChange={(e) => setTempStatus(e.target.value)}
+                                                        className="w-full bg-transparent border-none text-white font-black text-sm p-0 focus:ring-0 outline-none cursor-pointer"
+                                                    >
+                                                        <option value="Not Started" className="text-neutral-900">Not Started</option>
+                                                        <option value="In Progress" className="text-neutral-900">In Progress</option>
+                                                        <option value="Achieved" className="text-neutral-900">Achieved</option>
+                                                        <option value="Backlog" className="text-neutral-900">Backlog</option>
+                                                    </select>
+                                                ) : (
+                                                    <p className="text-sm font-black text-white">{relatedProgress?.status || 'Not Started'}</p>
+                                                )}
+                                            </div>
+
+                                            {/* Last Updated Section */}
+                                            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 space-y-2">
+                                                <div className="flex justify-between items-center">
+                                                    <label className="text-[10px] font-black text-white/70 uppercase tracking-widest">Last Activity</label>
+                                                    <Calendar className="h-3 w-3 text-white/40" />
+                                                </div>
+                                                <p className="text-sm font-black text-white">
+                                                    {relatedProgress?.lastUpdated ? new Date(relatedProgress.lastUpdated).toLocaleDateString() : 'No recent activity'}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Notes Section */}
+                                        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 space-y-3 relative group">
+                                            <div className="flex justify-between items-center">
+                                                <div className="flex items-center gap-2">
+                                                    <Info className="h-4 w-4 text-white/60" />
+                                                    <label className="text-[10px] font-black text-white/70 uppercase tracking-widest">Therapist Notes</label>
+                                                </div>
+                                                {role === 'therapist' && (
+                                                    tempNotes !== null ? (
+                                                        <button
+                                                            onClick={() => {
+                                                                updateSkillProgress(relatedProgress.id, { therapistNotes: tempNotes });
+                                                                setTempNotes(null);
+                                                            }}
+                                                            className="text-[9px] font-black text-white bg-indigo-500 px-3 py-1 rounded-lg shadow-lg"
+                                                        >
+                                                            SAVE NOTES
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-[8px] font-black text-white/40 uppercase">Modify notes below</span>
+                                                    )
+                                                )}
+                                            </div>
+                                            {role === 'therapist' ? (
+                                                <textarea
+                                                    value={tempNotes !== null ? tempNotes : (relatedProgress?.therapistNotes || '')}
+                                                    onChange={(e) => setTempNotes(e.target.value)}
+                                                    placeholder="Enter clinical observations..."
+                                                    className="w-full bg-transparent border-none text-white text-xs font-medium focus:ring-0 outline-none min-h-[60px] resize-none placeholder:text-white/30 scrollbar-hide"
+                                                />
+                                            ) : (
+                                                <p className="text-xs font-medium text-white/90 italic leading-relaxed">
+                                                    "{relatedProgress?.therapistNotes || 'No notes available for this skill yet.'}"
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
                                 </CardContent>
                             </Card>
 
 
-                            <Card className="border-none shadow-sm ring-1 ring-neutral-100 bg-white">
+                            <Card className="md:col-span-2 border-none shadow-sm ring-1 ring-neutral-100 bg-white">
                                 <CardContent className="p-6 flex flex-col justify-center">
                                     <div className="flex justify-between items-center mb-4">
                                         <div className="flex items-center gap-2">

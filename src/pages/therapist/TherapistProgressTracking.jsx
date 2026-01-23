@@ -34,7 +34,7 @@ const TherapistProgressTracking = () => {
     return (
         <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">
             {/* Patient Selection Sidebar */}
-            <div className="w-full lg:w-80 flex flex-col gap-4">
+            <div className="w-full lg:w-48 flex flex-col gap-4">
                 <header className="space-y-4">
                     <div>
                         <h2 className="text-2xl font-black text-neutral-800 tracking-tight">Case Load</h2>
@@ -64,17 +64,17 @@ const TherapistProgressTracking = () => {
                                 }`}
                         >
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${selectedChildId === child.id ? 'bg-primary-600 text-white' : 'bg-neutral-100 text-neutral-600'
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center font-bold ${selectedChildId === child.id ? 'bg-primary-600 text-white' : 'bg-neutral-100 text-neutral-600'
                                         }`}>
                                         {child.name[0]}
                                     </div>
-                                    <div>
-                                        <p className="font-bold text-neutral-800 text-sm">{child.name}</p>
-                                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{child.diagnosis}</p>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-neutral-800 text-sm truncate">{child.name}</p>
+                                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest truncate">{child.diagnosis}</p>
                                     </div>
                                 </div>
-                                <ChevronRight className={`h-4 w-4 transition-transform ${selectedChildId === child.id ? 'text-primary-600 translate-x-1' : 'text-neutral-300'}`} />
+                                <ChevronRight className={`h-4 w-4 shrink-0 transition-transform ${selectedChildId === child.id ? 'text-primary-600 translate-x-1' : 'text-neutral-300'}`} />
                             </div>
                         </button>
                     ))}
@@ -92,11 +92,11 @@ const TherapistProgressTracking = () => {
             <div className="flex-1 bg-white rounded-[2.5rem] border border-neutral-200/50 shadow-sm overflow-hidden flex flex-col">
                 {selectedChildId ? (
                     <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                        <div className="flex items-center gap-4 mb-8 p-1 bg-neutral-100 rounded-2xl w-fit">
+                        <div className="flex items-center gap-2 p-1 bg-neutral-100/80 backdrop-blur-sm rounded-2xl w-fit border border-neutral-200/50 shadow-inner mb-8">
                             <button
                                 onClick={() => setActiveView('clinical')}
                                 className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeView === 'clinical'
-                                    ? 'bg-white text-primary-600 shadow-sm'
+                                    ? 'bg-white text-primary-600 shadow-md ring-1 ring-black/5'
                                     : 'text-neutral-500 hover:text-neutral-700'
                                     }`}
                             >
@@ -105,7 +105,7 @@ const TherapistProgressTracking = () => {
                             <button
                                 onClick={() => setActiveView('actual')}
                                 className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeView === 'actual'
-                                    ? 'bg-white text-primary-600 shadow-sm'
+                                    ? 'bg-white text-primary-600 shadow-md ring-1 ring-black/5'
                                     : 'text-neutral-500 hover:text-neutral-700'
                                     }`}
                             >
