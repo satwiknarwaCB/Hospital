@@ -741,7 +741,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                             </CardHeader>
                             <CardContent>
                                 <div className="h-[300px] w-full">
-                                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                    <ResponsiveContainer width="100%" height={300} minWidth={0} debounce={50}>
                                         <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                                             <XAxis

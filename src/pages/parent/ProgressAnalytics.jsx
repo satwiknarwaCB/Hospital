@@ -255,29 +255,6 @@ const ProgressAnalytics = () => {
                     <h2 className="text-2xl font-bold text-neutral-800">Progress Analytics</h2>
                     <p className="text-neutral-500">Track {child.name}'s development across key skill areas</p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant={timeRange === 'week' ? 'primary' : 'outline'}
-                        size="sm"
-                        onClick={() => setTimeRange('week')}
-                    >
-                        Week
-                    </Button>
-                    <Button
-                        variant={timeRange === 'month' ? 'primary' : 'outline'}
-                        size="sm"
-                        onClick={() => setTimeRange('month')}
-                    >
-                        Month
-                    </Button>
-                    <Button
-                        variant={timeRange === 'quarter' ? 'primary' : 'outline'}
-                        size="sm"
-                        onClick={() => setTimeRange('quarter')}
-                    >
-                        Quarter
-                    </Button>
-                </div>
             </div>
 
             {/* View Selection Buttons */}
@@ -363,10 +340,40 @@ const ProgressAnalytics = () => {
 
                     {/* Skill Domains */}
                     <div>
-                        <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
-                            <Calendar className="h-5 w-5 text-neutral-500" />
-                            Skill Development by Domain
-                        </h3>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-neutral-800 flex items-center gap-2">
+                                <Calendar className="h-5 w-5 text-neutral-500" />
+                                Skill Development by Domain
+                            </h3>
+                            {activeView === 'analytics' && (
+                                <div className="flex items-center gap-1 p-1 bg-neutral-100/50 rounded-xl">
+                                    <Button
+                                        variant={timeRange === 'week' ? 'primary' : 'ghost'}
+                                        size="sm"
+                                        onClick={() => setTimeRange('week')}
+                                        className={`h-8 px-4 text-xs font-bold rounded-lg ${timeRange === 'week' ? '' : 'text-neutral-500 hover:text-neutral-700 hover:bg-white'}`}
+                                    >
+                                        Week
+                                    </Button>
+                                    <Button
+                                        variant={timeRange === 'month' ? 'primary' : 'ghost'}
+                                        size="sm"
+                                        onClick={() => setTimeRange('month')}
+                                        className={`h-8 px-4 text-xs font-bold rounded-lg ${timeRange === 'month' ? '' : 'text-neutral-500 hover:text-neutral-700 hover:bg-white'}`}
+                                    >
+                                        Month
+                                    </Button>
+                                    <Button
+                                        variant={timeRange === 'quarter' ? 'primary' : 'ghost'}
+                                        size="sm"
+                                        onClick={() => setTimeRange('quarter')}
+                                        className={`h-8 px-4 text-xs font-bold rounded-lg ${timeRange === 'quarter' ? '' : 'text-neutral-500 hover:text-neutral-700 hover:bg-white'}`}
+                                    >
+                                        Quarter
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
                         <div className="space-y-3">
                             {skillData.map((skill) => (
                                 <SkillDomainCard

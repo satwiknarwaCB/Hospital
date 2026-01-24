@@ -13,7 +13,7 @@ const data = [
 const OccupancyChart = () => {
     return (
         <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+            <ResponsiveContainer width="100%" height={300} minWidth={0} debounce={50}>
                 <AreaChart
                     data={data}
                     margin={{

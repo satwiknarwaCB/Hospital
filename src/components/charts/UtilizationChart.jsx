@@ -11,7 +11,7 @@ const data = [
 const UtilizationChart = () => {
     return (
         <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+            <ResponsiveContainer width="100%" height={300} minWidth={0} debounce={50}>
                 <BarChart
                     data={data}
                     layout="vertical"
