@@ -870,10 +870,21 @@ export const AppProvider = ({ children }) => {
 
                 const saved = await progressAPI.createProgress(fullRecord);
 
-                // Update local state with the real MongoDB _id
-                setSkillProgress(prev => prev.map(p =>
-                    p.id === skillId ? { ...p, dbId: saved._id || saved.id, _id: saved._id || saved.id, skillId: fullRecord.skillId } : p
-                ));
+                // Update local state with the real MongoDB _id and ensure deduplication
+                setSkillProgress(prev => {
+                    const exists = prev.some(p => p.childId === currentRecord.childId && (p.skillId === fullRecord.skillId || p.skillName === currentRecord.skillName));
+                    if (exists) {
+                        return prev.map(p => {
+                            if (p.childId === currentRecord.childId && (p.skillId === fullRecord.skillId || p.skillName === currentRecord.skillName)) {
+                                return { ...p, dbId: saved._id || saved.id, _id: saved._id || saved.id, skillId: fullRecord.skillId, ...fullUpdates };
+                            }
+                            return p;
+                        });
+                    }
+                    return prev.map(p =>
+                        p.id === skillId ? { ...p, dbId: saved._id || saved.id, _id: saved._id || saved.id, skillId: fullRecord.skillId } : p
+                    );
+                });
                 console.log(`🚀 [MongoDB] Record promoted and synced successfully for ${skillId}`);
             }
         } catch (err) {
@@ -923,7 +934,13 @@ export const AppProvider = ({ children }) => {
                 console.log('✅ Progress record created:', savedProgress);
 
                 // Update local state with the new progress record
-                setSkillProgress(prev => [...prev, savedProgress]);
+                setSkillProgress(prev => {
+                    const exists = prev.some(p => p.childId === savedProgress.childId && (p.skillId === savedProgress.skillId || p.skillName === savedProgress.skillName));
+                    if (exists) {
+                        return prev.map(p => (p.childId === savedProgress.childId && (p.skillId === savedProgress.skillId || p.skillName === savedProgress.skillName)) ? { ...p, ...savedProgress, id: p.id } : p);
+                    }
+                    return [...prev, { ...savedProgress, id: `${savedProgress.childId}-${savedProgress.skillId}` }];
+                });
             } catch (progressErr) {
                 console.warn('Progress record creation failed (may already exist):', progressErr);
                 // Create local fallback progress record
@@ -955,7 +972,7 @@ export const AppProvider = ({ children }) => {
             setSkillGoals(prev => [...prev, localGoal]);
 
             // Also create local progress record
-            setSkillProgress(prev => [...prev, {
+            const localRecord = {
                 id: `sp${Date.now()}`,
                 childId: newGoal.childId,
                 skillId: newGoal.skillId,
@@ -966,7 +983,15 @@ export const AppProvider = ({ children }) => {
                 history: [],
                 therapistNotes: '',
                 lastUpdated: new Date().toISOString().split('T')[0]
-            }]);
+            };
+
+            setSkillProgress(prev => {
+                const exists = prev.some(p => p.childId === newGoal.childId && (p.skillId === newGoal.skillId || p.skillName === newGoal.skillName));
+                if (exists) {
+                    return prev.map(p => (p.childId === newGoal.childId && (p.skillId === newGoal.skillId || p.skillName === newGoal.skillName)) ? { ...p, ...localRecord } : p);
+                }
+                return [...prev, localRecord];
+            });
 
             return localGoal;
         }

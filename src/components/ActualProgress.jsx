@@ -217,7 +217,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
             // Prepare goal data with only valid fields
             const goalData = {
                 childId,
-                skillId: skill?.id || `custom-${Date.now()}`,
+                skillId: skill?.skillId || skill?.id || `custom-${Date.now()}`,
                 skillName: finalSkillName,
                 duration: newGoalData.duration,
                 startDate: new Date().toISOString().split('T')[0],
@@ -741,7 +741,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                             </CardHeader>
                             <CardContent>
                                 <div className="h-[300px] w-full">
-                                    <ResponsiveContainer width="100%" height="100%">
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                         <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                                             <XAxis
