@@ -4,7 +4,7 @@
 // ============================================================
 
 import React, { useState, useMemo } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import {
     LayoutDashboard,
@@ -577,12 +577,12 @@ const CompliancePage = () => {
                             {auditLogs.map(log => (
                                 <div key={log.id} className="flex items-start gap-4 p-3 bg-neutral-50 rounded-lg">
                                     <div className={`p-2 rounded-lg ${log.action.includes('CREATE') ? 'bg-green-100' :
-                                            log.action.includes('UPDATE') ? 'bg-yellow-100' :
-                                                log.action.includes('LOGIN') ? 'bg-blue-100' : 'bg-neutral-100'
+                                        log.action.includes('UPDATE') ? 'bg-yellow-100' :
+                                            log.action.includes('LOGIN') ? 'bg-blue-100' : 'bg-neutral-100'
                                         }`}>
                                         <Activity className={`h-4 w-4 ${log.action.includes('CREATE') ? 'text-green-600' :
-                                                log.action.includes('UPDATE') ? 'text-yellow-600' :
-                                                    log.action.includes('LOGIN') ? 'text-blue-600' : 'text-neutral-600'
+                                            log.action.includes('UPDATE') ? 'text-yellow-600' :
+                                                log.action.includes('LOGIN') ? 'text-blue-600' : 'text-neutral-600'
                                             }`} />
                                     </div>
                                     <div className="flex-1">
@@ -634,6 +634,13 @@ const CompliancePage = () => {
 // Admin Portal Router
 // ============================================================
 const AdminPortal = () => {
+    const navigate = useNavigate();
+    const { logout } = useApp();
+
+    const handleLogout = async () => {
+        await logout();
+        navigate('/login');
+    };
     const sidebarItems = [
         { label: 'Overview', path: '/admin/dashboard', icon: LayoutDashboard },
         { label: 'Operations', path: '/admin/operations', icon: Building2 },
@@ -643,7 +650,7 @@ const AdminPortal = () => {
 
     return (
         <Routes>
-            <Route element={<DashboardLayout title="CDC Admin" sidebarItems={sidebarItems} roleColor="bg-neutral-800" />}>
+            <Route element={<DashboardLayout title="CDC Admin" sidebarItems={sidebarItems} roleColor="bg-neutral-800" onLogout={handleLogout} />}>
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="operations" element={<OperationsPage />} />
                 <Route path="reports" element={<ReportsPage />} />

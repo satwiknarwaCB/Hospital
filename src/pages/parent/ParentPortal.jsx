@@ -524,8 +524,14 @@ const ParentDashboard = () => {
 // Parent Portal Router
 // ============================================================
 const ParentPortal = () => {
-    const { privateUnreadCount, communityUnreadCount } = useApp();
+    const navigate = useNavigate();
+    const { privateUnreadCount, communityUnreadCount, logout } = useApp();
     const totalMessagesUnread = (privateUnreadCount || 0) + (communityUnreadCount || 0);
+
+    const handleLogout = async () => {
+        await logout();
+        navigate('/login');
+    };
 
     const sidebarItems = [
         { label: 'Dashboard', path: '/parent/dashboard', icon: LayoutDashboard },
@@ -538,7 +544,7 @@ const ParentPortal = () => {
 
     return (
         <Routes>
-            <Route element={<DashboardLayout title="Parent Portal" sidebarItems={sidebarItems} roleColor="bg-primary-600" />}>
+            <Route element={<DashboardLayout title="Parent Portal" sidebarItems={sidebarItems} roleColor="bg-primary-600" onLogout={handleLogout} />}>
                 <Route path="dashboard" element={<ParentDashboard />} />
                 <Route path="progress" element={<ProgressAnalytics />} />
                 <Route path="roadmap" element={<GrowthRoadmap />} />

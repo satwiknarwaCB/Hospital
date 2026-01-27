@@ -170,21 +170,49 @@ export const AppProvider = ({ children }) => {
                 const cloudMessages = await messagesAPI.getByUser(currentUser.id);
                 if (cloudMessages && cloudMessages.length > 0) {
                     // Normalize snake_case from MongoDB to camelCase for the frontend
-                    const normalizedMessages = cloudMessages.map(m => ({
-                        ...m,
-                        id: m.id || m._id,
-                        senderId: m.senderId || m.sender_id,
-                        recipientId: m.recipientId || m.recipient_id,
-                        childId: m.childId || m.child_id,
-                        threadId: m.threadId || m.thread_id,
-                        senderName: m.senderName || m.sender_name,
-                        senderRole: m.senderRole || m.sender_role
-                    }));
+                    const normalizedMessages = cloudMessages.map(m => {
+                        const mId = m.id || m._id || (m.thread_id + m.timestamp + (m.content || '').substring(0, 10));
+                        return {
+                            ...m,
+                            id: mId,
+                            _id: mId,
+                            senderId: m.senderId || m.sender_id,
+                            recipientId: m.recipientId || m.recipient_id,
+                            childId: m.childId || m.child_id,
+                            threadId: m.threadId || m.thread_id,
+                            senderName: m.senderName || m.sender_name,
+                            senderRole: m.senderRole || m.sender_role
+                        };
+                    });
 
                     setMessages(prev => {
-                        const cloudIds = new Set(normalizedMessages.map(m => m.id));
-                        const legacyMessages = prev.filter(m => !cloudIds.has(m.id) && !cloudIds.has(m._id));
-                        return [...normalizedMessages, ...legacyMessages];
+                        // Create a map for efficient deduplication
+                        const messageMap = new Map();
+
+                        // Add cloud messages first (source of truth)
+                        normalizedMessages.forEach(m => {
+                            messageMap.set(m.id, m);
+                        });
+
+                        // Add legacy messages only if they don't exist
+                        prev.forEach(m => {
+                            const msgId = m.id || m._id;
+                            if (!messageMap.has(msgId)) {
+                                // Also check if it's a duplicate based on content + timestamp
+                                const isDuplicate = Array.from(messageMap.values()).some(existing =>
+                                    existing.content === m.content &&
+                                    existing.senderId === m.senderId &&
+                                    existing.recipientId === m.recipientId &&
+                                    Math.abs(new Date(existing.timestamp) - new Date(m.timestamp)) < 5000 // Within 5 seconds
+                                );
+
+                                if (!isDuplicate) {
+                                    messageMap.set(msgId, m);
+                                }
+                            }
+                        });
+
+                        return Array.from(messageMap.values());
                     });
                 }
             } catch (err) {
@@ -214,13 +242,33 @@ export const AppProvider = ({ children }) => {
                 }
 
                 if (cloudSessions.length > 0) {
+                    const normalizedSessions = cloudSessions.map(s => ({
+                        ...s,
+                        id: s.id || s._id,
+                        _id: s.id || s._id,
+                        childId: s.childId || s.child_id,
+                        therapistId: s.therapistId || s.therapist_id
+                    }));
+
                     setSessions(prev => {
-                        // Smart Deduplication: Prioritize Cloud Data
-                        const cloudIds = new Set(cloudSessions.map(s => s.id || s._id));
-                        const legacySessions = prev.filter(s => !cloudIds.has(s.id) && !cloudIds.has(s._id));
-                        return [...cloudSessions, ...legacySessions];
+                        const sessionMap = new Map();
+                        // Add cloud sessions first (source of truth)
+                        normalizedSessions.forEach(s => sessionMap.set(s.id, s));
+                        // Add local sessions if they don't exist by ID or content (date + child)
+                        prev.forEach(s => {
+                            const sId = s.id || s._id;
+                            if (!sessionMap.has(sId)) {
+                                const isDuplicate = Array.from(sessionMap.values()).some(existing =>
+                                    existing.childId === s.childId &&
+                                    existing.date === s.date &&
+                                    existing.type === s.type
+                                );
+                                if (!isDuplicate) sessionMap.set(sId, s);
+                            }
+                        });
+                        return Array.from(sessionMap.values());
                     });
-                    console.log(`✅ Successfully synced ${cloudSessions.length} sessions from MongoDB.`);
+                    console.log(`✅ Successfully synced ${cloudSessions.length} sessions.`);
                 }
             } catch (err) {
                 console.error('❌ Cloud Session Sync Failed:', err);
@@ -244,58 +292,69 @@ export const AppProvider = ({ children }) => {
                     ]);
 
                     if (goals.length > 0) {
+                        const normalizedGoals = goals.map(g => ({
+                            ...g,
+                            id: g.id || g._id,
+                            _id: g.id || g._id,
+                            childId: g.childId || g.child_id
+                        }));
+
                         setSkillGoals(prev => {
-                            // Normalize Goal IDs
-                            const normalizedGoals = goals.map(g => ({
-                                ...g,
-                                id: g.id || g._id,
-                                dbId: g._id
-                            }));
-                            const cloudIds = new Set(normalizedGoals.map(g => g.id));
-                            const legacy = prev.filter(g => !cloudIds.has(g.id));
-                            return [...normalizedGoals, ...legacy];
+                            const goalMap = new Map();
+                            normalizedGoals.forEach(g => goalMap.set(g.id, g));
+                            prev.forEach(g => {
+                                const gId = g.id || g._id;
+                                if (!goalMap.has(gId)) {
+                                    const isDup = Array.from(goalMap.values()).some(ext =>
+                                        ext.childId === g.childId && ext.skillName === g.skillName
+                                    );
+                                    if (!isDup) goalMap.set(gId, g);
+                                }
+                            });
+                            return Array.from(goalMap.values());
                         });
                     }
 
                     if (progress.length > 0) {
+                        const normalizedProgress = progress.map(p => ({
+                            ...p,
+                            id: p.id || p._id || `${p.childId}-${p.skillId}`,
+                            _id: p.id || p._id,
+                            childId: p.childId || p.child_id
+                        }));
+
                         setSkillProgress(prev => {
-                            // Normalize: Ensure EVERY record has a GLOBALLY UNIQUE id (childId + skillId)
-                            const normalizedProgress = progress.map(p => ({
-                                ...p,
-                                id: `${p.childId}-${p.skillId}`, // CRITICAL: This is the source of truth for uniqueness
-                                dbId: p._id // Keep reference to backend _id for API calls
-                            }));
+                            const progMap = new Map();
+                            // 1. Seed with other children's data
+                            prev.filter(p => (p.childId || p.child_id) !== currentUser.childId).forEach(p => progMap.set(p.id, p));
 
-                            // Therapist-style merging for Parents: Ensure cloud data doesn't erase clinical mock data
-                            const skillMap = new Map();
+                            // 2. Load current child's local state as baseline for comparison
+                            const childLegacy = prev.filter(p => (p.childId || p.child_id) === currentUser.childId);
+                            childLegacy.forEach(p => progMap.set(p.skillName, p));
 
-                            // 1. Seed with existing local/legacy records
-                            prev.forEach(mock => {
-                                if (mock.childId === currentUser.childId) {
-                                    skillMap.set(mock.skillName, mock);
-                                }
-                            });
-
-                            // 2. Merge in normalized cloud records
+                            // 3. Merge in Cloud data (Source of Truth)
                             normalizedProgress.forEach(cloud => {
-                                const mock = skillMap.get(cloud.skillName);
-                                if (mock) {
-                                    // Deep merge logic: prefer cloud data, but keep mock data if cloud is empty
-                                    const isCloudEmpty = (!cloud.progress || cloud.progress === 0) && (!cloud.therapistNotes || cloud.therapistNotes.trim() === "");
-                                    const isMockFull = (mock.progress > 0) || (mock.therapistNotes && mock.therapistNotes.trim() !== "");
+                                const local = progMap.get(cloud.skillName);
+                                if (local) {
+                                    // Merge cloud data, but keep useful local bits if cloud is sparse
+                                    const isCloudSparse = (!cloud.progress || cloud.progress === 0) && (!cloud.therapistNotes || cloud.therapistNotes.trim() === "");
+                                    const isLocalRich = (local.progress > 0) || (local.therapistNotes && local.therapistNotes.trim() !== "");
 
-                                    if (isCloudEmpty && isMockFull) {
-                                        skillMap.set(cloud.skillName, { ...mock, dbId: cloud.dbId || cloud._id });
+                                    if (isCloudSparse && isLocalRich) {
+                                        progMap.set(cloud.skillName, { ...local, id: cloud.id, _id: cloud._id, dbId: cloud._id });
                                     } else {
-                                        skillMap.set(cloud.skillName, { ...mock, ...cloud }); // Merge fields
+                                        progMap.set(cloud.skillName, { ...local, ...cloud });
                                     }
                                 } else {
-                                    skillMap.set(cloud.skillName, cloud);
+                                    progMap.set(cloud.skillName, cloud);
                                 }
                             });
 
-                            const others = prev.filter(p => p.childId !== currentUser.childId);
-                            return [...others, ...Array.from(skillMap.values())].sort((a, b) => (a.order || 0) - (b.order || 0));
+                            const final = Array.from(progMap.values()).map(p => ({
+                                ...p,
+                                id: p.id || p._id || `${p.childId}-${p.skillId}`
+                            }));
+                            return final.sort((a, b) => (a.order || 0) - (b.order || 0));
                         });
                     }
                 }
@@ -342,50 +401,40 @@ export const AppProvider = ({ children }) => {
 
                             if (progress.length > 0) {
                                 setSkillProgress(prev => {
-                                    // Normalize for Therapist View: childId + skillId
                                     const normalizedProgress = progress.map(p => ({
                                         ...p,
-                                        id: `${p.childId}-${p.skillId}`,
-                                        dbId: p._id
+                                        id: p.id || p._id || `${p.childId}-${p.skillId}`,
+                                        _id: p.id || p._id,
+                                        childId: p.childId || p.child_id
                                     }));
 
-                                    const others = prev.filter(p => p.childId !== kid.id);
-                                    const kidLegacy = prev.filter(p => p.childId === kid.id);
+                                    const others = prev.filter(p => (p.childId || p.child_id) !== kid.id);
+                                    const kidLegacy = prev.filter(p => (p.childId || p.child_id) === kid.id);
 
-                                    // Use a Map to guarantee uniqueness by skillName for this child
                                     const skillMap = new Map();
+                                    kidLegacy.forEach(mock => skillMap.set(mock.skillName, mock));
 
-                                    // 1. Seed with local records (clinical mock data)
-                                    kidLegacy.forEach(mock => {
-                                        const existing = skillMap.get(mock.skillName);
-                                        // Prefer records that actually have progress data
-                                        if (!existing || (!existing.progress && mock.progress)) {
-                                            skillMap.set(mock.skillName, mock);
-                                        }
-                                    });
-
-                                    // For each legacy record, if it exists in cloud, merge. If not, keep.
-                                    // 2. Merge in cloud records
                                     normalizedProgress.forEach(cloud => {
-                                        const mock = skillMap.get(cloud.skillName);
-                                        if (mock) {
-                                            const isCloudEmpty = (!cloud.progress || cloud.progress === 0) && (!cloud.therapistNotes || cloud.therapistNotes.trim() === "");
-                                            const isMockFull = (mock.progress > 0) || (mock.therapistNotes && mock.therapistNotes.trim() !== "");
+                                        const local = skillMap.get(cloud.skillName);
+                                        if (local) {
+                                            const isCloudSparse = (!cloud.progress || cloud.progress === 0) && (!cloud.therapistNotes || cloud.therapistNotes.trim() === "");
+                                            const isLocalRich = (local.progress > 0) || (local.therapistNotes && local.therapistNotes.trim() !== "");
 
-                                            if (isCloudEmpty && isMockFull) {
-                                                // Map exists but cloud is empty - preserve mock clinical data but link to cloud DB ID
-                                                skillMap.set(cloud.skillName, { ...mock, dbId: cloud.dbId || cloud._id });
+                                            if (isCloudSparse && isLocalRich) {
+                                                skillMap.set(cloud.skillName, { ...local, id: cloud.id, _id: cloud._id });
                                             } else {
-                                                // Cloud has data or mock was also empty - prefer cloud
-                                                skillMap.set(cloud.skillName, cloud);
+                                                skillMap.set(cloud.skillName, { ...local, ...cloud });
                                             }
                                         } else {
                                             skillMap.set(cloud.skillName, cloud);
                                         }
                                     });
 
-                                    const merged = [...others, ...Array.from(skillMap.values())];
-                                    return merged.sort((a, b) => (a.order || 0) - (b.order || 0));
+                                    const final = [...others, ...Array.from(skillMap.values())].map(p => ({
+                                        ...p,
+                                        id: p.id || p._id || `${p.childId}-${p.skillId}`
+                                    }));
+                                    return final.sort((a, b) => (a.order || 0) - (b.order || 0));
                                 });
                             }
                         } catch (e) {
@@ -472,7 +521,8 @@ export const AppProvider = ({ children }) => {
 
         incomingUnread.forEach(m => {
             const mId = m.id || m._id;
-            if (!notifiedMessageIds.current.has(mId)) {
+            // Only notify if we haven't notified for this message AND it's not sent by current user
+            if (!notifiedMessageIds.current.has(mId) && m.senderId !== currentUser.id) {
                 addNotification({
                     type: 'message',
                     title: `New Message from ${m.senderName || 'Parent'}`,
@@ -483,14 +533,10 @@ export const AppProvider = ({ children }) => {
             }
         });
 
-        // 2. Clean up notified IDs if they are no longer unread or no longer in messages
-        const currentUnreadIds = new Set(incomingUnread.map(m => m.id || m._id));
-        notifiedMessageIds.current.forEach(id => {
-            if (!currentUnreadIds.has(id) && !messages.some(m => (m.id || m._id) === id)) {
-                // Keep it in the set to avoid re-notifying if it comes back, 
-                // but this logic is just a simple tracker for now
-            }
-        });
+        // 2. Clean up notified IDs periodically - DEACTIVATED
+        // We stop clearing the cache because if messages aren't perfectly synced 
+        // across every poll, clearing the cache causes re-notifications.
+        // Memory usage is negligible (a few KB for thousands of IDs).
     }, [messages, isAuthenticated, currentUser]);
     const [notifications, setNotifications] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -542,26 +588,18 @@ export const AppProvider = ({ children }) => {
     const addSession = useCallback((newSession) => {
         // Ensure all required fields are present
         const sessionWithId = {
-            id: `s${Date.now()}`,
-            childId: newSession.childId,
-            date: newSession.date || new Date().toISOString(), // Preserve date from form
-            type: newSession.type,
-            therapistId: newSession.therapistId || currentUser?.id || 't1',
-            duration: newSession.duration || 45,
-            status: newSession.status || 'scheduled', // Use status from form (scheduled for new sessions)
-            location: newSession.location || null,
-            // Optional fields for completed sessions
-            engagement: newSession.engagement || null,
-            emotionalState: newSession.emotionalState || null,
-            activities: newSession.activities || null,
-            notes: newSession.notes || null,
-            aiSummary: newSession.aiSummary || null,
-            wins: newSession.wins || null,
-            focusAreas: newSession.focusAreas || null,
-            behaviorTags: newSession.behaviorTags || null
+            ...newSession,
+            id: newSession.id || `s${Date.now()}`,
+            _id: newSession.id || newSession._id || `s${Date.now()}`,
+            date: newSession.date || new Date().toISOString(),
+            status: newSession.status || 'scheduled'
         };
 
-        setSessions(prev => [sessionWithId, ...prev]);
+        setSessions(prev => {
+            const exists = prev.some(s => s.id === sessionWithId.id || (s.date === sessionWithId.date && s.childId === sessionWithId.childId));
+            if (exists) return prev;
+            return [sessionWithId, ...prev];
+        });
 
         // Log audit event
         const childName = kids.find(k => k.id === newSession.childId)?.name || 'Unknown';
@@ -741,16 +779,32 @@ export const AppProvider = ({ children }) => {
 
             const savedMessage = await messagesAPI.send(backendMessage);
 
-            // Update Local State
+            // Update Local State - Use backend ID to prevent duplicates
             const newMessage = {
                 ...message,
-                id: savedMessage._id || savedMessage.id || `msg${Date.now()}`,
+                id: savedMessage._id || savedMessage.id, // Use backend ID only, no fallback
+                _id: savedMessage._id || savedMessage.id,
                 timestamp: savedMessage.timestamp || new Date().toISOString(),
                 read: false,
                 type: message.type || 'message'
             };
 
-            setMessages(prev => [newMessage, ...prev]);
+            setMessages(prev => {
+                // Check if message already exists to prevent duplicates
+                const exists = prev.some(m =>
+                    (m.id === newMessage.id || m._id === newMessage.id) ||
+                    (m.content === newMessage.content &&
+                        m.senderId === newMessage.senderId &&
+                        m.recipientId === newMessage.recipientId &&
+                        Math.abs(new Date(m.timestamp) - new Date(newMessage.timestamp)) < 2000)
+                );
+
+                if (exists) {
+                    return prev;
+                }
+
+                return [newMessage, ...prev];
+            });
             return newMessage;
         } catch (err) {
             console.error('Failed to send message via API:', err);
