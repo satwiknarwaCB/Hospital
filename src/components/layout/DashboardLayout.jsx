@@ -36,7 +36,8 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                     "lg:relative lg:translate-x-0"
                 )}
             >
-                <div className="h-16 flex items-center justify-between px-6 border-b border-neutral-100">
+                <div className="h-16 flex items-center gap-3 px-6 border-b border-neutral-100">
+                    <img src="/logo.svg" alt="NeuroBridge Logo" className="h-8 w-8" />
                     <span className="text-xl font-bold text-primary-900 font-serif tracking-tight">NeuroBridge™</span>
                     <Button
                         variant="ghost"
@@ -112,9 +113,7 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                     </div>
 
                     <div className="flex items-center space-x-4">
-                        <div className="h-8 w-8 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center text-[10px] font-black text-neutral-400">
-                            NB
-                        </div>
+                        <img src="/logo.svg" alt="NeuroBridge Logo" className="h-8 w-8 rounded-full border border-neutral-100 shadow-sm" />
                     </div>
                 </header>
 
