@@ -119,7 +119,7 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                 </header>
 
                 {/* Scrollable Content */}
-                <main className="flex-1 p-4 lg:p-8 overflow-auto relative">
+                <main className="flex-1 p-4 lg:p-8 pb-24 lg:pb-8 overflow-auto relative">
                     {children || <Outlet />}
 
                     {/* Global Notifications Toast Stack */}
@@ -158,6 +158,36 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                         ))}
                     </div>
                 </main>
+
+                {/* Mobile Bottom Navigation Bar */}
+                <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-neutral-200 px-6 py-3 flex items-center justify-between lg:hidden z-50">
+                    {sidebarItems.slice(0, 5).map((item) => {
+                        const isActive = location.pathname.startsWith(item.path);
+                        return (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                className={cn(
+                                    "flex flex-col items-center gap-1 transition-all duration-200",
+                                    isActive ? "text-primary-600" : "text-neutral-400"
+                                )}
+                            >
+                                <div className={cn(
+                                    "p-1 rounded-lg transition-all",
+                                    isActive && "bg-primary-50 text-primary-600"
+                                )}>
+                                    {item.icon && <item.icon className="h-6 w-6" />}
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-widest">{item.label.split(' ')[0]}</span>
+                                {item.badge > 0 && (
+                                    <span className="absolute top-2 translate-x-3 px-1.5 py-0.5 text-[8px] font-black bg-red-500 text-white rounded-full">
+                                        {item.badge}
+                                    </span>
+                                )}
+                            </Link>
+                        );
+                    })}
+                </nav>
             </div>
         </div>
     );

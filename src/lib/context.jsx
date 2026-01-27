@@ -312,6 +312,7 @@ export const AppProvider = ({ children }) => {
 
                             if (goals.length > 0) {
                                 setSkillGoals(prev => {
+                                    // Normalize Goal IDs and ensure uniqueness
                                     const normalizedGoals = goals.map(g => ({
                                         ...g,
                                         id: g.id || g._id,
@@ -319,10 +320,23 @@ export const AppProvider = ({ children }) => {
                                     }));
 
                                     const others = prev.filter(g => g.childId !== kid.id);
-                                    const cloudIds = new Set(normalizedGoals.map(g => g.id));
-                                    const legacy = prev.filter(g => g.childId === kid.id && !cloudIds.has(g.id));
+                                    const kidLegacy = prev.filter(g => g.childId === kid.id);
 
-                                    return [...others, ...normalizedGoals, ...legacy];
+                                    // Use a Map to deduplicate by skillName for this child
+                                    const goalMap = new Map();
+
+                                    // 1. Seed with legacy/mock data for this child
+                                    kidLegacy.forEach(g => {
+                                        goalMap.set(g.skillName.toLowerCase(), g);
+                                    });
+
+                                    // 2. Overwrite with Cloud data (source of truth)
+                                    normalizedGoals.forEach(g => {
+                                        goalMap.set(g.skillName.toLowerCase(), g);
+                                    });
+
+                                    const merged = Array.from(goalMap.values());
+                                    return [...others, ...merged];
                                 });
                             }
 
