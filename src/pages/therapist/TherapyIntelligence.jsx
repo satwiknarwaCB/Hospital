@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Therapy Intelligence Dashboard
+// NeuroBridge™ - Clinical Intelligence Dashboard
 // Therapist Console - AI-Powered Analytics & Insights
 // ============================================================
 
@@ -60,7 +60,7 @@ const AlertCard = ({ alert, type }) => {
             <CardContent className="p-4 flex items-start gap-3">
                 <div className="p-2 bg-white rounded-lg shadow-sm">
                     <Icon className={`h-5 w-5 ${type === 'regression' ? 'text-red-500' :
-                            type === 'success' ? 'text-green-500' : 'text-yellow-500'
+                        type === 'success' ? 'text-green-500' : 'text-yellow-500'
                         }`} />
                 </div>
                 <div className="flex-1">
@@ -106,7 +106,7 @@ const ActivityEffectivenessChart = ({ activities }) => {
                     <div className="flex-1 h-6 bg-neutral-100 rounded-full overflow-hidden relative">
                         <div
                             className={`h-full rounded-full transition-all ${activity.avgEngagement >= 80 ? 'bg-green-500' :
-                                    activity.avgEngagement >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                activity.avgEngagement >= 60 ? 'bg-yellow-500' : 'bg-red-500'
                                 }`}
                             style={{ width: `${(activity.avgEngagement / maxEngagement) * 100}%` }}
                         />
@@ -176,7 +176,6 @@ const TherapyIntelligence = () => {
     const [intelligence, setIntelligence] = useState(null);
     const [anomalies, setAnomalies] = useState({});
     const [isLoading, setIsLoading] = useState(true);
-    const [selectedChild, setSelectedChild] = useState(null);
 
     // Get therapist's patients
     const therapistId = currentUser?.id || 't1';
@@ -239,7 +238,7 @@ const TherapyIntelligence = () => {
             <div className="flex items-center justify-center h-64">
                 <div className="text-center">
                     <RefreshCw className="h-8 w-8 text-primary-500 animate-spin mx-auto mb-4" />
-                    <p className="text-neutral-500">Loading AI Intelligence...</p>
+                    <p className="text-neutral-500">Updating Clinical Brain...</p>
                 </div>
             </div>
         );
@@ -252,19 +251,19 @@ const TherapyIntelligence = () => {
                 <div>
                     <h2 className="text-2xl font-bold text-neutral-800 flex items-center gap-2">
                         <Brain className="h-7 w-7 text-primary-600" />
-                        Therapy Intelligence
+                        Clinical Brain
                     </h2>
-                    <p className="text-neutral-500">AI-powered insights for your caseload</p>
+                    <p className="text-neutral-500">AI-powered insights & analytics</p>
                 </div>
                 <Button variant="outline">
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    Refresh Analysis
+                    Run All Analytics
                 </Button>
             </div>
 
             {/* Stats Overview */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-violet-500 to-purple-600 text-white">
+                <Card className="bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg">
                     <CardContent className="p-4">
                         <Sparkles className="h-6 w-6 text-violet-200 mb-2" />
                         <p className="text-3xl font-bold">{myPatients.length}</p>
@@ -285,11 +284,11 @@ const TherapyIntelligence = () => {
                         <p className="text-neutral-500">Plateaus Detected</p>
                     </CardContent>
                 </Card>
-                <Card className={overallStats.alertsCount > 0 ? 'bg-red-50 border-red-200' : ''}>
+                <Card className={overallStats.alertsCount > 0 ? 'bg-red-50 border-red-200 shadow-sm' : ''}>
                     <CardContent className="p-4">
                         <AlertTriangle className={`h-6 w-6 mb-2 ${overallStats.alertsCount > 0 ? 'text-red-500' : 'text-neutral-400'}`} />
                         <p className="text-3xl font-bold text-neutral-800">{overallStats.alertsCount}</p>
-                        <p className="text-neutral-500">Need Attention</p>
+                        <p className="text-neutral-500">Anomalies Found</p>
                     </CardContent>
                 </Card>
             </div>

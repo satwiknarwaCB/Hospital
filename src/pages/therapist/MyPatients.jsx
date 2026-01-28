@@ -18,7 +18,9 @@ import {
     Activity,
     AlertTriangle,
     Star,
-    X
+    X,
+    Heart,
+    Play
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -111,7 +113,7 @@ const PatientCard = ({ child, sessions, skillScores, onSelect }) => {
                         </div>
                         {recentSession.engagement && (
                             <span className={`text-sm font-medium ${recentSession.engagement >= 80 ? 'text-green-600' :
-                                    recentSession.engagement >= 60 ? 'text-yellow-600' : 'text-red-600'
+                                recentSession.engagement >= 60 ? 'text-yellow-600' : 'text-red-600'
                                 }`}>
                                 {recentSession.engagement}% engagement
                             </span>
@@ -136,7 +138,7 @@ const PatientCard = ({ child, sessions, skillScores, onSelect }) => {
 // Patient Detail Modal
 const PatientDetailModal = ({ child, sessions, skillScores, onClose }) => {
     const navigate = useNavigate();
-    
+
     if (!child) return null;
 
     const handleLogNewSession = () => {
@@ -166,18 +168,23 @@ const PatientDetailModal = ({ child, sessions, skillScores, onClose }) => {
                     </button>
 
                     {/* Header */}
-                    <div className="flex items-center gap-4 mb-6 pr-8">
-                        <img
-                            src={child.photoUrl}
-                            alt={child.name}
-                            className="w-20 h-20 rounded-full object-cover border-4 border-primary-100"
-                        />
+                    <div className="flex items-center gap-6 mb-8 pr-8 animate-in slide-in-from-left duration-500">
+                        <div className="relative">
+                            <img
+                                src={child.photoUrl}
+                                alt={child.name}
+                                className="w-24 h-24 rounded-[2rem] object-cover border-4 border-white shadow-xl"
+                            />
+                            <div className="absolute -bottom-2 -right-2 h-8 w-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center shadow-lg">
+                                <Heart className="h-4 w-4 text-white fill-white" />
+                            </div>
+                        </div>
                         <div>
-                            <h2 className="text-2xl font-bold text-neutral-800">{child.name}</h2>
-                            <p className="text-neutral-500">{child.age} years • {child.diagnosis}</p>
-                            <div className="flex gap-2 mt-2">
+                            <h2 className="text-3xl font-black text-neutral-800 tracking-tight">{child.name}</h2>
+                            <p className="text-neutral-500 font-bold uppercase text-[10px] tracking-widest mt-1">{child.age} years • {child.diagnosis}</p>
+                            <div className="flex gap-2 mt-3">
                                 {child.program.map((prog, idx) => (
-                                    <span key={idx} className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded text-xs font-medium">
+                                    <span key={idx} className="px-3 py-1 bg-primary-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm">
                                         {prog}
                                     </span>
                                 ))}
@@ -217,7 +224,7 @@ const PatientDetailModal = ({ child, sessions, skillScores, onClose }) => {
                                     <div className="flex-1 h-2 bg-neutral-100 rounded-full overflow-hidden">
                                         <div
                                             className={`h-full rounded-full ${skill.trend === 'improving' ? 'bg-green-500' :
-                                                    skill.trend === 'attention' ? 'bg-red-500' : 'bg-yellow-500'
+                                                skill.trend === 'attention' ? 'bg-red-500' : 'bg-yellow-500'
                                                 }`}
                                             style={{ width: `${skill.score}%` }}
                                         />
@@ -228,21 +235,49 @@ const PatientDetailModal = ({ child, sessions, skillScores, onClose }) => {
                         </div>
                     </div>
 
+                    {/* Recent Wins (Memory Box Integration) */}
+                    <div className="mb-6">
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 className="font-black text-neutral-800 tracking-tight uppercase text-xs">Recent Wins from Home 💝</h3>
+                            <span className="text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">New Unseen</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="relative aspect-video bg-neutral-100 rounded-2xl overflow-hidden border border-neutral-100 group">
+                                <img src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&q=80&w=200" className="w-full h-full object-cover" alt="Win" />
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Play className="h-6 w-6 text-white fill-white" />
+                                </div>
+                                <div className="absolute bottom-2 left-2 right-2">
+                                    <p className="text-[9px] font-bold text-white truncate">"First full sentence!"</p>
+                                </div>
+                            </div>
+                            <div className="relative aspect-video bg-neutral-100 rounded-2xl overflow-hidden border border-neutral-100 group">
+                                <img src="https://images.unsplash.com/photo-1544126592-807daa215a05?auto=format&fit=crop&q=80&w=400" className="w-full h-full object-cover" alt="Win" />
+                                <div className="absolute bottom-2 left-2 right-2">
+                                    <p className="text-[9px] font-bold text-white truncate">"Self-feeding success"</p>
+                                </div>
+                            </div>
+                        </div>
+                        <Button variant="ghost" className="w-full mt-2 text-[10px] font-black uppercase tracking-widest text-primary-600 hover:bg-primary-50">
+                            See Full Memory Box →
+                        </Button>
+                    </div>
+
                     {/* Recent Sessions */}
                     <div>
-                        <h3 className="font-semibold text-neutral-800 mb-3">Recent Sessions</h3>
+                        <h3 className="font-black text-neutral-800 mb-3 tracking-tight uppercase text-xs">Recent Clinical Sessions</h3>
                         <div className="space-y-2">
-                            {sessions.slice(0, 5).map(session => (
-                                <div key={session.id} className="p-3 bg-neutral-50 rounded-lg flex items-center justify-between">
+                            {sessions.slice(0, 3).map(session => (
+                                <div key={session.id} className="p-3 bg-neutral-50 rounded-xl flex items-center justify-between border border-neutral-100/50">
                                     <div>
-                                        <p className="font-medium text-neutral-800">{session.type}</p>
-                                        <p className="text-sm text-neutral-500">
+                                        <p className="font-bold text-neutral-800 text-sm">{session.type}</p>
+                                        <p className="text-[10px] font-medium text-neutral-400">
                                             {new Date(session.date).toLocaleDateString()} • {session.duration}min
                                         </p>
                                     </div>
                                     {session.engagement && (
-                                        <span className={`text-sm font-medium ${session.engagement >= 80 ? 'text-green-600' :
-                                                session.engagement >= 60 ? 'text-yellow-600' : 'text-red-600'
+                                        <span className={`text-[11px] font-black ${session.engagement >= 80 ? 'text-green-600' :
+                                            session.engagement >= 60 ? 'text-yellow-600' : 'text-red-600'
                                             }`}>
                                             {session.engagement}%
                                         </span>

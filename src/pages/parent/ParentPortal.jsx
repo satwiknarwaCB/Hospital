@@ -3,7 +3,7 @@
 // Complete Parent Experience with All Modules
 // ============================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import {
@@ -19,7 +19,8 @@ import {
     X,
     CheckCircle2,
     Users,
-    Activity
+    Activity,
+    Lock
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -32,6 +33,7 @@ import GrowthRoadmap from './GrowthRoadmap';
 import HomeActivities from './HomeActivities';
 import ParentSessions from './ParentSessions';
 import Messages from './Messages';
+import MemoryBox from './MemoryBox';
 
 // ============================================================
 // Session Detail Modal Component
@@ -258,45 +260,97 @@ const ParentDashboard = () => {
 
     const improvingAreas = skillScores.filter(s => s.trend === 'improving').length;
 
-    return (
-        <div className="space-y-6">
-            {/* Welcome Block */}
-            <div className="flex items-center space-x-4 mb-8">
-                <img
-                    src={child.photoUrl}
-                    alt={child.name}
-                    className="w-16 h-16 rounded-full object-cover border-2 border-primary-200"
-                />
-                <div>
-                    <h1 className="text-2xl font-bold text-neutral-800">Hi, {child.name.split(' ')[0]}'s Family! 👋</h1>
-                    <p className="text-neutral-500">Here is what's happening with {child.name} today.</p>
-                </div>
-            </div>
+    // Simplified labels for parent understanding
+    const overallProgressDisplay = overallProgress;
+    const improvingCount = improvingAreas;
 
-            {/* Quick Stats Row */}
+    // Gajju's Morning Message Logic (Speech)
+    useEffect(() => {
+        // Only run once per session to avoid annoying the user
+        const hasGreeted = sessionStorage.getItem('gajju_greeted');
+        if (!hasGreeted && child?.id) {
+            const hour = new Date().getHours();
+            let greeting = 'Good morning!';
+            if (hour >= 12 && hour < 17) greeting = 'Good afternoon!';
+            else if (hour >= 17) greeting = 'Good evening!';
+
+            const message = `${greeting} I'm Gajju, and I'm so excited to play with ${child.name.split(' ')[0]} today! Let's win some badges!`;
+
+            // Wait for UI to settle
+            const timer = setTimeout(() => {
+                // Double check sessionStorage inside timeout to prevent race conditions
+                if (sessionStorage.getItem('gajju_greeted')) return;
+
+                if (window.speechSynthesis) {
+                    // Cancel any ongoing speech to avoid overlapping
+                    window.speechSynthesis.cancel();
+
+                    const utterance = new SpeechSynthesisUtterance(message);
+                    utterance.pitch = 1.3;
+                    utterance.rate = 0.9;
+                    window.speechSynthesis.speak(utterance);
+                }
+                sessionStorage.setItem('gajju_greeted', 'true');
+            }, 1500);
+            return () => {
+                clearTimeout(timer);
+                if (window.speechSynthesis) window.speechSynthesis.cancel();
+            };
+        }
+    }, [child?.id]); // Only re-run if child ID changes, not the whole object
+
+    return (
+        <div className="space-y-8 pb-safe-nav animate-slide-up">
+            {/* Gajju Welcome Card */}
+            <Card className="glass-card border-none overflow-hidden bg-gradient-to-r from-primary-500/10 to-violet-500/10 mb-8">
+                <CardContent className="p-6 flex items-center gap-6">
+                    <div className="relative">
+                        <div className="h-20 w-20 bg-white rounded-3xl shadow-xl flex items-center justify-center animate-float">
+                            <span className="text-4xl">🐘</span>
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 h-6 w-6 bg-green-500 rounded-full border-4 border-white" title="Gajju is online!" />
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <h1 className="text-2xl font-black text-neutral-800 tracking-tight">
+                                Hi, {child.name.split(' ')[0]}'s Family! 👋
+                            </h1>
+                            <div className="flex items-center gap-1.5 bg-green-500/10 text-green-700 px-3 py-1 rounded-full border border-green-500/20 shadow-sm">
+                                <Lock className="h-3 w-3" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Secure Bridge</span>
+                            </div>
+                        </div>
+                        <p className="text-neutral-500 font-medium">
+                            Gajju is ready for today's play session.
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Quick Stats Row - Peer Friendly Labels */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-primary-500 to-primary-600 text-white">
-                    <CardContent className="p-4">
-                        <p className="text-primary-100 text-sm">Current Streak</p>
-                        <p className="text-3xl font-bold">{child.streak} days 🔥</p>
+                <Card className="btn-premium bg-gradient-to-br from-primary-500 to-primary-600 border-none text-white shadow-xl shadow-primary-200/50">
+                    <CardContent className="p-5">
+                        <p className="text-primary-100 text-[10px] font-black uppercase tracking-widest mb-1">Activity Streak</p>
+                        <p className="text-3xl font-black">{child.streak} DAYS 🔥</p>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardContent className="p-4">
-                        <p className="text-neutral-500 text-sm">Overall Progress</p>
-                        <p className="text-2xl font-bold text-neutral-800">{overallProgress}%</p>
+                <Card className="glass-card border-none">
+                    <CardContent className="p-5">
+                        <p className="text-neutral-400 text-[10px] font-black uppercase tracking-widest mb-1">New Learning</p>
+                        <p className="text-3xl font-black text-neutral-800">{overallProgressDisplay}%</p>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardContent className="p-4">
-                        <p className="text-neutral-500 text-sm">Improving Areas</p>
-                        <p className="text-2xl font-bold text-green-600">{improvingAreas} skills</p>
+                <Card className="glass-card border-none">
+                    <CardContent className="p-5">
+                        <p className="text-neutral-400 text-[10px] font-black uppercase tracking-widest mb-1">Small Wins</p>
+                        <p className="text-3xl font-black text-green-500">{improvingCount}</p>
                     </CardContent>
                 </Card>
-                <Card className={unreadMessages > 0 ? 'bg-violet-50 border-violet-200' : ''}>
-                    <CardContent className="p-4">
-                        <p className="text-neutral-500 text-sm">New Messages</p>
-                        <p className={`text-2xl font-bold ${unreadMessages > 0 ? 'text-violet-600' : 'text-neutral-800'}`}>
+                <Card className={`glass-card border-none ${unreadMessages > 0 ? 'bg-violet-50' : ''}`}>
+                    <CardContent className="p-5">
+                        <p className="text-neutral-400 text-[10px] font-black uppercase tracking-widest mb-1">Doctor Notes</p>
+                        <p className={`text-3xl font-black ${unreadMessages > 0 ? 'text-violet-600' : 'text-neutral-800'}`}>
                             {unreadMessages}
                         </p>
                     </CardContent>
@@ -356,7 +410,11 @@ const ParentDashboard = () => {
                                     {/* Send thanks to the therapist in existing chat thread */}
                                     <Button
                                         className="flex-1"
+                                        disabled={showThanksSent}
                                         onClick={() => {
+                                            if (showThanksSent) return; // Guard clause
+                                            setShowThanksSent(true); // Disable immediately
+
                                             const childForSession = kids.find(c => c.id === lastSession.childId);
                                             const therapistId = lastSession.therapistId || childForSession?.therapistId || 't1';
 
@@ -390,9 +448,9 @@ const ParentDashboard = () => {
                                                     message: `Your thank you message has been sent to ${therapistUser?.name || 'the therapist'}.`
                                                 });
 
-                                                setShowThanksSent(true);
-                                                setTimeout(() => setShowThanksSent(false), 3000);
+                                                setTimeout(() => setShowThanksSent(false), 5000);
                                             } else {
+                                                setShowThanksSent(false); // Re-enable if failed
                                                 addNotification({
                                                     type: 'error',
                                                     title: 'Error',
@@ -400,7 +458,6 @@ const ParentDashboard = () => {
                                                 });
                                             }
                                         }}
-                                        disabled={showThanksSent}
                                     >
                                         {showThanksSent ? (
                                             <>
@@ -534,23 +591,25 @@ const ParentPortal = () => {
     };
 
     const sidebarItems = [
-        { label: 'Dashboard', path: '/parent/dashboard', icon: LayoutDashboard },
-        { label: 'Progress', path: '/parent/progress', icon: TrendingUp },
-        { label: 'Roadmap', path: '/parent/roadmap', icon: Target },
-        { label: 'Home Activities', path: '/parent/activities', icon: Home },
+        { label: 'Today', path: '/parent/dashboard', icon: LayoutDashboard },
+        { label: 'Daily Play', path: '/parent/activities', icon: Home },
+        { label: 'New Learning', path: '/parent/progress', icon: TrendingUp },
+        { label: 'Our Goals', path: '/parent/roadmap', icon: Target },
         { label: 'Sessions', path: '/parent/sessions', icon: Calendar },
+        { label: 'Memory Box', path: '/parent/memory-box', icon: History },
         { label: 'Messages', path: '/parent/messages', icon: MessageCircle, badge: totalMessagesUnread },
     ];
 
     return (
         <Routes>
-            <Route element={<DashboardLayout title="Parent Portal" sidebarItems={sidebarItems} roleColor="bg-primary-600" onLogout={handleLogout} />}>
+            <Route element={<DashboardLayout title="Family Portal" sidebarItems={sidebarItems} roleColor="bg-primary-600" onLogout={handleLogout} />}>
                 <Route path="dashboard" element={<ParentDashboard />} />
                 <Route path="progress" element={<ProgressAnalytics />} />
                 <Route path="roadmap" element={<GrowthRoadmap />} />
                 <Route path="activities" element={<HomeActivities />} />
                 <Route path="sessions" element={<ParentSessions />} />
                 <Route path="messages" element={<Messages />} />
+                <Route path="memory-box" element={<MemoryBox />} />
                 <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Route>
         </Routes>

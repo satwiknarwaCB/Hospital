@@ -23,6 +23,38 @@
   background: #f8fafc;
 }
 
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(31, 38, 135, 0.07)];
+  }
+
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md border border-white/60 shadow-lg hover:shadow-2xl transition-all duration-500;
+  }
+
+  .btn-premium {
+    @apply relative overflow-hidden transition-all duration-300 active:scale-95 hover:shadow-xl hover:-translate-y-0.5;
+  }
+
+  /* Doctor/Therapist "Glanceable" Cards */
+  .doctor-card-urgent {
+    @apply border-l-4 border-l-red-500 bg-red-50/50 hover:bg-red-50 transition-colors;
+  }
+
+  .doctor-card-stable {
+    @apply border-l-4 border-l-green-500 bg-green-50/50 hover:bg-green-50 transition-colors;
+  }
+
+  .doctor-card-warning {
+    @apply border-l-4 border-l-yellow-500 bg-yellow-50/50 hover:bg-yellow-50 transition-colors;
+  }
+
+  /* Mobile Bottom Nav Spacing */
+  .pb-safe-nav {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+}
+
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 10px;

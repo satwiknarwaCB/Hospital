@@ -19,6 +19,7 @@ import {
     SKILL_GOALS
 } from '../data/mockData';
 import { sessionAPI, communityAPI, messagesAPI, progressAPI } from './api';
+import { cryptoUtils } from './crypto';
 
 const AppContext = createContext();
 
@@ -181,38 +182,39 @@ export const AppProvider = ({ children }) => {
                             childId: m.childId || m.child_id,
                             threadId: m.threadId || m.thread_id,
                             senderName: m.senderName || m.sender_name,
-                            senderRole: m.senderRole || m.sender_role
+                            senderRole: m.senderRole || m.sender_role,
+                            content: cryptoUtils.decrypt(m.content) // DECRYPT ON LOAD
                         };
                     });
 
                     setMessages(prev => {
-                        // Create a map for efficient deduplication
                         const messageMap = new Map();
 
                         // Add cloud messages first (source of truth)
                         normalizedMessages.forEach(m => {
-                            messageMap.set(m.id, m);
+                            const mId = m.id || m._id;
+                            messageMap.set(mId, m);
                         });
 
-                        // Add legacy messages only if they don't exist
+                        // Add existing messages only if they are not already in the group
                         prev.forEach(m => {
-                            const msgId = m.id || m._id;
-                            if (!messageMap.has(msgId)) {
-                                // Also check if it's a duplicate based on content + timestamp
-                                const isDuplicate = Array.from(messageMap.values()).some(existing =>
-                                    existing.content === m.content &&
-                                    existing.senderId === m.senderId &&
-                                    existing.recipientId === m.recipientId &&
-                                    Math.abs(new Date(existing.timestamp) - new Date(m.timestamp)) < 5000 // Within 5 seconds
-                                );
+                            const mId = m.id || m._id;
+                            if (messageMap.has(mId)) return;
 
-                                if (!isDuplicate) {
-                                    messageMap.set(msgId, m);
-                                }
+                            // Content-based deduplication as secondary check
+                            const isDuplicate = Array.from(messageMap.values()).some(existing =>
+                                existing.content === m.content &&
+                                existing.senderId === m.senderId &&
+                                existing.recipientId === m.recipientId &&
+                                Math.abs(new Date(existing.timestamp) - new Date(m.timestamp)) < 10000 // Increased to 10s for slow connections
+                            );
+
+                            if (!isDuplicate) {
+                                messageMap.set(mId, m);
                             }
                         });
 
-                        return Array.from(messageMap.values());
+                        return Array.from(messageMap.values()).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                     });
                 }
             } catch (err) {
@@ -515,21 +517,32 @@ export const AppProvider = ({ children }) => {
 
         // 1. Private Messages Notifications (Now using normalized IDs)
         const incomingUnread = messages.filter(m =>
-            (m.recipientId === currentUser.id) &&
+            (m.recipientId === currentUser.id || m.recipient_id === currentUser.id) &&
             !m.read
         );
 
         incomingUnread.forEach(m => {
-            const mId = m.id || m._id;
-            // Only notify if we haven't notified for this message AND it's not sent by current user
-            if (!notifiedMessageIds.current.has(mId) && m.senderId !== currentUser.id) {
+            const mId = m.id || m._id || (m.threadId + m.timestamp);
+            const senderId = m.senderId || m.sender_id;
+
+            // SECURITY: Never notify for self-sent messages
+            if (senderId === currentUser.id) return;
+
+            // Only notify if we haven't notified for this specific message ID
+            if (!notifiedMessageIds.current.has(mId)) {
+                // Also do a content-based check to prevent double notifications for synced messages
+                const contentKey = `${senderId}-${m.content.substring(0, 50)}-${new Date(m.timestamp).getTime() / 1000 | 0}`;
+                if (notifiedMessageIds.current.has(contentKey)) return;
+
                 addNotification({
                     type: 'message',
                     title: `New Message from ${m.senderName || 'Parent'}`,
                     message: m.content.substring(0, 60) + (m.content.length > 60 ? '...' : ''),
                     messageId: mId
                 });
+
                 notifiedMessageIds.current.add(mId);
+                notifiedMessageIds.current.add(contentKey);
             }
         });
 
@@ -765,7 +778,7 @@ export const AppProvider = ({ children }) => {
 
     const sendMessage = useCallback(async (message) => {
         try {
-            // Persist to Backend
+            // Persist to Backend - ENCRYPT BEFORE SENDING
             const backendMessage = {
                 thread_id: message.threadId,
                 sender_id: message.senderId,
@@ -773,7 +786,7 @@ export const AppProvider = ({ children }) => {
                 sender_role: message.senderRole,
                 recipient_id: message.recipientId,
                 child_id: message.childId,
-                content: message.content,
+                content: cryptoUtils.encrypt(message.content), // ENCRYPT HERE
                 type: message.type || 'message'
             };
 
@@ -790,18 +803,22 @@ export const AppProvider = ({ children }) => {
             };
 
             setMessages(prev => {
-                // Check if message already exists to prevent duplicates
-                const exists = prev.some(m =>
-                    (m.id === newMessage.id || m._id === newMessage.id) ||
-                    (m.content === newMessage.content &&
-                        m.senderId === newMessage.senderId &&
-                        m.recipientId === newMessage.recipientId &&
-                        Math.abs(new Date(m.timestamp) - new Date(newMessage.timestamp)) < 2000)
-                );
+                const messageId = newMessage.id || newMessage._id;
 
-                if (exists) {
+                // Prevent duplicate by ID
+                if (prev.some(m => m.id === messageId || m._id === messageId)) {
                     return prev;
                 }
+
+                // Prevent duplicate by content (rapid clicking protection)
+                const isDuplicate = prev.some(m =>
+                    m.content === newMessage.content &&
+                    m.senderId === newMessage.senderId &&
+                    m.recipientId === newMessage.recipientId &&
+                    Math.abs(new Date(m.timestamp) - new Date(newMessage.timestamp)) < 10000
+                );
+
+                if (isDuplicate) return prev;
 
                 return [newMessage, ...prev];
             });

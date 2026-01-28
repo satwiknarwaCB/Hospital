@@ -23,7 +23,7 @@ import { Button } from '../../components/ui/Button';
 import { useApp } from '../../lib/context';
 
 // Activity Card Component
-const ActivityCard = ({ activity, onComplete, onViewDetails }) => {
+const ActivityCard = ({ activity, onComplete, onViewDetails, onLaunchGame }) => {
     const [showInstructions, setShowInstructions] = useState(false);
     const [notes, setNotes] = useState('');
     const [isCompleting, setIsCompleting] = useState(false);
@@ -86,11 +86,20 @@ const ActivityCard = ({ activity, onComplete, onViewDetails }) => {
                     </div>
 
                     {/* Action */}
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 flex flex-col gap-2">
                         {!isCompletedToday && (
-                            <Button size="sm" onClick={() => setShowInstructions(true)}>
-                                Start
-                            </Button>
+                            <>
+                                {activity.gameType ? (
+                                    <Button size="sm" onClick={() => onLaunchGame(activity)}>
+                                        <Sparkles className="h-4 w-4 mr-1" />
+                                        Play Game
+                                    </Button>
+                                ) : (
+                                    <Button size="sm" onClick={() => setShowInstructions(true)}>
+                                        Start
+                                    </Button>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
@@ -216,8 +225,11 @@ const WeeklyCalendar = ({ activities }) => {
 };
 
 // Main Home Activities Component
+import GameLauncher from '../../components/games/GameLauncher';
+
 const HomeActivities = () => {
     const { currentUser, kids, getChildHomeActivities, logActivityCompletion, getActivityAdherence } = useApp();
+    const [activeGame, setActiveGame] = useState(null);
 
     // Get current child
     const child = kids.find(k => k.id === currentUser?.childId);
@@ -237,12 +249,36 @@ const HomeActivities = () => {
         logActivityCompletion(activityId, completed, notes);
     };
 
+    const handleLaunchGame = (activity) => {
+        setActiveGame(activity);
+    };
+
+    const handleGameComplete = (results) => {
+        if (activeGame) {
+            handleCompleteActivity(
+                activeGame.id,
+                true,
+                `Game session completed successfully. Results: ${JSON.stringify(results)}`
+            );
+            setActiveGame(null);
+        }
+    };
+
     if (!child) {
         return <div className="p-8 text-center text-neutral-500">No child profile found.</div>;
     }
 
     return (
         <div className="space-y-6">
+            {/* Game Overlay */}
+            {activeGame && (
+                <GameLauncher
+                    gameType={activeGame.gameType}
+                    onComplete={handleGameComplete}
+                    onExit={() => setActiveGame(null)}
+                />
+            )}
+
             {/* Header */}
             <div>
                 <h2 className="text-2xl font-bold text-neutral-800">Home Activities</h2>
@@ -345,6 +381,7 @@ const HomeActivities = () => {
                                 key={activity.id}
                                 activity={activity}
                                 onComplete={handleCompleteActivity}
+                                onLaunchGame={handleLaunchGame}
                             />
                         ))
                     ) : (

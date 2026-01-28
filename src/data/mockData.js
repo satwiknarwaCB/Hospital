@@ -416,6 +416,7 @@ export const HOME_ACTIVITIES = [
         duration: 10,
         frequency: 'daily',
         domain: 'Language',
+        gameType: 'picture-talk',
         videoUrl: null,
         imageUrl: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=400',
         instructions: [
@@ -434,21 +435,37 @@ export const HOME_ACTIVITIES = [
         ]
     },
     {
+        id: 'ha1-sound',
+        childId: 'c1',
+        title: 'Sound Adventure',
+        description: 'Practice recognizing letter sounds with Gajju the Elephant.',
+        duration: 5,
+        frequency: 'daily',
+        domain: 'Language',
+        gameType: 'sound-pop',
+        instructions: [
+            'Launch the sound adventure game',
+            'Encourage Aarav to listen to the sound',
+            'Help him tap the matching letter'
+        ],
+        assignedDate: '2025-12-23',
+        completions: []
+    },
+    {
         id: 'ha2',
         childId: 'c1',
-        title: 'Sensory Play Time',
-        description: 'Engage in tactile play with playdough or sand to build sensory tolerance.',
+        title: 'Sensory Bubble Time',
+        description: 'Engage in a calming bubble breathing exercise to relax and regulate.',
         duration: 15,
         frequency: 'daily',
         domain: 'Sensory',
+        gameType: 'calm-bubbles',
         instructions: [
-            'Set up playdough or kinetic sand',
-            'Let Aarav explore at his own pace',
-            'Model pushing, rolling, and cutting',
-            'Gradually introduce new textures',
-            'End before overwhelm signs appear'
+            'Launch the calm bubble world',
+            'Breathe in as the circle grows',
+            'Breathe out as the circle shrinks'
         ],
-        tips: 'If he resists, start with preferred textures first.',
+        tips: 'Perfect for cooldown after therapy or before bedtime.',
         assignedDate: '2025-12-20',
         completions: []
     },
@@ -479,6 +496,7 @@ export const HOME_ACTIVITIES = [
         duration: 10,
         frequency: 'daily',
         domain: 'Language',
+        gameType: 'picture-talk',
         videoUrl: null,
         imageUrl: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=400',
         instructions: [
@@ -538,6 +556,32 @@ export const HOME_ACTIVITIES = [
         completions: [
             { date: '2025-12-23', completed: true, parentNotes: 'Identified happy and sad correctly!' }
         ]
+    },
+    {
+        id: 'ha-aba',
+        childId: 'c1',
+        title: 'Good Choice City',
+        description: 'Practice social choices and behavior with interactive stories.',
+        duration: 5,
+        frequency: 'daily',
+        domain: 'Behavior',
+        gameType: 'aba-choice',
+        instructions: ['Launch the game and help Aarav choose the thumbs-up behavior.'],
+        assignedDate: '2025-12-23',
+        completions: []
+    },
+    {
+        id: 'ha-ot',
+        childId: 'c1',
+        title: 'Tricky Trails',
+        description: 'Improve fine motor skills by tracing fun paths with Gajju.',
+        duration: 7,
+        frequency: 'daily',
+        domain: 'Motor',
+        gameType: 'ot-trace',
+        instructions: ['Encourage Aarav to trace the line from start to finish.'],
+        assignedDate: '2025-12-23',
+        completions: []
     }
 ];
 

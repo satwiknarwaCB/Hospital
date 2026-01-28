@@ -16,7 +16,8 @@ import {
     ArrowLeft,
     Paperclip,
     Smile,
-    Users
+    Users,
+    Lock
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';

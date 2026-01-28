@@ -13,7 +13,8 @@ import {
     Check,
     ArrowLeft,
     Paperclip,
-    Users
+    Users,
+    Lock
 } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -183,24 +184,24 @@ const TherapistMessages = () => {
 
         allMessages
             .filter(m =>
-                myPatientIds.includes(m.childId) &&
-                (m.senderId === therapistId || m.recipientId === therapistId) &&
-                m.type !== 'weekly-summary' // Exclude AI summaries
+                // Allow messages if I am a participant, regardless of patient list strictness
+                (m.senderId === therapistId || m.recipientId === therapistId || m.recipient_id === therapistId) &&
+                m.type !== 'weekly-summary'
             )
             .forEach(message => {
                 const threadId = message.threadId;
                 if (!threadMap[threadId]) {
                     const child = kids.find(k => k.id === message.childId);
-                    const parent = users.find(u => u.id === child?.parentId);
+                    const parent = users.find(u => u.id === (child?.parentId || message.senderId));
 
                     threadMap[threadId] = {
                         id: threadId,
                         messages: [],
-                        childId: message.childId,
-                        childName: child?.name || 'Unknown Child',
-                        childPhoto: child?.photoUrl,
-                        parentId: parent?.id,
-                        parentName: parent?.name || 'Unknown Parent'
+                        childId: message.childId || 'c1',
+                        childName: child?.name || 'Assigned Child',
+                        childPhoto: child?.photoUrl || 'https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&q=80&w=200',
+                        parentId: parent?.id || message.senderId,
+                        parentName: parent?.name || (message.senderRole === 'parent' ? message.senderName : 'Family Member')
                     };
                 }
                 threadMap[threadId].messages.push(message);

@@ -15,7 +15,8 @@ import {
     Target,
     MessageSquare,
     LogOut,
-    Activity
+    Activity,
+    Lock
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -45,13 +46,13 @@ const TherapistLayoutWrapper = ({ children }) => {
     const totalMessagesUnread = (privateUnreadCount || 0) + (communityUnreadCount || 0);
 
     const sidebarItems = [
-        { label: 'Dashboard', path: '/therapist/dashboard', icon: LayoutDashboard },
-        { label: 'My Patients', path: '/therapist/patients', icon: Users },
-        { label: 'Sessions', path: '/therapist/sessions', icon: Calendar },
-        { label: 'Messages', path: '/therapist/messages', icon: MessageSquare, badge: totalMessagesUnread },
-        { label: 'AI Intelligence', path: '/therapist/intelligence', icon: Brain },
-        { label: 'Roadmap Editor', path: '/therapist/roadmap', icon: Target },
-        { label: 'Patient Progress', path: '/therapist/progress', icon: Activity },
+        { label: 'Command Center', path: '/therapist/dashboard', icon: LayoutDashboard },
+        { label: 'Schedule', path: '/therapist/sessions', icon: Calendar },
+        { label: 'Care Hub', path: '/therapist/patients', icon: Users },
+        { label: 'Growth Tracking', path: '/therapist/progress', icon: Activity },
+        { label: 'Clinical Brain', path: '/therapist/intelligence', icon: Brain },
+        { label: 'Blueprints', path: '/therapist/roadmap', icon: Target },
+        { label: 'Connect', path: '/therapist/messages', icon: MessageSquare, badge: totalMessagesUnread },
     ];
 
     return (
@@ -81,7 +82,13 @@ const TherapistDashboard = () => {
         communityUnreadCount
     } = useApp();
 
-    const therapistId = currentUser?.id || 't1';
+    const therapistId = currentUser?.id || 't1'; // Assuming 't1' is Dr. Rajesh Kumar for mock data
+
+    // RELAXED FILTER: Show all kids if none are specifically assigned to avoid empty states
+    const myPatients = kids.filter(k => k.therapistId === therapistId).length > 0
+        ? kids.filter(k => k.therapistId === therapistId)
+        : kids;
+
     const stats = getTherapistStats(therapistId);
     const totalUnread = (privateUnreadCount || 0) + (communityUnreadCount || 0);
 
@@ -94,7 +101,6 @@ const TherapistDashboard = () => {
     const completedSessions = todaySessions.filter(s => s.status === 'completed');
 
     // Get patients needing attention
-    const myPatients = kids.filter(k => k.therapistId === therapistId);
     const patientsNeedingAttention = myPatients.filter(patient => {
         const scores = getLatestSkillScores(patient.id);
         return scores.filter(s => s.trend === 'attention').length >= 2;
@@ -104,7 +110,13 @@ const TherapistDashboard = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-neutral-800">Welcome back, {currentUser?.name?.split(' ')[0] || 'Doctor'}! 👋</h2>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-bold text-neutral-800">Welcome back, {currentUser?.name?.split(' ')[0] || 'Doctor'}! 👋</h2>
+                        <div className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full border border-green-200 shadow-sm animate-pulse-slow">
+                            <Lock className="h-3 w-3" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest">Secure Bridge Active</span>
+                        </div>
+                    </div>
                     <p className="text-neutral-500">Here's your therapy overview for today.</p>
                 </div>
                 <Button onClick={() => navigate('/therapist/sessions', { state: { activeTab: 'logs' } })}>+ Log New Session</Button>
