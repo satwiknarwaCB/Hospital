@@ -639,7 +639,7 @@ const AdminPortal = () => {
 
     const handleLogout = async () => {
         await logout();
-        navigate('/login');
+        navigate('/');
     };
     const sidebarItems = [
         { label: 'Overview', path: '/admin/dashboard', icon: LayoutDashboard },

@@ -38,7 +38,7 @@ const TherapistLayoutWrapper = ({ children }) => {
 
     const handleLogout = async () => {
         await logout();
-        navigate('/login');
+        navigate('/');
     };
 
     const { privateUnreadCount, communityUnreadCount } = useApp();

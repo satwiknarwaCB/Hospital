@@ -54,8 +54,8 @@ const Contact = () => {
         {
             icon: MapPin,
             title: 'Visit Us',
-            details: '123 Therapy Lane, Suite 100',
-            sub: 'Medical District, NY 10001',
+            details: '123 Therapy Lane, Suite 000',
+            sub: 'Medical District ABC 123456',
             color: 'text-secondary-600',
             bg: 'bg-secondary-50'
         },

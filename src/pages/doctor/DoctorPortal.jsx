@@ -26,7 +26,7 @@ const DoctorLayoutWrapper = ({ children }) => {
 
     const handleLogout = async () => {
         await logout();
-        navigate('/login');
+        navigate('/');
     };
 
     const sidebarItems = [
