@@ -642,7 +642,7 @@ const AdminPortal = () => {
         navigate('/');
     };
     const sidebarItems = [
-        { label: 'Overview', path: '/admin/dashboard', icon: LayoutDashboard },
+        { label: 'Overview', path: '/admin/overview', icon: LayoutDashboard },
         { label: 'Operations', path: '/admin/operations', icon: Building2 },
         { label: 'Reports', path: '/admin/reports', icon: FileBarChart },
         { label: 'Compliance', path: '/admin/compliance', icon: ShieldAlert },
@@ -651,11 +651,11 @@ const AdminPortal = () => {
     return (
         <Routes>
             <Route element={<DashboardLayout title="CDC Admin" sidebarItems={sidebarItems} roleColor="bg-neutral-800" onLogout={handleLogout} />}>
-                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="overview" element={<AdminDashboard />} />
                 <Route path="operations" element={<OperationsPage />} />
                 <Route path="reports" element={<ReportsPage />} />
                 <Route path="compliance" element={<CompliancePage />} />
-                <Route path="*" element={<Navigate to="dashboard" replace />} />
+                <Route path="*" element={<Navigate to="overview" replace />} />
             </Route>
         </Routes>
     );

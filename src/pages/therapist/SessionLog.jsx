@@ -106,7 +106,7 @@ const SessionLog = () => {
       });
 
       alert("🎉 Session Saved & Published Successfully to MongoDB!");
-      navigate('/therapist/dashboard');
+      navigate('/therapist/command-center');
     } catch (error) {
       console.error('❌ Failed to Save Session:', error);
       const errorMsg = typeof error === 'object'

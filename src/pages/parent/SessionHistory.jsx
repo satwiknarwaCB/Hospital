@@ -109,6 +109,19 @@ const SessionCard = ({ session, childName, isExpanded, onToggle }) => {
 
                     <div className="flex items-center gap-4">
                         {session.engagement && <EngagementIndicator value={session.engagement} />}
+                        
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-neutral-500 hover:text-primary-600 hidden sm:flex"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onToggle();
+                            }}
+                        >
+                            {isExpanded ? 'Hide Details' : 'View Details'}
+                        </Button>
+
                         {isExpanded ? (
                             <ChevronUp className="h-5 w-5 text-neutral-400" />
                         ) : (

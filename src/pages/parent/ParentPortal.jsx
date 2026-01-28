@@ -237,13 +237,43 @@ const ParentDashboard = () => {
     const [selectedSession, setSelectedSession] = useState(null);
     const [showThanksSent, setShowThanksSent] = useState(false);
 
+    // Get the logged-in parent's child
+    const child = kids.find(c => c.id === currentUser?.childId);
+
+    // Gajju's Morning Message Logic (Speech)
+    useEffect(() => {
+        // Only run once per session to avoid annoying the user
+        const hasGreeted = sessionStorage.getItem('gajju_greeted');
+        if (!hasGreeted && child?.id) {
+            const time = new Date().getHours();
+            let greeting = 'Good Morning';
+            if (time >= 12 && time < 17) greeting = 'Good Afternoon';
+            if (time >= 17) greeting = 'Good Evening';
+
+            const messages = [
+                `${greeting}! How is ${child.name} feeling today? ☀️`,
+                `Ready for another day of breakthroughs for ${child.name}? 🚀`,
+                `Hope you and ${child.name} are having a wonderful day! ✨`,
+                `Small steps lead to big milestones! How can I help ${child.name} today? 🌱`
+            ];
+
+            const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+
+            addNotification({
+                type: 'ai_insight',
+                title: 'Gajju says...',
+                message: randomMsg,
+                icon: 'Sparkles'
+            });
+
+            sessionStorage.setItem('gajju_greeted', 'true');
+        }
+    }, [child?.id, addNotification]);
+
     // Safety check
     if (!currentUser || currentUser.role !== 'parent') {
         return <div className="p-8 text-center text-neutral-500">Please log in as a parent to view this dashboard.</div>;
     }
-
-    // Get the logged-in parent's child
-    const child = kids.find(c => c.id === currentUser.childId);
 
     if (!child) return <div className="p-8">No child profile found.</div>;
 
@@ -263,41 +293,6 @@ const ParentDashboard = () => {
     // Simplified labels for parent understanding
     const overallProgressDisplay = overallProgress;
     const improvingCount = improvingAreas;
-
-    // Gajju's Morning Message Logic (Speech)
-    useEffect(() => {
-        // Only run once per session to avoid annoying the user
-        const hasGreeted = sessionStorage.getItem('gajju_greeted');
-        if (!hasGreeted && child?.id) {
-            const hour = new Date().getHours();
-            let greeting = 'Good morning!';
-            if (hour >= 12 && hour < 17) greeting = 'Good afternoon!';
-            else if (hour >= 17) greeting = 'Good evening!';
-
-            const message = `${greeting} I'm Gajju, and I'm so excited to play with ${child.name.split(' ')[0]} today! Let's win some badges!`;
-
-            // Wait for UI to settle
-            const timer = setTimeout(() => {
-                // Double check sessionStorage inside timeout to prevent race conditions
-                if (sessionStorage.getItem('gajju_greeted')) return;
-
-                if (window.speechSynthesis) {
-                    // Cancel any ongoing speech to avoid overlapping
-                    window.speechSynthesis.cancel();
-
-                    const utterance = new SpeechSynthesisUtterance(message);
-                    utterance.pitch = 1.3;
-                    utterance.rate = 0.9;
-                    window.speechSynthesis.speak(utterance);
-                }
-                sessionStorage.setItem('gajju_greeted', 'true');
-            }, 1500);
-            return () => {
-                clearTimeout(timer);
-                if (window.speechSynthesis) window.speechSynthesis.cancel();
-            };
-        }
-    }, [child?.id]); // Only re-run if child ID changes, not the whole object
 
     return (
         <div className="space-y-8 pb-safe-nav animate-slide-up">
@@ -591,10 +586,10 @@ const ParentPortal = () => {
     };
 
     const sidebarItems = [
-        { label: 'Today', path: '/parent/dashboard', icon: LayoutDashboard },
-        { label: 'Daily Play', path: '/parent/activities', icon: Home },
-        { label: 'New Learning', path: '/parent/progress', icon: TrendingUp },
-        { label: 'Our Goals', path: '/parent/roadmap', icon: Target },
+        { label: 'Today', path: '/parent/today', icon: LayoutDashboard },
+        { label: 'Daily Play', path: '/parent/daily-play', icon: Home },
+        { label: 'New Learning', path: '/parent/new-learning', icon: TrendingUp },
+        { label: 'Our Goals', path: '/parent/our-goals', icon: Target },
         { label: 'Sessions', path: '/parent/sessions', icon: Calendar },
         { label: 'Memory Box', path: '/parent/memory-box', icon: History },
         { label: 'Messages', path: '/parent/messages', icon: MessageCircle, badge: totalMessagesUnread },
@@ -602,15 +597,15 @@ const ParentPortal = () => {
 
     return (
         <Routes>
-            <Route element={<DashboardLayout title="Family Portal" sidebarItems={sidebarItems} roleColor="bg-primary-600" onLogout={handleLogout} />}>
-                <Route path="dashboard" element={<ParentDashboard />} />
-                <Route path="progress" element={<ProgressAnalytics />} />
-                <Route path="roadmap" element={<GrowthRoadmap />} />
-                <Route path="activities" element={<HomeActivities />} />
+            <Route element={<DashboardLayout title="Parent Portal" sidebarItems={sidebarItems} roleColor="bg-primary-600" onLogout={handleLogout} />}>
+                <Route path="today" element={<ParentDashboard />} />
+                <Route path="new-learning" element={<ProgressAnalytics />} />
+                <Route path="our-goals" element={<GrowthRoadmap />} />
+                <Route path="daily-play" element={<HomeActivities />} />
                 <Route path="sessions" element={<ParentSessions />} />
                 <Route path="messages" element={<Messages />} />
                 <Route path="memory-box" element={<MemoryBox />} />
-                <Route path="*" element={<Navigate to="dashboard" replace />} />
+                <Route path="*" element={<Navigate to="today" replace />} />
             </Route>
         </Routes>
     );

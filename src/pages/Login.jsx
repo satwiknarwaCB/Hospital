@@ -80,11 +80,11 @@ const Login = () => {
 
             // Redirect based on role
             if (formData.email.includes('@parent.com')) {
-                navigate('/parent/dashboard');
+                navigate('/parent/today');
             } else if (formData.email.includes('@neurobridge.com')) {
-                navigate('/admin/dashboard');
+                navigate('/admin/overview');
             } else {
-                navigate('/therapist/dashboard');
+                navigate('/therapist/command-center');
             }
         } catch (error) {
             setApiError(error.message || 'Login failed. Please check your credentials.');

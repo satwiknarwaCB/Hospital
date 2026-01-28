@@ -583,8 +583,20 @@ export const AppProvider = ({ children }) => {
                 details: 'User logged out'
             });
         }
+
+        // Clear all auth data from localStorage to ensure logout is complete
+        localStorage.removeItem('parent_token');
+        localStorage.removeItem('parent_data');
+        localStorage.removeItem('doctor_token');
+        localStorage.removeItem('doctor_data');
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_data');
+
         setCurrentUser(null);
         setIsAuthenticated(false);
+
+        // Notify other hooks (like useAuth) and tabs to sync their state
+        window.dispatchEvent(new Event('auth-change'));
     }, [currentUser]);
 
     // ============ Session Actions ============

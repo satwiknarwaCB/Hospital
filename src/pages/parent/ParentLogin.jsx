@@ -77,8 +77,8 @@ const ParentLogin = () => {
             console.log('🔑 Token stored in localStorage');
 
             // Redirect to dashboard on success
-            console.log('🚀 Redirecting to /parent/dashboard');
-            navigate('/parent/dashboard');
+            console.log('🚀 Redirecting to /parent/today');
+            navigate('/parent/today');
         } catch (error) {
             console.error('❌ Login error:', error);
             setApiError(error.message || 'Login failed. Please check your credentials.');

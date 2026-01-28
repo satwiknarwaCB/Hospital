@@ -68,7 +68,7 @@ const AdminLogin = () => {
         try {
             await login(formData.email, formData.password, 'admin');
             // Redirect to admin dashboard on success
-            navigate('/admin/dashboard');
+            navigate('/admin/overview');
         } catch (error) {
             setApiError(error.message || 'Login failed. Please check your credentials.');
         } finally {

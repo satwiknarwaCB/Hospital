@@ -46,13 +46,13 @@ const TherapistLayoutWrapper = ({ children }) => {
     const totalMessagesUnread = (privateUnreadCount || 0) + (communityUnreadCount || 0);
 
     const sidebarItems = [
-        { label: 'Command Center', path: '/therapist/dashboard', icon: LayoutDashboard },
-        { label: 'Schedule', path: '/therapist/sessions', icon: Calendar },
-        { label: 'Care Hub', path: '/therapist/patients', icon: Users },
-        { label: 'Growth Tracking', path: '/therapist/progress', icon: Activity },
-        { label: 'Clinical Brain', path: '/therapist/intelligence', icon: Brain },
-        { label: 'Blueprints', path: '/therapist/roadmap', icon: Target },
-        { label: 'Connect', path: '/therapist/messages', icon: MessageSquare, badge: totalMessagesUnread },
+        { label: 'Command Center', path: '/therapist/command-center', icon: LayoutDashboard },
+        { label: 'Schedule', path: '/therapist/schedule', icon: Calendar },
+        { label: 'Care Hub', path: '/therapist/care-hub', icon: Users },
+        { label: 'Growth Tracking', path: '/therapist/growth-tracking', icon: Activity },
+        { label: 'Clinical Brain', path: '/therapist/clinical-brain', icon: Brain },
+        { label: 'Blueprints', path: '/therapist/blueprints', icon: Target },
+        { label: 'Connect', path: '/therapist/connect', icon: MessageSquare, badge: totalMessagesUnread },
     ];
 
     return (
@@ -119,12 +119,12 @@ const TherapistDashboard = () => {
                     </div>
                     <p className="text-neutral-500">Here's your therapy overview for today.</p>
                 </div>
-                <Button onClick={() => navigate('/therapist/sessions', { state: { activeTab: 'logs' } })}>+ Log New Session</Button>
+                <Button onClick={() => navigate('/therapist/schedule', { state: { activeTab: 'logs' } })}>+ Log New Session</Button>
             </div>
 
             {/* Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-                <Card className="border-l-4 border-l-secondary-500 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/therapist/patients')}>
+                <Card className="border-l-4 border-l-secondary-500 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/therapist/care-hub')}>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-lg">Active Patients</CardTitle>
                     </CardHeader>
@@ -133,7 +133,7 @@ const TherapistDashboard = () => {
                         <p className="text-sm text-neutral-500">Total Caseload</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-primary-500 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/therapist/sessions', { state: { activeTab: 'schedule' } })}>
+                <Card className="border-l-4 border-l-primary-500 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/therapist/schedule', { state: { activeTab: 'schedule' } })}>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-lg">Today's Sessions</CardTitle>
                     </CardHeader>
@@ -151,7 +151,7 @@ const TherapistDashboard = () => {
                         <p className="text-sm text-neutral-500">High Priority</p>
                     </CardContent>
                 </Card>
-                <Card className={`border-l-4 ${totalUnread > 0 ? 'border-l-violet-500 bg-violet-50' : 'border-l-neutral-300'} hover:shadow-lg transition-shadow cursor-pointer`} onClick={() => navigate('/therapist/messages')}>
+                <Card className={`border-l-4 ${totalUnread > 0 ? 'border-l-violet-500 bg-violet-50' : 'border-l-neutral-300'} hover:shadow-lg transition-shadow cursor-pointer`} onClick={() => navigate('/therapist/connect')}>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-lg">New Messages</CardTitle>
                     </CardHeader>
@@ -179,7 +179,7 @@ const TherapistDashboard = () => {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-violet-500 to-purple-600 text-white" onClick={() => navigate('/therapist/intelligence')}>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-violet-500 to-purple-600 text-white" onClick={() => navigate('/therapist/clinical-brain')}>
                     <CardContent className="p-6 flex items-center gap-4">
                         <Brain className="h-10 w-10 text-violet-200" />
                         <div>
@@ -188,7 +188,7 @@ const TherapistDashboard = () => {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-primary-500 to-primary-600 text-white" onClick={() => navigate('/therapist/roadmap')}>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-primary-500 to-primary-600 text-white" onClick={() => navigate('/therapist/blueprints')}>
                     <CardContent className="p-6 flex items-center gap-4">
                         <Target className="h-10 w-10 text-primary-200" />
                         <div>
@@ -197,7 +197,7 @@ const TherapistDashboard = () => {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-secondary-500 to-secondary-600 text-white" onClick={() => navigate('/therapist/sessions', { state: { activeTab: 'schedule' } })}>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-secondary-500 to-secondary-600 text-white" onClick={() => navigate('/therapist/schedule', { state: { activeTab: 'schedule' } })}>
                     <CardContent className="p-6 flex items-center gap-4">
                         <Calendar className="h-10 w-10 text-secondary-200" />
                         <div>
@@ -206,7 +206,7 @@ const TherapistDashboard = () => {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-indigo-500 to-blue-600 text-white" onClick={() => navigate('/therapist/progress')}>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-indigo-500 to-blue-600 text-white" onClick={() => navigate('/therapist/growth-tracking')}>
                     <CardContent className="p-6 flex items-center gap-4">
                         <Activity className="h-10 w-10 text-indigo-200" />
                         <div>
@@ -222,7 +222,7 @@ const TherapistDashboard = () => {
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                         <span>Today's Schedule</span>
-                        <Button variant="ghost" size="sm" onClick={() => navigate('/therapist/sessions', { state: { activeTab: 'schedule' } })}>
+                        <Button variant="ghost" size="sm" onClick={() => navigate('/therapist/schedule', { state: { activeTab: 'schedule' } })}>
                             View All →
                         </Button>
                     </CardTitle>
@@ -249,7 +249,7 @@ const TherapistDashboard = () => {
                                         {session.status === 'completed' ? (
                                             <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Completed</span>
                                         ) : (
-                                            <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); navigate('/therapist/sessions', { state: { activeTab: 'logs' } }); }}>
+                                            <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); navigate('/therapist/schedule', { state: { activeTab: 'logs' } }); }}>
                                                 Start Session
                                             </Button>
                                         )}
@@ -282,7 +282,7 @@ const TherapistDashboard = () => {
                                         <p className="font-medium text-neutral-800">{patient.name}</p>
                                         <p className="text-sm text-red-600">Multiple skills showing decline</p>
                                     </div>
-                                    <Button size="sm" variant="outline" onClick={() => navigate('/therapist/patients')}>
+                                    <Button size="sm" variant="outline" onClick={() => navigate('/therapist/care-hub')}>
                                         Review
                                     </Button>
                                 </div>
@@ -302,14 +302,14 @@ const TherapistPortal = () => {
     return (
         <Routes>
             <Route element={<TherapistLayoutWrapper />}>
-                <Route path="dashboard" element={<TherapistDashboard />} />
-                <Route path="sessions" element={<Sessions />} />
-                <Route path="patients" element={<MyPatients />} />
-                <Route path="intelligence" element={<TherapyIntelligence />} />
-                <Route path="roadmap" element={<RoadmapEditor />} />
-                <Route path="messages" element={<TherapistMessages />} />
-                <Route path="progress" element={<TherapistProgressTracking />} />
-                <Route path="*" element={<Navigate to="dashboard" replace />} />
+                <Route path="command-center" element={<TherapistDashboard />} />
+                <Route path="schedule" element={<Sessions />} />
+                <Route path="care-hub" element={<MyPatients />} />
+                <Route path="clinical-brain" element={<TherapyIntelligence />} />
+                <Route path="blueprints" element={<RoadmapEditor />} />
+                <Route path="connect" element={<TherapistMessages />} />
+                <Route path="growth-tracking" element={<TherapistProgressTracking />} />
+                <Route path="*" element={<Navigate to="command-center" replace />} />
             </Route>
         </Routes>
     );
