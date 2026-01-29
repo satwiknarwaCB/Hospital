@@ -53,7 +53,7 @@ const Services = () => {
         <div className="pt-24 pb-16">
             <section className="bg-neutral-900 py-24 text-white">
                 <div className="container mx-auto px-4 md:px-6">
-                    <div className="max-w-3xl">
+                    <div className="max-w-3xl mx-auto text-center">
                         <h1 className="text-4xl md:text-5xl font-bold mb-6">
                             Tailored <span className="text-primary-400">Therapeutic Solutions</span>
                         </h1>

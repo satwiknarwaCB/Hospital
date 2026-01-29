@@ -868,6 +868,12 @@ export const AppProvider = ({ children }) => {
         return quickTestResults.find(r => r.childId === childId);
     }, [quickTestResults]);
 
+    const shareQuickTestResult = useCallback((resultId) => {
+        setQuickTestResults(prev => prev.map(r =>
+            r.id === resultId ? { ...r, sharedWithTherapist: true } : r
+        ));
+    }, []);
+
     // ============ Message Actions ============
     const getChildMessages = useCallback((childId, userId) => {
         return messages
@@ -1279,7 +1285,9 @@ export const AppProvider = ({ children }) => {
         getActivityAdherence20Days,
         completeQuickTestGame,
         getLatestQuickTestResult,
+        shareQuickTestResult,
         quickTestProgress,
+        quickTestResults,
 
         // Message Actions
         getChildMessages,
@@ -1323,6 +1331,7 @@ export const AppProvider = ({ children }) => {
         getLatestSkillScores, getSkillHistory, getChildRoadmap, updateRoadmapProgress,
         completeMilestone, getChildHomeActivities, logActivityCompletion, getActivityAdherence,
         getActivityAdherence20Days, completeQuickTestGame, getLatestQuickTestResult,
+        shareQuickTestResult,
         quickTestResults, quickTestProgress,
         getChildMessages, getUnreadCount, sendMessage, markMessageRead, addAuditLog,
         addNotification, clearNotifications, getEngagementTrend, getTherapistStats,

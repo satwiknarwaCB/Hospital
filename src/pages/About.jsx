@@ -7,7 +7,7 @@ const About = () => {
             {/* Header Section */}
             <section className="bg-primary-50 py-20">
                 <div className="container mx-auto px-4 md:px-6">
-                    <div className="max-w-3xl">
+                    <div className="max-w-3xl mx-auto text-center">
                         <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
                             Bridging the Gap in <span className="text-primary-600">Neurodiverse Care</span>
                         </h1>

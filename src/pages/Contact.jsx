@@ -75,7 +75,7 @@ const Contact = () => {
             <section className="bg-primary-50 py-20 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-1/3 h-full bg-primary-100/50 skew-x-12 transform translate-x-1/2" />
                 <div className="container mx-auto px-4 md:px-6 relative z-10">
-                    <div className="max-w-3xl">
+                    <div className="max-w-3xl mx-auto text-center">
                         <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
                             Let's Start a <span className="text-primary-600">Conversation</span>
                         </h1>

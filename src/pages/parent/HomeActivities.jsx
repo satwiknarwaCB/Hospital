@@ -21,9 +21,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useApp } from '../../lib/context';
-import { Lock, FileText, BarChart3, TrendingUp, X } from 'lucide-react';
+import { Lock, FileText, BarChart3, TrendingUp, X, Share2 } from 'lucide-react';
 
-const ShowResultModal = ({ isOpen, onClose, result }) => {
+const ShowResultModal = ({ isOpen, onClose, result, onShare }) => {
     if (!isOpen || !result) return null;
 
     return (
@@ -92,7 +92,23 @@ const ShowResultModal = ({ isOpen, onClose, result }) => {
                             </div>
                         </div>
 
-                        <div className="pt-4 border-t border-neutral-100 flex justify-end">
+                        <div className="pt-4 border-t border-neutral-100 flex justify-end gap-3">
+                            {!result.sharedWithTherapist && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => onShare(result.id)}
+                                    className="flex items-center gap-2 border-primary-200 text-primary-600 hover:bg-primary-50"
+                                >
+                                    <Share2 className="h-4 w-4" />
+                                    Share to Therapist
+                                </Button>
+                            )}
+                            {result.sharedWithTherapist && (
+                                <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg text-sm font-medium border border-green-100">
+                                    <CheckCircle2 className="h-4 w-4" />
+                                    Shared with Therapist
+                                </div>
+                            )}
                             <Button onClick={onClose} className="px-8">
                                 Done
                             </Button>
@@ -327,7 +343,7 @@ import GameLauncher from '../../components/games/GameLauncher';
 const HomeActivities = () => {
     const {
         currentUser, kids, getChildHomeActivities, logActivityCompletion, getActivityAdherence,
-        getActivityAdherence20Days, completeQuickTestGame, getLatestQuickTestResult, quickTestProgress
+        getActivityAdherence20Days, completeQuickTestGame, getLatestQuickTestResult, shareQuickTestResult, quickTestProgress
     } = useApp();
     const [activeGame, setActiveGame] = useState(null);
     const [showResults, setShowResults] = useState(false);
@@ -491,11 +507,6 @@ const HomeActivities = () => {
                         Today's Activities
                     </h3>
                     <div className="flex items-center gap-3">
-                        {currentProgress.length > 0 && currentProgress.length < 6 && (
-                            <span className="text-xs bg-primary-50 text-primary-600 px-3 py-1 rounded-full font-medium animate-pulse">
-                                Quick Test: {currentProgress.length}/6 Games
-                            </span>
-                        )}
                         <Button
                             variant="outline"
                             size="sm"
@@ -516,6 +527,7 @@ const HomeActivities = () => {
                     isOpen={showResults}
                     onClose={() => setShowResults(false)}
                     result={latestResult}
+                    onShare={shareQuickTestResult}
                 />
                 <div className="space-y-4">
                     {activities.length > 0 ? (

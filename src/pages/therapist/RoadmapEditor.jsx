@@ -18,7 +18,12 @@ import {
     ChevronDown,
     ChevronUp,
     AlertTriangle,
-    Sparkles
+    Sparkles,
+    Award,
+    TrendingUp,
+    BarChart3,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -322,7 +327,8 @@ const RoadmapGoalCard = ({ goal, onEdit, onToggleLock, onCompleteMilestone }) =>
 
 // Main Roadmap Editor Component
 const RoadmapEditor = () => {
-    const { currentUser, kids, getChildRoadmap, updateRoadmapProgress, completeMilestone } = useApp();
+    const { currentUser, kids, getChildRoadmap, updateRoadmapProgress, completeMilestone, quickTestResults } = useApp();
+    const [showSharedAssessment, setShowSharedAssessment] = useState(false);
     const [selectedChildId, setSelectedChildId] = useState(null);
     const [showGoalForm, setShowGoalForm] = useState(false);
     const [editingGoal, setEditingGoal] = useState(null);
@@ -340,6 +346,11 @@ const RoadmapEditor = () => {
 
     const selectedChild = kids.find(k => k.id === selectedChildId);
     const roadmap = selectedChildId ? getChildRoadmap(selectedChildId) : [];
+
+    // Find the latest SHARED assessment for this child
+    const latestSharedAssessment = selectedChildId
+        ? quickTestResults?.find(r => r.childId === selectedChildId && r.sharedWithTherapist)
+        : null;
 
     const handleSaveGoal = (goalData) => {
         // In production, this would save to the database
@@ -457,10 +468,55 @@ const RoadmapEditor = () => {
                     {/* In Progress */}
                     {groupedGoals['in-progress'].length > 0 && (
                         <div>
-                            <h3 className="flex items-center gap-2 text-lg font-semibold text-neutral-800 mb-3">
-                                <Target className="h-5 w-5 text-primary-500" />
-                                In Progress
-                            </h3>
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="flex items-center gap-2 text-lg font-semibold text-neutral-800">
+                                    <Target className="h-5 w-5 text-primary-500" />
+                                    In Progress
+                                </h3>
+                                {latestSharedAssessment && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setShowSharedAssessment(!showSharedAssessment)}
+                                        className={`flex items-center gap-2 ${showSharedAssessment ? 'bg-violet-50 border-violet-200 text-violet-700' : 'border-neutral-200 text-neutral-600'}`}
+                                    >
+                                        {showSharedAssessment ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        {showSharedAssessment ? 'Hide Home Assessment' : 'View Home Assessment'}
+                                    </Button>
+                                )}
+                            </div>
+
+                            {/* Shared Assessment Display (if toggled) */}
+                            {showSharedAssessment && latestSharedAssessment && (
+                                <Card className="mb-4 border-l-4 border-l-violet-500 bg-gradient-to-r from-violet-50 to-transparent animate-in slide-in-from-top-4 duration-300">
+                                    <CardContent className="p-4">
+                                        <div className="flex flex-col md:flex-row gap-6">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-2 text-violet-800">
+                                                    <Award className="h-4 w-4" />
+                                                    <span className="text-xs font-bold uppercase tracking-wider">Home Assessment Insights</span>
+                                                </div>
+                                                <p className="text-sm italic text-neutral-600 bg-white/60 p-3 rounded-lg border border-violet-100 leading-relaxed">
+                                                    "{latestSharedAssessment.summary?.score}% Progress: {latestSharedAssessment.summary?.interpretation}"
+                                                </p>
+                                                <div className="mt-3 grid grid-cols-3 gap-2">
+                                                    {latestSharedAssessment.games?.slice(0, 6).map((g, i) => (
+                                                        <div key={i} className="bg-white p-2 rounded border border-neutral-100 text-center">
+                                                            <p className="text-[10px] text-neutral-400 uppercase font-bold">Game {i + 1}</p>
+                                                            <p className="text-xs font-bold text-green-600">{g.results?.score || 100}%</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="md:w-40 flex flex-col items-center justify-center p-4 bg-violet-600 text-white rounded-xl shadow-lg shrink-0">
+                                                <p className="text-[10px] uppercase tracking-widest font-bold opacity-80">Score</p>
+                                                <p className="text-4xl font-black">{latestSharedAssessment.summary?.score}%</p>
+                                                <p className="text-[10px] mt-1 opacity-80">Shared: {new Date(latestSharedAssessment.date).toLocaleDateString()}</p>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
                             <div className="space-y-3">
                                 {groupedGoals['in-progress'].map(goal => (
                                     <RoadmapGoalCard
