@@ -1,10 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Gajju } from './GameEngine';
 import { Wind } from 'lucide-react';
 
-const CalmBubbles = ({ onExit, lang = 'en', speak }) => {
+const CalmBubbles = ({ onExit, onComplete, lang = 'en', speak }) => {
     const [bubbles, setBubbles] = useState([]);
-    const [breathingStep, setBreathingStep] = useState('plus'); // internal step
+    const [breathingStep, setBreathingStep] = useState('plus');
+    const [cycleCount, setCycleCount] = useState(0);
+    const onCompleteRef = useRef(onComplete);
+
+    useEffect(() => {
+        onCompleteRef.current = onComplete;
+    }, [onComplete]);
 
     const getLabel = (step) => {
         if (step === 'Inhale') {
@@ -15,13 +21,35 @@ const CalmBubbles = ({ onExit, lang = 'en', speak }) => {
 
     useEffect(() => {
         let currentStep = 'Inhale';
+        let cycles = 0;
+        let completed = false;
         setBreathingStep(currentStep);
         speak && speak(getLabel(currentStep));
 
         const interval = setInterval(() => {
+            if (completed) return;
+
             currentStep = currentStep === 'Inhale' ? 'Exhale' : 'Inhale';
             setBreathingStep(currentStep);
             speak && speak(getLabel(currentStep));
+
+            // Count complete cycles (Inhale -> Exhale = 1 cycle)
+            if (currentStep === 'Exhale') {
+                cycles++;
+                setCycleCount(cycles);
+
+                // Complete after 5 breathing cycles
+                if (cycles >= 5 && !completed && onCompleteRef.current) {
+                    completed = true;
+                    setTimeout(() => {
+                        onCompleteRef.current({
+                            completed: true,
+                            cycles: cycles,
+                            duration: cycles * 8
+                        });
+                    }, 4000);
+                }
+            }
         }, 4000);
 
         const bubbleInterval = setInterval(() => {
@@ -73,6 +101,15 @@ const CalmBubbles = ({ onExit, lang = 'en', speak }) => {
                             {getLabel(breathingStep)}
                         </h3>
                         <p className="text-indigo-400 text-sm">{lang === 'hi' ? 'घेरे के साथ सांस लें...' : lang === 'te' ? 'వృత్తంతో శ్వాస తీసుకోండి...' : 'Breathe with the circle...'}</p>
+                        <div className="flex gap-2 justify-center mt-4">
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <div
+                                    key={i}
+                                    className={`w-3 h-3 rounded-full transition-all ${i <= cycleCount ? 'bg-indigo-500' : 'bg-indigo-200'
+                                        }`}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

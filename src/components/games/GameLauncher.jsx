@@ -15,7 +15,7 @@ const GameLauncher = ({ gameType, onComplete, onExit }) => {
             case 'sound-pop':
                 return <SoundPop onComplete={onComplete} onExit={onExit} />;
             case 'calm-bubbles':
-                return <CalmBubbles onExit={onExit} />;
+                return <CalmBubbles onComplete={onComplete} onExit={onExit} />;
             case 'aba-choice':
                 return <GoodChoiceCity onComplete={onComplete} onExit={onExit} />;
             case 'ot-trace':

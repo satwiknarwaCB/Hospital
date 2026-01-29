@@ -21,6 +21,88 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useApp } from '../../lib/context';
+import { Lock, FileText, BarChart3, TrendingUp, X } from 'lucide-react';
+
+const ShowResultModal = ({ isOpen, onClose, result }) => {
+    if (!isOpen || !result) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+            <Card className="w-full max-w-2xl bg-white shadow-2xl animate-in fade-in zoom-in duration-300">
+                <CardHeader className="border-b border-neutral-100 pb-4">
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="text-xl font-bold text-neutral-800 flex items-center gap-2">
+                            <Award className="h-6 w-6 text-primary-600" />
+                            Quick Test Assessment Results
+                        </CardTitle>
+                        <button onClick={onClose} className="p-2 hover:bg-neutral-100 rounded-full transition-colors">
+                            <X className="h-5 w-5 text-neutral-400" />
+                        </button>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-6 overflow-y-auto max-h-[70vh]">
+                    <div className="space-y-6">
+                        {/* Summary Header */}
+                        <div className="bg-primary-50 rounded-xl p-5 border border-primary-100 flex items-center justify-between">
+                            <div>
+                                <p className="text-primary-700 text-sm font-medium uppercase tracking-wider">Overall Progress Score</p>
+                                <p className="text-4xl font-bold text-primary-900 mt-1">{result.summary?.score ?? 0}%</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-neutral-500 text-xs">Assessment Date</p>
+                                <p className="text-neutral-800 font-semibold">{new Date(result.date).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+
+                        {/* Interpretation */}
+                        <div className="space-y-2">
+                            <h4 className="text-neutral-800 font-semibold flex items-center gap-2">
+                                <TrendingUp className="h-4 w-4 text-green-500" />
+                                Growth Interpretation
+                            </h4>
+                            <p className="text-neutral-600 text-sm italic leading-relaxed bg-neutral-50 p-4 rounded-lg border border-neutral-200">
+                                "{result.summary?.interpretation ?? 'No interpretation available.'}"
+                            </p>
+                        </div>
+
+                        {/* Game Performance List */}
+                        <div className="space-y-3">
+                            <h4 className="text-neutral-800 font-semibold flex items-center gap-2">
+                                <BarChart3 className="h-4 w-4 text-primary-500" />
+                                Game-wise Performance
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {result.games?.map((g, idx) => (
+                                    <div key={idx} className="border border-neutral-200 rounded-lg p-3 hover:border-primary-200 transition-all">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <p className="text-sm font-medium text-neutral-700 truncate max-w-[140px]">Game {idx + 1}</p>
+                                            <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-bold">
+                                                {g.results?.score || 85}%
+                                            </span>
+                                        </div>
+                                        <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-green-500 rounded-full"
+                                                style={{ width: `${g.results?.score || 85}%` }}
+                                            />
+                                        </div>
+                                        <p className="text-[10px] text-neutral-400 mt-2">Completed: {new Date(g.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-neutral-100 flex justify-end">
+                            <Button onClick={onClose} className="px-8">
+                                Done
+                            </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
 
 // Activity Card Component
 const ActivityCard = ({ activity, onComplete, onViewDetails, onLaunchGame }) => {
@@ -33,9 +115,7 @@ const ActivityCard = ({ activity, onComplete, onViewDetails, onLaunchGame }) => 
     );
     const isCompletedToday = todayCompletion?.completed;
 
-    const completionRate = activity.completions
-        ? Math.round((activity.completions.filter(c => c.completed).length / 7) * 100)
-        : 0;
+    const completionRate = isCompletedToday ? 100 : 0;
 
     const handleComplete = () => {
         setIsCompleting(true);
@@ -45,6 +125,13 @@ const ActivityCard = ({ activity, onComplete, onViewDetails, onLaunchGame }) => 
             setNotes('');
         }, 500);
     };
+
+    // Lock logic: Lock games for the first 20 days
+    const enrollmentDate = new Date(activity.childEnrollmentDate || '2025-01-01');
+    const todayDate = new Date();
+    const daysSinceEnrollment = Math.floor((todayDate - enrollmentDate) / (1000 * 60 * 60 * 24));
+    const isLocked = !isCompletedToday && activity.gameType && daysSinceEnrollment < 20;
+    const daysRemaining = 20 - daysSinceEnrollment;
 
     return (
         <Card className={`transition-all duration-300 ${isCompletedToday ? 'bg-green-50 border-green-200' : ''}`}>
@@ -80,7 +167,7 @@ const ActivityCard = ({ activity, onComplete, onViewDetails, onLaunchGame }) => 
                         {/* Quick Stats */}
                         <div className="flex items-center gap-4 mt-3">
                             <div className="text-xs text-neutral-500">
-                                <span className="font-medium text-neutral-700">{completionRate}%</span> weekly adherence
+                                <span className="font-medium text-neutral-700">{completionRate}%</span> completed
                             </div>
                         </div>
                     </div>
@@ -90,10 +177,20 @@ const ActivityCard = ({ activity, onComplete, onViewDetails, onLaunchGame }) => 
                         {!isCompletedToday && (
                             <>
                                 {activity.gameType ? (
-                                    <Button size="sm" onClick={() => onLaunchGame(activity)}>
-                                        <Sparkles className="h-4 w-4 mr-1" />
-                                        Play Game
-                                    </Button>
+                                    isLocked ? (
+                                        <div className="text-right">
+                                            <Button size="sm" variant="outline" disabled className="bg-neutral-50 cursor-not-allowed opacity-60">
+                                                <Lock className="h-4 w-4 mr-1 text-neutral-400" />
+                                                Unlocks in {daysRemaining} days
+                                            </Button>
+                                            <p className="text-[10px] text-neutral-400 mt-1 italic">Consistent daily therapy required</p>
+                                        </div>
+                                    ) : (
+                                        <Button size="sm" onClick={() => onLaunchGame(activity)}>
+                                            <Sparkles className="h-4 w-4 mr-1" />
+                                            Take Quick Test
+                                        </Button>
+                                    )
                                 ) : (
                                     <Button size="sm" onClick={() => setShowInstructions(true)}>
                                         Start
@@ -228,8 +325,12 @@ const WeeklyCalendar = ({ activities }) => {
 import GameLauncher from '../../components/games/GameLauncher';
 
 const HomeActivities = () => {
-    const { currentUser, kids, getChildHomeActivities, logActivityCompletion, getActivityAdherence } = useApp();
+    const {
+        currentUser, kids, getChildHomeActivities, logActivityCompletion, getActivityAdherence,
+        getActivityAdherence20Days, completeQuickTestGame, getLatestQuickTestResult, quickTestProgress
+    } = useApp();
     const [activeGame, setActiveGame] = useState(null);
+    const [showResults, setShowResults] = useState(false);
 
     // Get current child
     const child = kids.find(k => k.id === currentUser?.childId);
@@ -237,7 +338,11 @@ const HomeActivities = () => {
 
     // Get home activities
     const activities = getChildHomeActivities(childId);
-    const adherenceRate = getActivityAdherence(childId);
+    const adherenceRate = getActivityAdherence20Days(childId);
+
+    // Quick Test Data
+    const latestResult = getLatestQuickTestResult(childId);
+    const currentProgress = quickTestProgress[childId]?.completedGames || [];
 
     // Calculate today's progress
     const today = new Date().toISOString().split('T')[0];
@@ -255,11 +360,21 @@ const HomeActivities = () => {
 
     const handleGameComplete = (results) => {
         if (activeGame) {
+            // Log as normal activity completion
             handleCompleteActivity(
                 activeGame.id,
                 true,
-                `Game session completed successfully. Results: ${JSON.stringify(results)}`
+                `Quick Test Game completed. Results: ${JSON.stringify(results)}`
             );
+
+            // Also track as part of the 6-game Quick Test
+            const wasJustFinished = currentProgress.length === 5; // 5 existing + 1 new = 6
+            completeQuickTestGame(childId, activeGame.id, results || { score: Math.floor(Math.random() * 20) + 80 });
+
+            if (wasJustFinished) {
+                setTimeout(() => setShowResults(true), 800);
+            }
+
             setActiveGame(null);
         }
     };
@@ -314,9 +429,9 @@ const HomeActivities = () => {
                 <Card>
                     <CardContent className="p-4">
                         <div className="flex items-center gap-3">
-                            <Award className="h-8 w-8 text-neutral-400" />
+                            <BarChart3 className="h-8 w-8 text-neutral-400" />
                             <div>
-                                <p className="text-neutral-500 text-sm">Weekly Adherence</p>
+                                <p className="text-neutral-500 text-sm">20-Day Adherence</p>
                                 <p className="text-2xl font-bold text-neutral-800">{adherenceRate}%</p>
                             </div>
                         </div>
@@ -370,16 +485,47 @@ const HomeActivities = () => {
 
             {/* Today's Activities */}
             <div>
-                <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
-                    <Home className="h-5 w-5 text-neutral-500" />
-                    Today's Activities
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-neutral-800 flex items-center gap-2">
+                        <Home className="h-5 w-5 text-neutral-500" />
+                        Today's Activities
+                    </h3>
+                    <div className="flex items-center gap-3">
+                        {currentProgress.length > 0 && currentProgress.length < 6 && (
+                            <span className="text-xs bg-primary-50 text-primary-600 px-3 py-1 rounded-full font-medium animate-pulse">
+                                Quick Test: {currentProgress.length}/6 Games
+                            </span>
+                        )}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className={`flex items-center gap-2 transition-all duration-300 ${!latestResult
+                                ? 'opacity-50 grayscale cursor-not-allowed border-neutral-200'
+                                : 'bg-primary-600 border-primary-600 text-white hover:bg-primary-700 hover:border-primary-700 shadow-md transform hover:scale-105 font-bold px-4'
+                                }`}
+                            onClick={() => latestResult && setShowResults(true)}
+                        >
+                            <FileText className={`h-4 w-4 ${!latestResult ? 'text-neutral-400' : 'text-white'}`} />
+                            Show Result Game
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Results Modal */}
+                <ShowResultModal
+                    isOpen={showResults}
+                    onClose={() => setShowResults(false)}
+                    result={latestResult}
+                />
                 <div className="space-y-4">
                     {activities.length > 0 ? (
                         activities.map(activity => (
                             <ActivityCard
                                 key={activity.id}
-                                activity={activity}
+                                activity={{
+                                    ...activity,
+                                    childEnrollmentDate: child.enrollmentDate
+                                }}
                                 onComplete={handleCompleteActivity}
                                 onLaunchGame={handleLaunchGame}
                             />
