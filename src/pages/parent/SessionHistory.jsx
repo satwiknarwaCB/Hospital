@@ -26,7 +26,7 @@ import { useApp } from '../../lib/context';
 const EngagementIndicator = ({ value }) => {
     const getColor = (val) => {
         if (val >= 80) return 'bg-green-500';
-        if (val >= 60) return 'bg-yellow-500';
+        if (val >= 40) return 'bg-yellow-500';
         return 'bg-red-500';
     };
 
@@ -109,7 +109,7 @@ const SessionCard = ({ session, childName, isExpanded, onToggle }) => {
 
                     <div className="flex items-center gap-4">
                         {session.engagement && <EngagementIndicator value={session.engagement} />}
-                        
+
                         <Button
                             variant="ghost"
                             size="sm"
@@ -251,8 +251,8 @@ const FilterModal = ({ isOpen, onClose, filters, onApply }) => {
                         >
                             <option value="all">All Levels</option>
                             <option value="high">High (80%+)</option>
-                            <option value="medium">Medium (60-79%)</option>
-                            <option value="low">Low (&lt;60%)</option>
+                            <option value="medium">Medium (40-79%)</option>
+                            <option value="low">Low (&lt;40%)</option>
                         </select>
                     </div>
 
@@ -346,8 +346,8 @@ const SessionHistory = () => {
             if (filters.engagement !== 'all') {
                 const eng = session.engagement || 0;
                 if (filters.engagement === 'high' && eng < 80) return false;
-                if (filters.engagement === 'medium' && (eng < 60 || eng >= 80)) return false;
-                if (filters.engagement === 'low' && eng >= 60) return false;
+                if (filters.engagement === 'medium' && (eng < 40 || eng >= 80)) return false;
+                if (filters.engagement === 'low' && eng >= 40) return false;
             }
 
             // Date range filter

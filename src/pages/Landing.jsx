@@ -90,7 +90,7 @@ const Landing = () => {
                 <div className="container mx-auto px-4 md:px-6 relative z-10">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
                         {[
-                            { label: 'Active Patients', val: '2,500+', icon: Users },
+                            { label: 'Active Children', val: '2,500+', icon: Users },
                             { label: 'Licensed Therapists', val: '150+', icon: Stethoscope },
                             { label: 'Success Sessions', val: '50k+', icon: Activity },
                             { label: 'Clinical Sites', val: '12', icon: Building2 },

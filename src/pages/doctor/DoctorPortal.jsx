@@ -31,7 +31,7 @@ const DoctorLayoutWrapper = ({ children }) => {
 
     const sidebarItems = [
         { label: 'Dashboard', path: '/doctor/dashboard', icon: LayoutDashboard },
-        { label: 'My Patients', path: '/therapist/patients', icon: Users },
+        { label: 'My Children', path: '/therapist/patients', icon: Users },
         { label: 'Schedule', path: '/therapist/schedule', icon: Calendar },
         { label: 'Session Logs', path: '/therapist/logs', icon: ClipboardList },
         { label: 'Messages', path: '/therapist/messages', icon: MessageSquare },

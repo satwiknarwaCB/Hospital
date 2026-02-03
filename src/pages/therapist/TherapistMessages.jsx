@@ -189,22 +189,23 @@ const TherapistMessages = () => {
                 m.type !== 'weekly-summary'
             )
             .forEach(message => {
-                const threadId = message.threadId;
-                if (!threadMap[threadId]) {
-                    const child = kids.find(k => k.id === message.childId);
+                // Fix: Group by childId instead of threadId to prevent "double double" chat lists
+                const groupKey = message.childId || 'c1';
+                if (!threadMap[groupKey]) {
+                    const child = kids.find(k => k.id === groupKey);
                     const parent = users.find(u => u.id === (child?.parentId || message.senderId));
 
-                    threadMap[threadId] = {
-                        id: threadId,
+                    threadMap[groupKey] = {
+                        id: groupKey,
                         messages: [],
-                        childId: message.childId || 'c1',
+                        childId: groupKey,
                         childName: child?.name || 'Assigned Child',
                         childPhoto: child?.photoUrl || 'https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&q=80&w=200',
                         parentId: parent?.id || message.senderId,
                         parentName: parent?.name || (message.senderRole === 'parent' ? message.senderName : 'Family Member')
                     };
                 }
-                threadMap[threadId].messages.push(message);
+                threadMap[groupKey].messages.push(message);
             });
 
         // Sort messages within each thread by timestamp

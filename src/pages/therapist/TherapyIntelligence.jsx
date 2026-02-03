@@ -31,7 +31,6 @@ const HeatmapCell = ({ value, max = 100 }) => {
         if (intensity >= 0.8) return 'bg-green-500';
         if (intensity >= 0.6) return 'bg-green-300';
         if (intensity >= 0.4) return 'bg-yellow-300';
-        if (intensity >= 0.2) return 'bg-orange-300';
         return 'bg-red-300';
     };
 
@@ -106,7 +105,7 @@ const ActivityEffectivenessChart = ({ activities }) => {
                     <div className="flex-1 h-6 bg-neutral-100 rounded-full overflow-hidden relative">
                         <div
                             className={`h-full rounded-full transition-all ${activity.avgEngagement >= 80 ? 'bg-green-500' :
-                                activity.avgEngagement >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                activity.avgEngagement >= 40 ? 'bg-yellow-500' : 'bg-red-500'
                                 }`}
                             style={{ width: `${(activity.avgEngagement / maxEngagement) * 100}%` }}
                         />
@@ -130,7 +129,7 @@ const ChildSkillHeatmap = ({ children, getLatestSkillScores }) => {
             <table className="w-full">
                 <thead>
                     <tr>
-                        <th className="text-left text-sm font-medium text-neutral-500 pb-2">Patient</th>
+                        <th className="text-left text-sm font-medium text-neutral-500 pb-2">Child</th>
                         {domains.map(domain => (
                             <th key={domain} className="text-center text-xs font-medium text-neutral-500 pb-2 px-1">
                                 {domain.split(' - ')[0].substring(0, 4)}
@@ -177,9 +176,9 @@ const TherapyIntelligence = () => {
     const [anomalies, setAnomalies] = useState({});
     const [isLoading, setIsLoading] = useState(true);
 
-    // Get therapist's patients
+    // Get therapist's children
     const therapistId = currentUser?.id || 't1';
-    const myPatients = kids.filter(k => k.therapistId === therapistId);
+    const myChildren = kids.filter(k => k.therapistId === therapistId);
 
     // Load AI intelligence
     useEffect(() => {
@@ -191,11 +190,11 @@ const TherapyIntelligence = () => {
                 const result = await generateTherapyIntelligence('all', allSessions, skillScores);
                 setIntelligence(result);
 
-                // Check for anomalies in each patient
+                // Check for anomalies in each child
                 const anomalyResults = {};
-                for (const patient of myPatients) {
-                    const patientSessions = getChildSessions(patient.id);
-                    const result = await detectAnomalies(patient.id, patientSessions);
+                for (const child of myChildren) {
+                    const childSessions = getChildSessions(child.id);
+                    const result = await detectAnomalies(child.id, childSessions);
                     if (result.anomalies.length > 0) {
                         anomalyResults[patient.id] = result;
                     }
@@ -217,8 +216,8 @@ const TherapyIntelligence = () => {
         let totalRegressions = 0;
         let totalImprovements = 0;
 
-        myPatients.forEach(patient => {
-            const scores = getLatestSkillScores(patient.id);
+        myChildren.forEach(child => {
+            const scores = getLatestSkillScores(child.id);
             scores.forEach(score => {
                 if (score.trend === 'improving') totalImprovements++;
                 if (score.trend === 'attention') totalRegressions++;
@@ -231,7 +230,7 @@ const TherapyIntelligence = () => {
             improvements: totalImprovements,
             alertsCount: Object.keys(anomalies).length
         };
-    }, [myPatients, intelligence, anomalies, getLatestSkillScores]);
+    }, [myChildren, intelligence, anomalies, getLatestSkillScores]);
 
     if (isLoading) {
         return (
@@ -266,8 +265,8 @@ const TherapyIntelligence = () => {
                 <Card className="bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg">
                     <CardContent className="p-4">
                         <Sparkles className="h-6 w-6 text-violet-200 mb-2" />
-                        <p className="text-3xl font-bold">{myPatients.length}</p>
-                        <p className="text-violet-100">Patients Analyzed</p>
+                        <p className="text-3xl font-bold">{myChildren.length}</p>
+                        <p className="text-violet-100">Children Analyzed</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -300,12 +299,12 @@ const TherapyIntelligence = () => {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <BarChart3 className="h-5 w-5 text-neutral-500" />
-                            Skill Heatmap Across Patients
+                            Skill Heatmap Across Children
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <ChildSkillHeatmap
-                            children={myPatients}
+                            children={myChildren}
                             getLatestSkillScores={getLatestSkillScores}
                         />
                     </CardContent>

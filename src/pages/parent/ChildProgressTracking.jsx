@@ -477,7 +477,7 @@ const MonthlyProgressView = ({ records }) => {
 // ============================================================
 const ChildProgressTracking = ({ forceChildId = null, role = 'parent' }) => {
     const { currentUser, kids, getChildProgress, updateSkillProgress } = useApp();
-    const [activeTab, setActiveTab] = useState('daily'); // daily, weekly, monthly
+    const [activeTab, setActiveTab] = useState('weekly'); // weekly, monthly
     const [selectedSkillForUpdate, setSelectedSkillForUpdate] = useState(null);
 
     const child = kids.find(k => k.id === (forceChildId || currentUser?.childId));
@@ -505,7 +505,6 @@ const ChildProgressTracking = ({ forceChildId = null, role = 'parent' }) => {
             {/* Tab Navigation & Actions */}
             <div className="flex flex-col md:flex-row gap-4">
                 <nav className="flex-1 p-1.5 bg-neutral-100/80 backdrop-blur rounded-2xl flex gap-1 sticky top-0 z-10 shadow-sm border border-neutral-200/50">
-                    <TabButton value="daily" label="Daily" />
                     <TabButton value="weekly" label="Weekly" />
                     <TabButton value="monthly" label="Monthly" />
                 </nav>
@@ -513,13 +512,6 @@ const ChildProgressTracking = ({ forceChildId = null, role = 'parent' }) => {
 
             {/* View Transitions */}
             <div className="animate-in fade-in slide-in-from-bottom-3 duration-700">
-                {activeTab === 'daily' && (
-                    <DailyProgressView
-                        records={records}
-                        role={role}
-                        onUpdate={(skill) => setSelectedSkillForUpdate(skill)}
-                    />
-                )}
                 {activeTab === 'weekly' && <WeeklyProgressView records={records} />}
                 {activeTab === 'monthly' && <MonthlyProgressView records={records} />}
             </div>

@@ -28,7 +28,7 @@ const ProgressRing = ({ progress, size = 60, strokeWidth = 6 }) => {
 
     const getColor = (progress) => {
         if (progress >= 80) return '#10B981';
-        if (progress >= 50) return '#F59E0B';
+        if (progress >= 40) return '#F59E0B';
         return '#EF4444';
     };
 
@@ -72,7 +72,7 @@ const ConfidenceBadge = ({ confidence }) => {
         low: { color: 'bg-red-100 text-red-700', label: 'Low Confidence' }
     };
 
-    const level = confidence >= 75 ? 'high' : confidence >= 50 ? 'medium' : 'low';
+    const level = confidence >= 75 ? 'high' : confidence >= 40 ? 'medium' : 'low';
     const { color, label } = config[level];
 
     return (
@@ -162,7 +162,7 @@ const GoalCard = ({ goal, isExpanded, onToggle }) => {
                     <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
                         <div
                             className={`h-full rounded-full transition-all duration-500 ${goal.status === 'completed' ? 'bg-green-500' :
-                                    goal.status === 'at-risk' ? 'bg-red-500' : 'bg-primary-500'
+                                goal.status === 'at-risk' ? 'bg-red-500' : 'bg-primary-500'
                                 }`}
                             style={{ width: `${goal.progress}%` }}
                         />

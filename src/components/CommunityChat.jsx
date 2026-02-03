@@ -127,40 +127,43 @@ const CommunityChat = ({ communityId, currentUserId, currentUserName, currentUse
         }
     }, [communityId]);
 
-    // Poll for new messages every 5 seconds
+    // Poll for new messages every 60 seconds (Reduced to clean up logs)
     useEffect(() => {
         if (!communityId) return;
 
-        pollIntervalRef.current = setInterval(async () => {
+        const pollMessages = async () => {
             try {
                 const messagesData = await communityAPI.getMessages(communityId, 100, 0);
                 const newMessages = messagesData.messages || [];
 
-                // Check for actually new messages (different count or different last message id)
-                if (newMessages.length > messages.length) {
-                    const latest = newMessages[newMessages.length - 1];
-                    // If the latest message is not from the current user, show notification
-                    if (latest.sender_id !== currentUserId && messages.length > 0) {
-                        setNotification({
-                            title: `New message from ${latest.sender_name}`,
-                            content: latest.content.substring(0, 50) + (latest.content.length > 50 ? '...' : '')
-                        });
-                        // Auto-dismiss after 3 seconds
-                        setTimeout(() => setNotification(null), 3000);
+                // Update only if count changed to avoid unnecessary re-renders
+                setMessages(prev => {
+                    if (newMessages.length > prev.length) {
+                        const latest = newMessages[newMessages.length - 1];
+                        if (latest.sender_id !== currentUserId && prev.length > 0) {
+                            setNotification({
+                                title: `New message from ${latest.sender_name}`,
+                                content: latest.content.substring(0, 50) + (latest.content.length > 50 ? '...' : '')
+                            });
+                            setTimeout(() => setNotification(null), 3000);
+                        }
+                        return newMessages;
                     }
-                    setMessages(newMessages);
-                }
+                    return prev;
+                });
             } catch (err) {
                 console.error('Failed to poll messages:', err);
             }
-        }, 5000);
+        };
+
+        pollIntervalRef.current = setInterval(pollMessages, 60000);
 
         return () => {
             if (pollIntervalRef.current) {
                 clearInterval(pollIntervalRef.current);
             }
         };
-    }, [communityId, messages, currentUserId]);
+    }, [communityId, currentUserId]);
 
     // Scroll on new messages
     useEffect(() => {

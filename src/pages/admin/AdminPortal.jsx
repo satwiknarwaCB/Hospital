@@ -191,7 +191,7 @@ const AdminDashboard = () => {
                                 {Object.entries(cdcMetrics.therapistUtilization).map(([id, data]) => (
                                     <tr key={id} className="border-b border-neutral-100">
                                         <td className="py-3 font-medium text-neutral-800">{data.name}</td>
-                                        <td className="py-3 text-neutral-600">{data.caseload} patients</td>
+                                        <td className="py-3 text-neutral-600">{data.caseload} children</td>
                                         <td className="py-3">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-24 h-2 bg-neutral-100 rounded-full overflow-hidden">
@@ -342,7 +342,7 @@ const OperationsPage = () => {
                             <div key={id} className="flex items-center gap-4 p-4 bg-neutral-50 rounded-xl">
                                 <div className="flex-1">
                                     <p className="font-medium text-neutral-800">{data.name}</p>
-                                    <p className="text-sm text-neutral-500">{data.caseload} patients assigned</p>
+                                    <p className="text-sm text-neutral-500">{data.caseload} children assigned</p>
                                 </div>
                                 <div className="w-48">
                                     <div className="flex justify-between text-sm mb-1">

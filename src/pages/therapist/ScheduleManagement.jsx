@@ -123,7 +123,7 @@ const SessionDetailModal = ({ session, child, onClose, onStatusChange }) => {
                         <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600">✕</button>
                     </div>
 
-                    {/* Patient Info */}
+                    {/* Child Info */}
                     {child && (
                         <div className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg mb-4">
                             <img
@@ -192,9 +192,9 @@ const SessionDetailModal = ({ session, child, onClose, onStatusChange }) => {
 };
 
 // New Session Modal
-const NewSessionModal = ({ patients, onSave, onClose, isLoading }) => {
+const NewSessionModal = ({ children, onSave, onClose, isLoading }) => {
     const [formData, setFormData] = useState({
-        childId: patients[0]?.id || '',
+        childId: children[0]?.id || '',
         type: THERAPY_TYPES[0].name,
         date: new Date().toISOString().split('T')[0],
         time: '10:00',
@@ -205,7 +205,7 @@ const NewSessionModal = ({ patients, onSave, onClose, isLoading }) => {
     const handleSave = () => {
         // Validation
         if (!formData.childId) {
-            alert('Please select a patient');
+            alert('Please select a child');
             return;
         }
         if (!formData.date || !formData.time) {
@@ -237,15 +237,15 @@ const NewSessionModal = ({ patients, onSave, onClose, isLoading }) => {
                     <h3 className="text-xl font-bold text-neutral-800 mb-6">Schedule New Session</h3>
 
                     <div className="space-y-4">
-                        {/* Patient */}
+                        {/* Child */}
                         <div>
-                            <label className="text-sm font-medium text-neutral-700">Patient</label>
+                            <label className="text-sm font-medium text-neutral-700">Child</label>
                             <select
                                 className="w-full mt-1 p-2 border border-neutral-200 rounded-lg"
                                 value={formData.childId}
                                 onChange={(e) => setFormData({ ...formData, childId: e.target.value })}
                             >
-                                {patients.map(p => (
+                                {children.map(p => (
                                     <option key={p.id} value={p.id}>{p.name}</option>
                                 ))}
                             </select>
@@ -345,7 +345,7 @@ const ScheduleManagement = () => {
 
     // Get therapist's data
     const therapistId = currentUser?.id || 't1';
-    const myPatients = kids.filter(k => k.therapistId === therapistId);
+    const myChildren = kids.filter(k => k.therapistId === therapistId);
     const mySessions = sessions.filter(s => s.therapistId === therapistId);
 
     // Calendar navigation
@@ -424,11 +424,11 @@ const ScheduleManagement = () => {
             setShowNewSession(false);
 
             // Show success notification
-            const patientName = myPatients.find(p => p.id === sessionData.childId)?.name || 'patient';
+            const childName = myChildren.find(p => p.id === sessionData.childId)?.name || 'child';
             addNotification({
                 type: 'success',
                 title: 'Session Scheduled',
-                message: `Session scheduled successfully in MongoDB for ${patientName}!`
+                message: `Session scheduled successfully in MongoDB for ${childName}!`
             });
 
             // 3. Update UI Focus
@@ -482,8 +482,8 @@ const ScheduleManagement = () => {
                 <Card>
                     <CardContent className="p-4">
                         <Users className="h-6 w-6 text-violet-500 mb-2" />
-                        <p className="text-3xl font-bold text-neutral-800">{myPatients.length}</p>
-                        <p className="text-neutral-500">Patients</p>
+                        <p className="text-3xl font-bold text-neutral-800">{myChildren.length}</p>
+                        <p className="text-neutral-500">Children</p>
                     </CardContent>
                 </Card>
             </div>
@@ -580,7 +580,7 @@ const ScheduleManagement = () => {
             {/* Modals */}
             {showNewSession && (
                 <NewSessionModal
-                    patients={myPatients}
+                    children={myChildren}
                     onSave={handleNewSession}
                     onClose={() => setShowNewSession(false)}
                     isLoading={isLoading}

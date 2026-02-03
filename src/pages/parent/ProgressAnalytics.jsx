@@ -101,7 +101,7 @@ const MiniChart = ({ data, color = '#4F46E5' }) => {
 const SkillDomainCard = ({ domain, currentScore, trend, weeklyChange, historicalData, isExpanded, onToggle }) => {
     const getColor = (score) => {
         if (score >= 70) return 'green';
-        if (score >= 50) return 'yellow';
+        if (score >= 40) return 'yellow';
         return 'red';
     };
 
@@ -275,7 +275,7 @@ const ProgressAnalytics = () => {
                         : 'text-neutral-500 hover:text-neutral-700'
                         }`}
                 >
-                    Daily Tracking
+                    Progress Tracking
                 </button>
                 <button
                     onClick={() => setActiveView('actual')}
@@ -363,14 +363,6 @@ const ProgressAnalytics = () => {
                                     >
                                         Month
                                     </Button>
-                                    <Button
-                                        variant={timeRange === 'quarter' ? 'primary' : 'ghost'}
-                                        size="sm"
-                                        onClick={() => setTimeRange('quarter')}
-                                        className={`h-8 px-4 text-xs font-bold rounded-lg ${timeRange === 'quarter' ? '' : 'text-neutral-500 hover:text-neutral-700 hover:bg-white'}`}
-                                    >
-                                        Quarter
-                                    </Button>
                                 </div>
                             )}
                         </div>
@@ -399,15 +391,15 @@ const ProgressAnalytics = () => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-green-500" />
-                                    <span className="text-neutral-600">70-100%: On track for age</span>
+                                    <span className="text-neutral-600">70-100%: Mastering</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                                    <span className="text-neutral-600">50-69%: Developing well</span>
+                                    <span className="text-neutral-600">40-69%: Developing</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-red-500" />
-                                    <span className="text-neutral-600">0-49%: Focus area</span>
+                                    <span className="text-neutral-600">0-39%: Focus Needed</span>
                                 </div>
                             </div>
                         </CardContent>

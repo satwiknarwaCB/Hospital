@@ -24,11 +24,12 @@ import { useApp } from '../../lib/context';
 import { useAuth } from '../../hooks/useAuth';
 
 import Sessions from './Sessions';
-import MyPatients from './MyPatients';
+import MyChildren from './MyPatients';
 import TherapyIntelligence from './TherapyIntelligence';
 import RoadmapEditor from './RoadmapEditor';
 import TherapistMessages from './TherapistMessages';
 import TherapistProgressTracking from './TherapistProgressTracking';
+import BaselineArchive from './BaselineArchive';
 
 // ============================================================
 // Therapist Layout Wrapper with Logout
@@ -52,6 +53,7 @@ const TherapistLayoutWrapper = ({ children }) => {
         { label: 'Growth Tracking', path: '/therapist/growth-tracking', icon: Activity },
         { label: 'Clinical Brain', path: '/therapist/clinical-brain', icon: Brain },
         { label: 'Blueprints', path: '/therapist/blueprints', icon: Target },
+        { label: 'Dossier', path: '/therapist/dossier', icon: ClipboardList },
         { label: 'Connect', path: '/therapist/connect', icon: MessageSquare, badge: totalMessagesUnread },
     ];
 
@@ -85,7 +87,7 @@ const TherapistDashboard = () => {
     const therapistId = currentUser?.id || 't1'; // Assuming 't1' is Dr. Rajesh Kumar for mock data
 
     // RELAXED FILTER: Show all kids if none are specifically assigned to avoid empty states
-    const myPatients = kids.filter(k => k.therapistId === therapistId).length > 0
+    const myChildren = kids.filter(k => k.therapistId === therapistId).length > 0
         ? kids.filter(k => k.therapistId === therapistId)
         : kids;
 
@@ -100,9 +102,9 @@ const TherapistDashboard = () => {
     );
     const completedSessions = todaySessions.filter(s => s.status === 'completed');
 
-    // Get patients needing attention
-    const patientsNeedingAttention = myPatients.filter(patient => {
-        const scores = getLatestSkillScores(patient.id);
+    // Get children needing attention
+    const childrenNeedingAttention = myChildren.filter(child => {
+        const scores = getLatestSkillScores(child.id);
         return scores.filter(s => s.trend === 'attention').length >= 2;
     });
 
@@ -126,10 +128,10 @@ const TherapistDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                 <Card className="border-l-4 border-l-secondary-500 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/therapist/care-hub')}>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">Active Patients</CardTitle>
+                        <CardTitle className="text-lg">Active Children</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-3xl font-bold text-neutral-800">{stats.totalPatients}</p>
+                        <p className="text-3xl font-bold text-neutral-800">{stats.totalChildren}</p>
                         <p className="text-sm text-neutral-500">Total Caseload</p>
                     </CardContent>
                 </Card>
@@ -162,16 +164,16 @@ const TherapistDashboard = () => {
                         <p className="text-sm text-neutral-500">{totalUnread === 1 ? 'Unread Message' : 'Unread Messages'}</p>
                     </CardContent>
                 </Card>
-                <Card className={`border-l-4 ${patientsNeedingAttention.length > 0 ? 'border-l-red-500 bg-red-50' : 'border-l-green-500 bg-green-50'}`}>
+                <Card className={`border-l-4 ${childrenNeedingAttention.length > 0 ? 'border-l-red-500 bg-red-50' : 'border-l-green-500 bg-green-50'}`}>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-lg">Need Attention</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className={`text-3xl font-bold ${patientsNeedingAttention.length > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            {patientsNeedingAttention.length}
+                        <p className={`text-3xl font-bold ${childrenNeedingAttention.length > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                            {childrenNeedingAttention.length}
                         </p>
-                        <p className={`text-sm ${patientsNeedingAttention.length > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                            {patientsNeedingAttention.length > 0 ? 'Review Required' : 'All Good!'}
+                        <p className={`text-sm ${childrenNeedingAttention.length > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                            {childrenNeedingAttention.length > 0 ? 'Review Required' : 'All Good!'}
                         </p>
                     </CardContent>
                 </Card>
@@ -193,7 +195,7 @@ const TherapistDashboard = () => {
                         <Target className="h-10 w-10 text-primary-200" />
                         <div>
                             <h3 className="font-semibold">Roadmap Editor</h3>
-                            <p className="text-sm text-primary-200">Manage patient goals</p>
+                            <p className="text-sm text-primary-200">Manage goals</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -210,7 +212,7 @@ const TherapistDashboard = () => {
                     <CardContent className="p-6 flex items-center gap-4">
                         <Activity className="h-10 w-10 text-indigo-200" />
                         <div>
-                            <h3 className="font-semibold">Patient Progress</h3>
+                            <h3 className="font-semibold">Child Progress</h3>
                             <p className="text-sm text-indigo-200">Manage mastery levels</p>
                         </div>
                     </CardContent>
@@ -263,23 +265,23 @@ const TherapistDashboard = () => {
                 </CardContent>
             </Card>
 
-            {/* Patients Needing Attention */}
-            {patientsNeedingAttention.length > 0 && (
+            {/* Children Needing Attention */}
+            {childrenNeedingAttention.length > 0 && (
                 <Card className="border-red-200 bg-red-50">
                     <CardHeader>
-                        <CardTitle className="text-red-700">⚠️ Patients Needing Attention</CardTitle>
+                        <CardTitle className="text-red-700">⚠️ Children Needing Attention</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-3">
-                            {patientsNeedingAttention.map(patient => (
-                                <div key={patient.id} className="flex items-center gap-3 p-3 bg-white rounded-lg">
+                            {childrenNeedingAttention.map(child => (
+                                <div key={child.id} className="flex items-center gap-3 p-3 bg-white rounded-lg">
                                     <img
-                                        src={patient.photoUrl}
-                                        alt={patient.name}
+                                        src={child.photoUrl}
+                                        alt={child.name}
                                         className="w-10 h-10 rounded-full"
                                     />
                                     <div className="flex-1">
-                                        <p className="font-medium text-neutral-800">{patient.name}</p>
+                                        <p className="font-medium text-neutral-800">{child.name}</p>
                                         <p className="text-sm text-red-600">Multiple skills showing decline</p>
                                     </div>
                                     <Button size="sm" variant="outline" onClick={() => navigate('/therapist/care-hub')}>
@@ -304,10 +306,11 @@ const TherapistPortal = () => {
             <Route element={<TherapistLayoutWrapper />}>
                 <Route path="command-center" element={<TherapistDashboard />} />
                 <Route path="schedule" element={<Sessions />} />
-                <Route path="care-hub" element={<MyPatients />} />
+                <Route path="care-hub" element={<MyChildren />} />
                 <Route path="clinical-brain" element={<TherapyIntelligence />} />
                 <Route path="blueprints" element={<RoadmapEditor />} />
-                <Route path="connect" element={<TherapistMessages />} />
+                <Route path="dossier" element={<BaselineArchive />} />
+                <Route path="connect/*" element={<TherapistMessages />} />
                 <Route path="growth-tracking" element={<TherapistProgressTracking />} />
                 <Route path="*" element={<Navigate to="command-center" replace />} />
             </Route>

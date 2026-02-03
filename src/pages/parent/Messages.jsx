@@ -189,14 +189,15 @@ const Messages = () => {
         allMessages
             .filter(m => m.childId === childId && (m.senderId === userId || m.recipientId === userId))
             .forEach(message => {
-                const threadId = message.threadId;
-                if (!threadMap[threadId]) {
-                    // Determine the other participant to show as the thread name
+                // Group by childId to prevent "double double" conversations for the same context
+                const groupKey = message.childId || 'c1';
+                if (!threadMap[groupKey]) {
+                    // Determine the other participant
                     const otherUserId = message.senderId === userId ? message.recipientId : message.senderId;
                     const otherUser = users?.find(u => u.id === otherUserId);
 
-                    threadMap[threadId] = {
-                        id: threadId,
+                    threadMap[groupKey] = {
+                        id: groupKey,
                         messages: [],
                         type: message.type,
                         participantName: otherUser ? otherUser.name :
@@ -204,7 +205,7 @@ const Messages = () => {
                         participantRole: otherUser ? otherUser.role : (message.senderId === userId ? message.recipientRole : message.senderRole)
                     };
                 }
-                threadMap[threadId].messages.push(message);
+                threadMap[groupKey].messages.push(message);
             });
 
         // Sort messages within each thread

@@ -1,6 +1,6 @@
 // ============================================================
 // NeuroBridge™ - Therapist Progress Management
-// Clinical View for Patient Progress Tracking
+// Clinical View for Child Progress Tracking
 // ============================================================
 
 import React, { useState } from 'react';
@@ -33,19 +33,19 @@ const TherapistProgressTracking = () => {
 
     return (
         <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">
-            {/* Patient Selection Sidebar */}
+            {/* Child Selection Sidebar */}
             <div className="w-full lg:w-48 flex flex-col gap-4">
                 <header className="space-y-4">
                     <div>
                         <h2 className="text-2xl font-black text-neutral-800 tracking-tight">Case Load</h2>
-                        <p className="text-sm text-neutral-500">Manage mastery for your patients</p>
+                        <p className="text-sm text-neutral-500">Manage mastery for your children</p>
                     </div>
 
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
                         <input
                             type="text"
-                            placeholder="Find a patient..."
+                            placeholder="Find a child..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-10 pr-4 py-2 bg-neutral-100 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none transition-all"
@@ -82,7 +82,7 @@ const TherapistProgressTracking = () => {
                     {therapistKids.length === 0 && (
                         <div className="text-center py-12 px-4 bg-neutral-50 rounded-2xl border-2 border-dashed border-neutral-200">
                             <Users className="h-8 w-8 text-neutral-300 mx-auto mb-3" />
-                            <p className="text-sm text-neutral-500 font-medium">No patients found</p>
+                            <p className="text-sm text-neutral-500 font-medium">No children found</p>
                         </div>
                     )}
                 </div>
@@ -133,9 +133,9 @@ const TherapistProgressTracking = () => {
                                 <Activity className="h-10 w-10 text-primary-600" />
                             </div>
                         </div>
-                        <h3 className="text-2xl font-black text-neutral-800 mb-2">Patient Progress Portal</h3>
+                        <h3 className="text-2xl font-black text-neutral-800 mb-2">Child Progress Portal</h3>
                         <p className="text-neutral-500 max-w-sm leading-relaxed">
-                            Select a patient from the left to view their functional skill mastery, growth trends, and validate clinical progress.
+                            Select a child from the left to view their functional skill mastery, growth trends, and validate clinical progress.
                         </p>
 
                         <div className="grid grid-cols-2 gap-4 mt-12 max-w-lg w-full">

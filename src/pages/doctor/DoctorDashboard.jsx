@@ -113,7 +113,7 @@ const DoctorDashboard = () => {
                             <span className="text-[10px] font-black uppercase tracking-widest text-green-500">Active</span>
                         </div>
                         <p className="text-3xl font-black text-neutral-800 mb-1">{profileData.assigned_patients}</p>
-                        <p className="text-xs font-bold text-neutral-400 uppercase tracking-tighter">Total Patients</p>
+                        <p className="text-xs font-bold text-neutral-400 uppercase tracking-tighter">Total Children</p>
                     </CardContent>
                 </Card>
 
@@ -147,7 +147,7 @@ const DoctorDashboard = () => {
             {/* Glanceable Patient Status Grid (The Traffic Light) */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-black text-neutral-800 tracking-tight">Patient Care Tracking 🏥</h2>
+                    <h2 className="text-xl font-black text-neutral-800 tracking-tight">Child Care Tracking 🏥</h2>
                     <div className="flex gap-4">
                         <span className="flex items-center gap-1.5 text-[10px] font-bold text-red-500 uppercase"><span className="h-2 w-2 bg-red-500 rounded-full" /> Declining</span>
                         <span className="flex items-center gap-1.5 text-[10px] font-bold text-yellow-500 uppercase"><span className="h-2 w-2 bg-yellow-500 rounded-full" /> Stale</span>
@@ -277,8 +277,8 @@ const DoctorDashboard = () => {
                     className="bg-gradient-to-br from-primary-500 to-primary-600 text-white p-6 rounded-xl hover:shadow-xl hover:scale-[1.02] transition-all"
                 >
                     <Users className="w-8 h-8 mb-2" />
-                    <h3 className="font-semibold text-lg">View Patients</h3>
-                    <p className="text-sm text-primary-100 mt-1">Manage patient records</p>
+                    <h3 className="font-semibold text-lg">View Children</h3>
+                    <p className="text-sm text-primary-100 mt-1">Manage child records</p>
                 </button>
 
                 <button

@@ -10,25 +10,27 @@
 export const generateSessionSummary = async (sessionData) => {
     return new Promise((resolve) => {
         setTimeout(() => {
-            const { childName, activities, engagement, mood, rawNotes } = sessionData;
+            const { childName, activities, engagement, mood, isUnwell, healthStatus, rawNotes } = sessionData;
 
             // Generate context-aware summaries
             const moodEmoji = mood === 'Regulated' ? '😊' : mood === 'Neutral' ? '😐' : '😔';
             const engagementLevel = engagement >= 80 ? 'excellent' : engagement >= 60 ? 'good' : 'improving';
 
             const response = {
-                clinicalNote: `Patient (${childName}) demonstrated ${engagement}% engagement during 45min session. Activities included: ${activities.join(', ')}. Emotional state observed as ${mood}. ${rawNotes ? `Additional notes: ${rawNotes}` : ''}`,
+                clinicalNote: `Patient (${childName}) demonstrated ${engagement}% engagement during 45min session. Health status: ${healthStatus || (isUnwell ? 'Under the weather' : 'Healthy')}. Activities included: ${activities.join(', ')}. Emotional state observed as ${mood}. ${rawNotes ? `Additional notes: ${rawNotes}` : ''}`,
 
-                parentSummary: `We had a wonderful session with ${childName} today! ${moodEmoji}
+                parentSummary: isUnwell
+                    ? `Today, our primary focus was on ${childName}'s comfort and emotional well-being as they seemed a bit under the weather (${healthStatus || 'low energy'}). We kept activities gentle and followed their lead. ${moodEmoji}`
+                    : `We had a wonderful session with ${childName} today! ${moodEmoji}
 
 ${childName} did a great job with ${activities[0]}${activities[1] ? ` and ${activities[1]}` : ''}. Their engagement was ${engagementLevel} at ${engagement}%, and they were feeling ${mood.toLowerCase()} throughout the session.
 
 ${engagement >= 80 ? '🌟 This was one of our best sessions! Keep up the amazing support at home!' : engagement >= 60 ? '👍 Great progress today! The home activities are really helping.' : '💪 We\'re working through some challenges together. Every step forward counts!'}`,
 
                 wins: generateWins(activities, engagement, mood),
-
+                measurableOutcomes: generateMeasurableOutcomes(activities, engagement, isUnwell),
+                nonMeasurableOutcomes: generateNonMeasurableOutcomes(activities, mood, isUnwell),
                 focusAreas: generateFocusAreas(activities, engagement),
-
                 recommendations: generateRecommendations(engagement, mood)
             };
 
@@ -109,6 +111,58 @@ const generateRecommendations = (engagement, mood) => {
     recs.push('Continue daily home activities');
 
     return recs;
+};
+
+/**
+ * Generate measurable outcomes based on session performance
+ */
+const generateMeasurableOutcomes = (activities, engagement, isUnwell) => {
+    const outcomes = [];
+    const baseRate = isUnwell ? 0.6 : 0.8; // Reduced target for unwell children
+
+    activities.forEach(activity => {
+        if (activity === 'Picture Exchange') {
+            outcomes.push(`Independent requests in ${Math.floor(engagement / 10)}/10 trials.`);
+        }
+        if (activity === 'Sound Imitation') {
+            outcomes.push(`Followed phoneme prompts with ${engagement}% accuracy.`);
+        }
+        if (activity === 'Blocks Stacking') {
+            outcomes.push(`Successfully stacked ${Math.floor(engagement / 15)} blocks without assistance.`);
+        }
+    });
+
+    if (outcomes.length === 0) {
+        outcomes.push(`Maintained participation for ${Math.floor(45 * (engagement / 100))} minutes.`);
+    }
+
+    return outcomes;
+};
+
+/**
+ * Generate non-measurable outcomes (qualitative wins)
+ */
+const generateNonMeasurableOutcomes = (activities, mood, isUnwell) => {
+    const outcomes = [];
+
+    if (isUnwell) {
+        outcomes.push('Demonstrated resilience despite physical fatigue.');
+        outcomes.push('Communicated discomfort effectively when needed.');
+    }
+
+    if (mood === 'Regulated') {
+        outcomes.push('Increased frustration tolerance during challenging tasks.');
+    }
+
+    if (activities.includes('Sensory Play')) {
+        outcomes.push('Showed improved tactile tolerance to new textures.');
+    }
+
+    if (outcomes.length < 2) {
+        outcomes.push('Positive therapeutic relationship building.');
+    }
+
+    return outcomes;
 };
 
 /**

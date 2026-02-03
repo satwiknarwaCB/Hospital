@@ -102,13 +102,13 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
 
     const getStatusColor = (planned, achieved, status) => {
         if (status === 'Achieved' || achieved >= 100) return 'text-emerald-600 bg-emerald-50 border-emerald-100';
-        if (status === 'Backlog' || achieved < (planned * 0.5)) return 'text-rose-600 bg-rose-50 border-rose-100';
+        if (status === 'Backlog' || achieved < (planned * 0.4)) return 'text-rose-600 bg-rose-50 border-rose-100';
         return 'text-amber-600 bg-amber-50 border-amber-100'; // In Progress
     };
 
     const getChartColor = (planned, achieved, status) => {
         if (status === 'Achieved' || achieved >= 100) return '#10B981'; // Emerald/Green
-        if (status === 'Backlog' || achieved < (planned * 0.5)) return '#EF4444'; // Rose/Red
+        if (status === 'Backlog' || achieved < (planned * 0.4)) return '#EF4444'; // Rose/Red
         return '#F59E0B'; // Amber/Yellow
     };
 

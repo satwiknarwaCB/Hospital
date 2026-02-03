@@ -16,7 +16,8 @@ import {
     AUDIT_LOGS,
     CDC_METRICS,
     SKILL_PROGRESS,
-    SKILL_GOALS
+    SKILL_GOALS,
+    DOCUMENTS
 } from '../data/mockData';
 import { sessionAPI, communityAPI, messagesAPI, progressAPI } from './api';
 import { cryptoUtils } from './crypto';
@@ -42,6 +43,10 @@ export const AppProvider = ({ children }) => {
     const [skillGoals, setSkillGoals] = useState(() => {
         const saved = localStorage.getItem('neurobridge_skill_goals');
         return saved ? JSON.parse(saved) : SKILL_GOALS;
+    });
+    const [childDocuments, setChildDocuments] = useState(() => {
+        const saved = localStorage.getItem('neurobridge_documents');
+        return saved ? JSON.parse(saved) : DOCUMENTS;
     });
     const [communityUnreadCount, setCommunityUnreadCount] = useState(0);
     const [privateUnreadCount, setPrivateUnreadCount] = useState(0);
@@ -85,6 +90,10 @@ export const AppProvider = ({ children }) => {
     useEffect(() => {
         localStorage.setItem('neurobridge_skill_goals', JSON.stringify(skillGoals));
     }, [skillGoals]);
+
+    useEffect(() => {
+        localStorage.setItem('neurobridge_documents', JSON.stringify(childDocuments));
+    }, [childDocuments]);
 
     useEffect(() => {
         localStorage.setItem('neurobridge_quick_test_results', JSON.stringify(quickTestResults));
@@ -261,8 +270,8 @@ export const AppProvider = ({ children }) => {
         };
 
         syncMessagesFromCloud();
-        // Poll for new messages every 15s
-        const interval = setInterval(syncMessagesFromCloud, 15000);
+        // Poll for new messages every 60s (Reduced for cleaner logs)
+        const interval = setInterval(syncMessagesFromCloud, 60000);
         return () => clearInterval(interval);
     }, [isAuthenticated, currentUser]);
 
@@ -272,7 +281,6 @@ export const AppProvider = ({ children }) => {
             if (!isAuthenticated || !currentUser) return;
 
             try {
-                console.log(`🌐 Syncing sessions for ${currentUser.role}: ${currentUser.name}`);
                 let cloudSessions = [];
 
                 if (currentUser.role === 'parent' && currentUser.childId) {
@@ -308,7 +316,6 @@ export const AppProvider = ({ children }) => {
                         });
                         return Array.from(sessionMap.values());
                     });
-                    console.log(`✅ Successfully synced ${cloudSessions.length} sessions.`);
                 }
             } catch (err) {
                 console.error('❌ Cloud Session Sync Failed:', err);
@@ -488,7 +495,7 @@ export const AppProvider = ({ children }) => {
         };
 
         syncProgressFromCloud();
-        const interval = setInterval(syncProgressFromCloud, 30000);
+        const interval = setInterval(syncProgressFromCloud, 120000); // Poll every 2 mins
         return () => clearInterval(interval);
     }, [isAuthenticated, currentUser, kids]);
 
@@ -535,7 +542,7 @@ export const AppProvider = ({ children }) => {
         };
 
         pollUnreadCounts();
-        const interval = setInterval(pollUnreadCounts, 10000); // 10s poll
+        const interval = setInterval(pollUnreadCounts, 60000); // 60s poll
         return () => clearInterval(interval);
     }, [isAuthenticated, currentUser]);
 
@@ -1213,14 +1220,14 @@ export const AppProvider = ({ children }) => {
 
     const getTherapistStats = useCallback((therapistId) => {
         const therapistSessions = sessions.filter(s => s.therapistId === therapistId);
-        const patients = kids.filter(k => k.therapistId === therapistId);
+        const children = kids.filter(k => k.therapistId === therapistId);
         const completedToday = therapistSessions.filter(s =>
             s.status === 'completed' &&
             s.date.startsWith(new Date().toISOString().split('T')[0])
         ).length;
 
         return {
-            totalPatients: patients.length,
+            totalChildren: children.length,
             totalSessions: therapistSessions.length,
             completedToday,
             avgEngagement: Math.round(
@@ -1320,6 +1327,15 @@ export const AppProvider = ({ children }) => {
         deleteSkillGoal,
         deleteSkillProgress,
 
+        // Document Actions
+        childDocuments,
+        getChildDocuments: (childId) => childDocuments.filter(d => d.childId === childId).sort((a, b) => new Date(b.date) - new Date(a.date)),
+        addDocument: (doc) => {
+            const newDoc = { ...doc, id: `doc-${Date.now()}`, date: new Date().toISOString().split('T')[0] };
+            setChildDocuments(prev => [newDoc, ...prev]);
+            return newDoc;
+        },
+
         // UI Actions
         setIsLoading
     }), [
@@ -1336,7 +1352,8 @@ export const AppProvider = ({ children }) => {
         getChildMessages, getUnreadCount, sendMessage, markMessageRead, addAuditLog,
         addNotification, clearNotifications, getEngagementTrend, getTherapistStats,
         skillProgress, getChildProgress, updateSkillProgress,
-        skillGoals, getChildGoals, updateSkillGoal, addSkillGoal, deleteSkillGoal, deleteSkillProgress
+        skillGoals, getChildGoals, updateSkillGoal, addSkillGoal, deleteSkillGoal, deleteSkillProgress,
+        childDocuments
     ]);
 
     return (

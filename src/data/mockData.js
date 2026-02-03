@@ -1179,3 +1179,46 @@ export const SKILL_GOALS = [
         notes: 'Focus on bilabial sounds (B, P, M).'
     }
 ];
+
+// ============ CLINICAL DOCUMENTS ============
+export const DOCUMENTS = [
+    {
+        id: 'doc1',
+        childId: 'c1',
+        title: 'Initial Intake Report',
+        type: 'intake',
+        category: 'Baseline',
+        format: 'pdf',
+        date: '2025-06-15',
+        uploadedBy: 'Dr. Rajesh Kumar',
+        fileSize: '1.2 MB',
+        status: 'verified',
+        url: '#'
+    },
+    {
+        id: 'doc2',
+        childId: 'c1',
+        title: 'Speech & Language Assessment',
+        type: 'assessment',
+        category: 'Assessment',
+        format: 'pdf',
+        date: '2025-07-02',
+        uploadedBy: 'Dr. Sarah Smith',
+        fileSize: '2.4 MB',
+        status: 'verified',
+        url: '#'
+    },
+    {
+        id: 'doc3',
+        childId: 'c2',
+        title: 'Pediatric Medical History',
+        type: 'medical',
+        category: 'Medical',
+        format: 'pdf',
+        date: '2025-05-20',
+        uploadedBy: 'Dr. Anita Desai',
+        fileSize: '0.8 MB',
+        status: 'verified',
+        url: '#'
+    }
+];

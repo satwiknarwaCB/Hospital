@@ -20,7 +20,9 @@ import {
     CheckCircle2,
     Users,
     Activity,
-    Lock
+    Lock,
+    ChevronRight,
+    FileText
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -34,6 +36,8 @@ import HomeActivities from './HomeActivities';
 import ParentSessions from './ParentSessions';
 import Messages from './Messages';
 import MemoryBox from './MemoryBox';
+import Reports from './Reports';
+
 
 // ============================================================
 // Session Detail Modal Component
@@ -136,7 +140,7 @@ const SessionDetailModal = ({ session, child, onClose }) => {
                                             <div className="flex-1 h-2 bg-neutral-100 rounded-full overflow-hidden">
                                                 <div
                                                     className={`h-full rounded-full ${session.engagement >= 80 ? 'bg-green-500' :
-                                                        session.engagement >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                                        session.engagement >= 40 ? 'bg-yellow-500' : 'bg-red-500'
                                                         }`}
                                                     style={{ width: `${session.engagement}%` }}
                                                 />
@@ -278,10 +282,50 @@ const ParentDashboard = () => {
     if (!child) return <div className="p-8">No child profile found.</div>;
 
     const childSessions = getChildSessions(child.id);
-    const lastSession = childSessions.find(s => s.status === 'completed');
+
+    // Get all completed sessions sorted by newest first
+    const completedSessions = childSessions
+        .filter(s => s.status === 'completed')
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // Get today's sessions specifically
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayHighlights = completedSessions.filter(s => s.date.startsWith(todayStr));
+
+    // Determine what to show: All of today's, or just the most recent if none today
+    const highlightsToShow = todayHighlights.length > 0 ? todayHighlights : (completedSessions[0] ? [completedSessions[0]] : []);
+
     const nextSession = childSessions.find(s => s.status === 'scheduled');
     const skillScores = getLatestSkillScores(child.id);
     const unreadMessages = getUnreadCount(currentUser.id);
+
+    // Grouping progress by Session Types (Therapy Types)
+    const therapyProgress = [
+        {
+            name: 'Speech Therapy',
+            val: skillScores.find(s => s.domain.toLowerCase().includes('language'))?.score || 65,
+            trend: 'improving',
+            color: 'text-violet-500'
+        },
+        {
+            name: 'Occupational Therapy',
+            val: skillScores.find(s => s.domain.toLowerCase().includes('sensory') || s.domain.toLowerCase().includes('interaction'))?.score || 58,
+            trend: 'improving',
+            color: 'text-orange-500'
+        },
+        {
+            name: 'Physical Therapy',
+            val: skillScores.find(s => s.domain.toLowerCase().includes('motor'))?.score || 45,
+            trend: 'stable',
+            color: 'text-blue-500'
+        },
+        {
+            name: 'Behavioral Therapy',
+            val: skillScores.find(s => s.domain.toLowerCase().includes('emotional') || s.domain.toLowerCase().includes('regulation'))?.score || 72,
+            trend: 'improving',
+            color: 'text-green-500'
+        }
+    ];
 
     // Calculate overall progress
     const overallProgress = skillScores.length > 0
@@ -293,6 +337,30 @@ const ParentDashboard = () => {
     // Simplified labels for parent understanding
     const overallProgressDisplay = overallProgress;
     const improvingCount = improvingAreas;
+
+    // Periodic (15-day/Monthly) Clinical Reviews
+    const periodicReviews = [
+        {
+            id: 'rev1',
+            type: 'Speech Therapy',
+            title: 'Fortnightly Progress Review',
+            date: 'Feb 1, 2026',
+            period: 'Jan 15 - Jan 31',
+            summary: `${child.name} has shown remarkable consistency in receptive language this fortnight. He is now independently using picture cards to express needs in 4/5 attempts. Engagement levels have stabilized at 75% across all speech activities.`,
+            milestone: 'Mastered 2-step instructional sequences',
+            isNew: true
+        },
+        {
+            id: 'rev2',
+            type: 'Occupational Therapy',
+            title: 'Monthly Clinical Insight',
+            date: 'Jan 28, 2026',
+            period: 'Jan 1 - Jan 28',
+            summary: "This month's focus on sensory regulation has been highly productive. We observed a 40% decrease in transition-related anxiety. Fine motor coordination for pincer grasp is reaching age-appropriate milestones. We will continue focusing on auditory desensitization next month.",
+            milestone: 'Independent sensory regulation in noisy environments',
+            isNew: false
+        }
+    ];
 
     return (
         <div className="space-y-8 pb-safe-nav animate-slide-up">
@@ -353,123 +421,172 @@ const ParentDashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Recent/Today Session */}
-                <Card className="border-t-4 border-t-primary-500 col-span-1 md:col-span-2">
-                    <CardHeader>
-                        <CardTitle className="flex justify-between items-center">
-                            <span>Today's Highlights</span>
-                            <span className="text-sm font-normal text-neutral-500">
-                                {lastSession ? new Date(lastSession.date).toLocaleDateString() : 'No recent sessions'}
+                {/* Recent/Today Sessions */}
+                <div className="col-span-1 md:col-span-2 space-y-4">
+                    <div className="flex items-center justify-between px-2">
+                        <h2 className="text-xl font-black text-neutral-800 tracking-tight">Today's Highlights 🌟</h2>
+                        {todayHighlights.length > 0 && (
+                            <span className="bg-primary-100 text-primary-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-widest">
+                                {todayHighlights.length} Sessions Today
                             </span>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {lastSession ? (
-                            <div className="space-y-4">
-                                <div>
-                                    <p className="text-lg font-medium text-neutral-800 mb-1">{lastSession.type}</p>
-                                    {lastSession.aiSummary ? (
-                                        <div className="bg-primary-50 border border-primary-100 p-4 rounded-xl relative">
-                                            <div className="absolute -top-3 -right-3 bg-white p-1.5 rounded-full shadow-sm border border-neutral-100">
-                                                <span className="text-xl">✨</span>
-                                            </div>
-                                            <p className="text-neutral-700 leading-relaxed text-sm md:text-base">
-                                                {lastSession.aiSummary}
-                                            </p>
-                                        </div>
-                                    ) : (
-                                        <p className="text-neutral-600 italic">"{lastSession.notes}"</p>
-                                    )}
-                                </div>
+                        )}
+                    </div>
 
-                                {lastSession.wins && (
-                                    <div className="flex flex-wrap gap-2">
-                                        {lastSession.wins.map((win, i) => (
-                                            <span key={i} className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
-                                                🏆 {win}
-                                            </span>
-                                        ))}
+                    {highlightsToShow.length > 0 ? (
+                        highlightsToShow.map((session, index) => (
+                            <Card key={session.id} className={`border-t-4 ${index === 0 ? 'border-t-primary-500' : 'border-t-secondary-500'} animate-slide-up`} style={{ animationDelay: `${index * 100}ms` }}>
+                                <CardHeader className="pb-2">
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`p-2 rounded-lg ${index === 0 ? 'bg-primary-50 text-primary-600' : 'bg-secondary-50 text-secondary-600'}`}>
+                                                <Activity className="h-4 w-4" />
+                                            </div>
+                                            <p className="text-lg font-bold text-neutral-800">{session.type}</p>
+                                        </div>
+                                        <span className="text-sm font-medium text-neutral-400 bg-neutral-100 px-3 py-1 rounded-full">
+                                            {new Date(session.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-4">
+                                        <div>
+                                            {session.aiSummary ? (
+                                                <div className="bg-neutral-50 border border-neutral-100 p-5 rounded-2xl relative shadow-inner">
+                                                    <div className="absolute -top-3 -right-3 bg-white p-2 rounded-full shadow-md border border-neutral-50 scale-110">
+                                                        <span className="text-xl">✨</span>
+                                                    </div>
+                                                    <p className="text-neutral-700 leading-relaxed text-sm md:text-base font-medium">
+                                                        {session.aiSummary}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <p className="text-neutral-600 italic">"{session.notes || 'No notes available for this session.'}"</p>
+                                            )}
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+                                            {session.wins && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {session.wins.map((win, i) => (
+                                                        <span key={i} className="px-3 py-1.5 bg-green-500/10 text-green-700 rounded-xl text-xs font-black uppercase tracking-wider border border-green-500/20">
+                                                            🏆 {win}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <div className="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
+                                                <Button
+                                                    size="sm"
+                                                    variant="secondary"
+                                                    className="flex-1 md:flex-none h-11 px-6 rounded-xl font-bold"
+                                                    onClick={() => navigate('/parent/sessions', { state: { activeTab: 'history', sessionId: session.id } })}
+                                                >
+                                                    Full Report
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    className="flex-1 md:flex-none h-11 px-6 rounded-xl font-bold bg-neutral-900 hover:bg-black text-white"
+                                                    onClick={() => {
+                                                        const therapistId = session.therapistId || 't1';
+                                                        const therapistUser = users.find(u => u.id === therapistId);
+
+                                                        sendMessage({
+                                                            threadId: `thread-${currentUser.id}-${therapistId}`,
+                                                            senderId: currentUser.id,
+                                                            senderName: currentUser.name,
+                                                            senderRole: 'parent',
+                                                            recipientId: therapistId,
+                                                            childId: child.id,
+                                                            subject: `Thanks for today's ${session.type}!`,
+                                                            content: `Hi ${therapistUser?.name || 'Doctor'}, thank you for the wonderful session today. We loved the update!`,
+                                                            type: 'message'
+                                                        });
+
+                                                        addNotification({
+                                                            type: 'success',
+                                                            title: 'Thanks Sent!',
+                                                            message: `Appreciation sent to ${therapistUser?.name || 'the therapist'}.`
+                                                        });
+                                                    }}
+                                                >
+                                                    Say Thanks
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))
+                    ) : (
+                        <Card className="p-8 text-center border-dashed border-2 bg-neutral-50/50">
+                            <span className="text-4xl block mb-4">🌱</span>
+                            <p className="text-neutral-500 font-medium">No sessions logged for today yet.</p>
+                        </Card>
+                    )}
+                </div>
+
+                {/* Periodic Clinical Reviews - 15 Day / Monthly Summaries */}
+                <div className="col-span-1 lg:col-span-3 space-y-4">
+                    <div className="flex items-center justify-between px-2">
+                        <h2 className="text-xl font-black text-neutral-800 tracking-tight flex items-center gap-2">
+                            <History className="h-5 w-5 text-violet-500" />
+                            Clinical Reviews & Milestones 📋
+                        </h2>
+                        <span className="text-sm font-bold text-neutral-400">15-30 Day Insights</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {periodicReviews.map((review) => (
+                            <Card key={review.id} className="relative group overflow-hidden border-none shadow-lg bg-white ring-1 ring-neutral-200">
+                                {review.isNew && (
+                                    <div className="absolute top-0 right-0 bg-violet-600 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest z-10">
+                                        New Review
                                     </div>
                                 )}
+                                <CardHeader className="bg-neutral-50/50 border-b border-neutral-100">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest mb-1">{review.type}</p>
+                                            <h3 className="text-lg font-black text-neutral-800 tracking-tight">{review.title}</h3>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs font-bold text-neutral-500">{review.date}</p>
+                                            <p className="text-[10px] font-medium text-neutral-400 italic">{review.period}</p>
+                                        </div>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="p-6">
+                                    <div className="space-y-4">
+                                        <div className="relative">
+                                            <p className="text-neutral-600 text-sm leading-relaxed">
+                                                {review.summary}
+                                            </p>
+                                        </div>
 
-                                <div className="flex gap-3 mt-4">
-                                    {/* View full report in an overlay */}
-                                    <Button
-                                        className="flex-1"
-                                        variant="outline"
-                                        onClick={() => navigate('/parent/sessions', { state: { activeTab: 'history', sessionId: lastSession.id } })}
-                                    >
-                                        View Full Report
-                                    </Button>
+                                        <div className="bg-primary-50 p-3 rounded-xl border border-primary-100/50">
+                                            <p className="text-[10px] font-black text-primary-600 uppercase tracking-widest mb-1">Key Milestone Reached</p>
+                                            <p className="text-sm font-bold text-neutral-800 flex items-center gap-2">
+                                                <Target className="h-4 w-4 text-primary-500" />
+                                                {review.milestone}
+                                            </p>
+                                        </div>
 
-                                    {/* Send thanks to the therapist in existing chat thread */}
-                                    <Button
-                                        className="flex-1"
-                                        disabled={showThanksSent}
-                                        onClick={() => {
-                                            if (showThanksSent) return; // Guard clause
-                                            setShowThanksSent(true); // Disable immediately
-
-                                            const childForSession = kids.find(c => c.id === lastSession.childId);
-                                            const therapistId = lastSession.therapistId || childForSession?.therapistId || 't1';
-
-                                            if (therapistId) {
-                                                // Find existing thread between this parent and therapist for this child
-                                                const existingMessages = getChildMessages(childForSession.id, currentUser.id);
-                                                const existingThread = existingMessages.find(
-                                                    m =>
-                                                        (m.senderId === therapistId || m.recipientId === therapistId) &&
-                                                        m.childId === childForSession.id
-                                                );
-
-                                                const threadId = existingThread?.threadId || `thread-${currentUser.id}-${therapistId}`;
-                                                const therapistUser = users.find(u => u.id === therapistId);
-
-                                                sendMessage({
-                                                    threadId,
-                                                    senderId: currentUser.id,
-                                                    senderName: currentUser.name,
-                                                    senderRole: 'parent',
-                                                    recipientId: therapistId,
-                                                    childId: childForSession.id,
-                                                    subject: 'Thank You',
-                                                    content: `Thank you so much, ${therapistUser?.name || 'Doctor'}, for the wonderful session with ${childForSession?.name || 'my child'}! We really appreciate your dedication and the progress we're seeing. 🙏`,
-                                                    type: 'message'
-                                                });
-
-                                                addNotification({
-                                                    type: 'success',
-                                                    title: 'Message Sent',
-                                                    message: `Your thank you message has been sent to ${therapistUser?.name || 'the therapist'}.`
-                                                });
-
-                                                setTimeout(() => setShowThanksSent(false), 5000);
-                                            } else {
-                                                setShowThanksSent(false); // Re-enable if failed
-                                                addNotification({
-                                                    type: 'error',
-                                                    title: 'Error',
-                                                    message: 'Unable to send message. Therapist information not available.'
-                                                });
-                                            }
-                                        }}
-                                    >
-                                        {showThanksSent ? (
-                                            <>
-                                                <CheckCircle2 className="h-4 w-4 mr-2" />
-                                                Sent!
-                                            </>
-                                        ) : (
-                                            'Send Thanks to Therapist'
-                                        )}
-                                    </Button>
-                                </div>
-                            </div>
-                        ) : (
-                            <p className="text-neutral-500">No recent sessions.</p>
-                        )}
-                    </CardContent>
-                </Card>
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full text-xs font-bold text-neutral-500 hover:text-primary-600 hover:bg-primary-50 h-10 rounded-lg group"
+                                            onClick={() => navigate('/parent/new-learning')}
+                                        >
+                                            View Full Progress Roadmap
+                                            <ChevronRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
 
                 {/* Current Mood */}
                 <Card className="border-t-4 border-t-secondary-500">
@@ -515,44 +632,50 @@ const ParentDashboard = () => {
                     </CardContent>
                 </Card>
 
-                {/* Quick Progress Overview */}
-                <Card className="col-span-1 md:col-span-2">
-                    <CardHeader>
+                {/* Therapy Mastery Overview */}
+                <Card className="col-span-1 md:col-span-2 shadow-sm border-neutral-200/60">
+                    <CardHeader className="pb-2">
                         <CardTitle className="flex items-center justify-between">
-                            <span>Progress Snapshot</span>
-                            <Button variant="ghost" size="sm" className="text-primary-600">
-                                View Details →
+                            <div className="flex items-center gap-2">
+                                <TrendingUp className="h-5 w-5 text-primary-500" />
+                                <span className="text-xl font-black text-neutral-800 tracking-tight">Therapy Mastery</span>
+                            </div>
+                            <Button variant="ghost" size="sm" className="text-primary-600 font-bold hover:bg-primary-50" onClick={() => navigate('/parent/new-learning')}>
+                                View Detailed Roadmap →
                             </Button>
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {skillScores.slice(0, 4).map((skill) => (
-                                <div key={skill.id} className="text-center p-3 bg-neutral-50 rounded-xl">
-                                    <div className="relative h-12 w-12 mx-auto mb-2">
-                                        <svg className="transform -rotate-90" viewBox="0 0 36 36">
+                            {therapyProgress.map((therapy) => (
+                                <div key={therapy.name} className="flex flex-col items-center p-4 bg-neutral-50 rounded-2xl border border-neutral-100/50 hover:bg-white hover:shadow-md transition-all group">
+                                    <div className="relative h-20 w-20 mb-3 group-hover:scale-110 transition-transform">
+                                        <svg className="transform -rotate-90 w-full h-full" viewBox="0 0 36 36">
                                             <path
                                                 className="text-neutral-200"
-                                                strokeWidth="3"
+                                                strokeWidth="3.5"
                                                 stroke="currentColor"
                                                 fill="none"
                                                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                                             />
                                             <path
-                                                className={skill.trend === 'improving' ? 'text-green-500' : skill.trend === 'attention' ? 'text-red-500' : 'text-yellow-500'}
-                                                strokeWidth="3"
-                                                strokeDasharray={`${skill.score}, 100`}
+                                                className={therapy.color}
+                                                strokeWidth="3.5"
+                                                strokeDasharray={`${therapy.val}, 100`}
                                                 strokeLinecap="round"
                                                 stroke="currentColor"
                                                 fill="none"
                                                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                                             />
                                         </svg>
-                                        <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">
-                                            {skill.score}%
-                                        </span>
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                            <span className="text-lg font-black text-neutral-800 leading-none">{therapy.val}%</span>
+                                            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-tighter">Done</span>
+                                        </div>
                                     </div>
-                                    <p className="text-xs text-neutral-600 font-medium truncate">{skill.domain.split(' - ')[0]}</p>
+                                    <p className="text-xs text-neutral-600 font-black text-center leading-tight">
+                                        {therapy.name.split(' ')[0]}<br />{therapy.name.split(' ')[1]}
+                                    </p>
                                 </div>
                             ))}
                         </div>
@@ -591,6 +714,7 @@ const ParentPortal = () => {
         { label: 'New Learning', path: '/parent/new-learning', icon: TrendingUp },
         { label: 'Our Goals', path: '/parent/our-goals', icon: Target },
         { label: 'Sessions', path: '/parent/sessions', icon: Calendar },
+        { label: 'Reports', path: '/parent/reports', icon: FileText },
         { label: 'Memory Box', path: '/parent/memory-box', icon: History },
         { label: 'Messages', path: '/parent/messages', icon: MessageCircle, badge: totalMessagesUnread },
     ];
@@ -603,6 +727,7 @@ const ParentPortal = () => {
                 <Route path="our-goals" element={<GrowthRoadmap />} />
                 <Route path="daily-play" element={<HomeActivities />} />
                 <Route path="sessions" element={<ParentSessions />} />
+                <Route path="reports" element={<Reports />} />
                 <Route path="messages" element={<Messages />} />
                 <Route path="memory-box" element={<MemoryBox />} />
                 <Route path="*" element={<Navigate to="today" replace />} />
