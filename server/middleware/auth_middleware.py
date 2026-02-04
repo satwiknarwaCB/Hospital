@@ -2,7 +2,8 @@
 JWT Authentication Middleware
 Protects routes by validating JWT tokens
 """
-from typing import Optional
+from typing import Optional, Union
+from bson import ObjectId
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from database import db_manager
@@ -51,9 +52,16 @@ async def get_current_doctor(
         raise credentials_exception
     
     # Get doctor from database
+    print(f"[INFO] Looking up doctor in DB with ID: {doctor_id}")
     doctor_data = db_manager.doctors.find_one({"_id": doctor_id})
+    if doctor_data is None and ObjectId.is_valid(doctor_id):
+        print(f"[RETRY] Trying ObjectId lookup for doctor: {doctor_id}")
+        doctor_data = db_manager.doctors.find_one({"_id": ObjectId(doctor_id)})
+        
     if doctor_data is None:
+        print(f"[ERROR] Doctor not found in DB: {doctor_id}")
         raise credentials_exception
+    print(f"[OK] Doctor found: {doctor_data.get('email')}")
     
     # Check if doctor is active
     if not doctor_data.get("is_active", True):
@@ -135,9 +143,16 @@ async def get_current_parent(
         raise credentials_exception
     
     # Get parent from database
+    print(f"[INFO] Looking up parent in DB with ID: {parent_id}")
     parent_data = db_manager.parents.find_one({"_id": parent_id})
+    if parent_data is None and ObjectId.is_valid(parent_id):
+        print(f"[RETRY] Trying ObjectId lookup for parent: {parent_id}")
+        parent_data = db_manager.parents.find_one({"_id": ObjectId(parent_id)})
+        
     if parent_data is None:
+        print(f"[ERROR] Parent not found in DB: {parent_id}")
         raise credentials_exception
+    print(f"[OK] Parent found: {parent_data.get('email')}")
     
     # Check if parent is active
     if not parent_data.get("is_active", True):
@@ -203,9 +218,16 @@ async def get_current_admin(
     if admin_id is None:
         raise credentials_exception
     
+    print(f"[INFO] Looking up admin in DB with ID: {admin_id}")
     admin_data = db_manager.admins.find_one({"_id": admin_id})
+    if admin_data is None and ObjectId.is_valid(admin_id):
+        print(f"[RETRY] Trying ObjectId lookup for admin: {admin_id}")
+        admin_data = db_manager.admins.find_one({"_id": ObjectId(admin_id)})
+        
     if admin_data is None:
+        print(f"[ERROR] Admin not found in DB: {admin_id}")
         raise credentials_exception
+    print(f"[OK] Admin found: {admin_data.get('email')}")
     
     if not admin_data.get("is_active", True):
         raise HTTPException(
@@ -244,6 +266,8 @@ async def get_current_user(
     
     # Check if doctor/therapist
     doctor = db_manager.doctors.find_one({"_id": user_id})
+    if not doctor and ObjectId.is_valid(user_id):
+        doctor = db_manager.doctors.find_one({"_id": ObjectId(user_id)})
     if doctor:
         if not doctor.get("is_active", True):
             raise HTTPException(status_code=403, detail="Doctor account is deactivated")
@@ -251,6 +275,8 @@ async def get_current_user(
         
     # Check if parent
     parent = db_manager.parents.find_one({"_id": user_id})
+    if not parent and ObjectId.is_valid(user_id):
+        parent = db_manager.parents.find_one({"_id": ObjectId(user_id)})
     if parent:
         if not parent.get("is_active", True):
             raise HTTPException(status_code=403, detail="Parent account is deactivated")
@@ -258,6 +284,8 @@ async def get_current_user(
         
     # Check if admin
     admin = db_manager.admins.find_one({"_id": user_id})
+    if not admin and ObjectId.is_valid(user_id):
+        admin = db_manager.admins.find_one({"_id": ObjectId(user_id)})
     if admin:
         if not admin.get("is_active", True):
             raise HTTPException(status_code=403, detail="Admin account is deactivated")

@@ -2,7 +2,7 @@
 Doctor data models for request/response validation
 """
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from datetime import datetime, timezone
 
 
@@ -58,13 +58,14 @@ class DoctorCreate(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
     specialization: str
-    experience_years: int = Field(..., ge=0)
+    experience_years: int = Field(default=0, ge=0)
     assigned_patients: int = Field(default=0, ge=0)
     phone: Optional[str] = None
     license_number: Optional[str] = None
     
-    @validator('password')
-    def validate_password(cls, v):
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v: str) -> str:
         """Validate password strength"""
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters')

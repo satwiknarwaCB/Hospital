@@ -32,6 +32,9 @@ import { useApp } from '../../lib/context';
 import OccupancyChart from '../../components/charts/OccupancyChart';
 import UtilizationChart from '../../components/charts/UtilizationChart';
 
+import TherapistProgressOverview from '../../components/admin/TherapistProgressOverview';
+import UserManagement from '../../components/admin/UserManagement';
+
 // ============================================================
 // Admin Dashboard - Main Overview
 // ============================================================
@@ -50,7 +53,7 @@ const AdminDashboard = () => {
         <div className="space-y-6">
             {/* Top Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="bg-gradient-to-br from-primary-500 to-primary-600 text-white">
+                <Card className="bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-200">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-primary-100">Active Children</CardTitle>
                     </CardHeader>
@@ -63,7 +66,7 @@ const AdminDashboard = () => {
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border-none shadow-sm ring-1 ring-neutral-200">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-neutral-500">Therapist Utilization</CardTitle>
                     </CardHeader>
@@ -76,7 +79,7 @@ const AdminDashboard = () => {
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border-none shadow-sm ring-1 ring-neutral-200">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-neutral-500">Therapy Completion</CardTitle>
                     </CardHeader>
@@ -87,7 +90,7 @@ const AdminDashboard = () => {
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border-none shadow-sm ring-1 ring-neutral-200">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-neutral-500">Parent Engagement</CardTitle>
                     </CardHeader>
@@ -100,76 +103,12 @@ const AdminDashboard = () => {
                 </Card>
             </div>
 
-            {/* Financial Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="col-span-2">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <DollarSign className="h-5 w-5 text-green-500" />
-                            Revenue Overview
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-center justify-between mb-4">
-                            <div>
-                                <p className="text-3xl font-bold text-neutral-800">₹{(cdcMetrics.monthlyRevenue / 1000).toFixed(1)}k</p>
-                                <p className="text-sm text-neutral-500">Month to Date</p>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-lg font-medium text-neutral-600">Target: ₹{(cdcMetrics.revenueTarget / 1000).toFixed(0)}k</p>
-                                <p className="text-sm text-green-600">
-                                    {Math.round((cdcMetrics.monthlyRevenue / cdcMetrics.revenueTarget) * 100)}% achieved
-                                </p>
-                            </div>
-                        </div>
-                        <div className="h-3 bg-neutral-100 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full"
-                                style={{ width: `${(cdcMetrics.monthlyRevenue / cdcMetrics.revenueTarget) * 100}%` }}
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Waitlist</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-4xl font-bold text-neutral-800">{cdcMetrics.waitlistSize}</p>
-                        <p className="text-sm text-neutral-500 mt-1">Pending enrollment</p>
-                        <div className="mt-4 space-y-1">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-neutral-500">Avg wait time</span>
-                                <span className="font-medium">2.5 weeks</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-neutral-500">Renewals due</span>
-                                <span className="font-medium">{cdcMetrics.upcomingRenewals}</span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+            {/* Therapist & Child Progress Graphs */}
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <TherapistProgressOverview />
             </div>
 
-            {/* Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Center Occupancy Trends</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <OccupancyChart />
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Therapy Utilization by Type</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <UtilizationChart />
-                    </CardContent>
-                </Card>
-            </div>
+            {/* Dashboard Statistics & Trends removed as requested */}
 
             {/* Therapist Performance */}
             <Card>
@@ -644,6 +583,7 @@ const AdminPortal = () => {
     const sidebarItems = [
         { label: 'Overview', path: '/admin/overview', icon: LayoutDashboard },
         { label: 'Operations', path: '/admin/operations', icon: Building2 },
+        { label: 'Users', path: '/admin/users', icon: Users },
         { label: 'Reports', path: '/admin/reports', icon: FileBarChart },
         { label: 'Compliance', path: '/admin/compliance', icon: ShieldAlert },
     ];
@@ -653,6 +593,7 @@ const AdminPortal = () => {
             <Route element={<DashboardLayout title="CDC Admin" sidebarItems={sidebarItems} roleColor="bg-neutral-800" onLogout={handleLogout} />}>
                 <Route path="overview" element={<AdminDashboard />} />
                 <Route path="operations" element={<OperationsPage />} />
+                <Route path="users" element={<UserManagement />} />
                 <Route path="reports" element={<ReportsPage />} />
                 <Route path="compliance" element={<CompliancePage />} />
                 <Route path="*" element={<Navigate to="overview" replace />} />

@@ -79,12 +79,21 @@ const Login = () => {
             const user = await login(formData.email, formData.password);
 
             // Redirect based on role
-            if (formData.email.includes('@parent.com')) {
+            if (user.role === 'parent') {
                 navigate('/parent/today');
-            } else if (formData.email.includes('@neurobridge.com')) {
+            } else if (user.role === 'admin') {
                 navigate('/admin/overview');
-            } else {
+            } else if (user.role === 'therapist' || user.role === 'doctor') {
                 navigate('/therapist/command-center');
+            } else {
+                // Fallback based on email if role is somehow missing
+                if (formData.email.includes('@parent.com')) {
+                    navigate('/parent/today');
+                } else if (formData.email.includes('@neurobridge.com')) {
+                    navigate('/admin/overview');
+                } else {
+                    navigate('/therapist/command-center');
+                }
             }
         } catch (error) {
             setApiError(error.message || 'Login failed. Please check your credentials.');

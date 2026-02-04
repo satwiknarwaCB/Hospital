@@ -147,11 +147,8 @@ export const AppProvider = ({ children }) => {
                 try {
                     const parent = JSON.parse(parentData);
                     const mockUser = users.find(u => u.email?.toLowerCase() === parent.email?.toLowerCase());
+                    // Real data (parent) should overwrite mock data, especially the ID
                     const user = { ...mockUser, ...parent };
-                    if (mockUser) {
-                        user.id = mockUser.id;
-                        user.email = mockUser.email;
-                    }
 
                     if (!user.role) user.role = 'parent';
 
@@ -164,11 +161,8 @@ export const AppProvider = ({ children }) => {
                 try {
                     const doctor = JSON.parse(doctorData);
                     const mockUser = users.find(u => u.email?.toLowerCase() === doctor.email?.toLowerCase());
+                    // Real data (doctor) should overwrite mock data
                     const user = { ...mockUser, ...doctor };
-                    if (mockUser) {
-                        user.id = mockUser.id;
-                        user.email = mockUser.email;
-                    }
 
                     if (!user.role) user.role = 'therapist';
 
@@ -180,7 +174,9 @@ export const AppProvider = ({ children }) => {
             } else if (adminData) {
                 try {
                     const admin = JSON.parse(adminData);
-                    const user = users.find(u => u.email === admin.email) || admin;
+                    const mockUser = users.find(u => u.email?.toLowerCase() === admin.email?.toLowerCase());
+                    // Real data (admin) should overwrite mock data
+                    const user = { ...mockUser, ...admin };
 
                     if (!user.role) user.role = 'admin';
 

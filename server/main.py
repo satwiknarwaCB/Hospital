@@ -2,7 +2,7 @@
 Therapy Portal - Doctor Module Backend
 FastAPI application with JWT authentication and MongoDB
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from config import settings
@@ -15,6 +15,7 @@ from routes.sessions import router as sessions_router
 from routes.communities import router as communities_router
 from routes.messages import router as messages_router
 from routes.progress import router as progress_router
+from routes.user_management import router as user_management_router
 
 
 @asynccontextmanager
@@ -40,16 +41,21 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-
-# Configure CORS
+# 1. ADD CORS FIRST
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # Register routers
 app.include_router(doctor_auth_router)
@@ -60,6 +66,7 @@ app.include_router(sessions_router)
 app.include_router(communities_router)
 app.include_router(messages_router)
 app.include_router(progress_router)
+app.include_router(user_management_router)
 
 
 # Health check endpoint

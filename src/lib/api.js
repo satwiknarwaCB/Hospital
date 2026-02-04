@@ -5,13 +5,16 @@
 import axios from 'axios';
 
 // API base URL - update this to match your backend
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+// API base URL - Using 127.0.0.1 for maximum stability
+const API_BASE_URL = 'http://127.0.0.1:8000';
 
 // Create axios instance with default config
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
     },
 });
 
@@ -498,6 +501,43 @@ export const progressAPI = {
         } catch (error) {
             throw error.response?.data || error.message;
         }
+    }
+};
+
+// User Management API
+export const userManagementAPI = {
+    /**
+     * Create a new therapist account
+     * @param {Object} data - Therapist creation data
+     */
+    createTherapist: async (data) => {
+        const response = await apiClient.post('/api/admin/users/therapist', data);
+        return response.data;
+    },
+
+    /**
+     * Create a new parent account
+     * @param {Object} data - Parent creation data
+     */
+    createParent: async (data) => {
+        const response = await apiClient.post('/api/admin/users/parent', data);
+        return response.data;
+    },
+
+    /**
+     * List all therapist accounts
+     */
+    listTherapists: async () => {
+        const response = await apiClient.get('/api/admin/users/therapists');
+        return response.data;
+    },
+
+    /**
+     * List all parent accounts
+     */
+    listParents: async () => {
+        const response = await apiClient.get('/api/admin/users/parents');
+        return response.data;
     }
 };
 

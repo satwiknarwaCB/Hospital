@@ -2,7 +2,7 @@
 Parent data models for request/response validation
 """
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from datetime import datetime, timezone
 
 
@@ -59,8 +59,9 @@ class ParentCreate(BaseModel):
     children_ids: List[str] = Field(default_factory=list)
     relationship: Optional[str] = None
     
-    @validator('password')
-    def validate_password(cls, v):
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v: str) -> str:
         """Validate password strength"""
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters')

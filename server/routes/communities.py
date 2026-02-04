@@ -14,7 +14,7 @@ from models.community import (
     MessagesListResponse,
     JoinCommunityRequest
 )
-from middleware.auth_middleware import get_current_parent, get_current_doctor, security
+from middleware.auth_middleware import get_current_parent, get_current_doctor, security, get_current_user
 from fastapi.security import HTTPAuthorizationCredentials
 from utils.auth import decode_access_token
 from models.parent import ParentResponse
@@ -29,36 +29,8 @@ router = APIRouter(prefix="/api/communities", tags=["Communities"])
 
 
 
-async def get_current_community_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    """Dependency that allows either a parent or a doctor/therapist"""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    
-    token = credentials.credentials
-    payload = decode_access_token(token)
-    if payload is None:
-        raise credentials_exception
-    
-    user_id = payload.get("sub")
-    if user_id is None:
-        raise credentials_exception
-    
-    # Check if doctor/therapist
-    doctor = db_manager.doctors.find_one({"_id": user_id})
-    if doctor:
-        return {"id": str(doctor["_id"]), "name": doctor["name"], "role": "therapist"}
-        
-    # Check if parent
-    parent = db_manager.parents.find_one({"_id": user_id})
-    if parent:
-        return {"id": str(parent["_id"]), "name": parent["name"], "role": "parent"}
-        
-    raise credentials_exception
+# Replacing get_current_community_user with the more robust get_current_user
+get_current_community_user = get_current_user
 
 
 @router.get("/", response_model=List[CommunityResponse])
@@ -405,6 +377,9 @@ async def get_community_members(
     members = []
     for parent_id in member_ids:
         parent = db_manager.parents.find_one({"_id": parent_id})
+        if not parent and ObjectId.is_valid(parent_id):
+            parent = db_manager.parents.find_one({"_id": ObjectId(parent_id)})
+            
         if parent:
             members.append(CommunityMemberResponse(
                 id=str(parent["_id"]),
