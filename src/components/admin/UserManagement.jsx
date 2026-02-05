@@ -123,11 +123,14 @@ const UserManagement = () => {
 
         try {
             let response;
+            // Send null if password is empty string to avoid validation error
+            const passwordPayload = formData.password ? formData.password : null;
+
             if (activeTab === 'therapists') {
                 response = await userManagementAPI.createTherapist({
                     name: formData.name,
                     email: formData.email,
-                    password: formData.password, // Optional now
+                    password: passwordPayload,
                     specialization: formData.specialization,
                     experience_years: parseInt(formData.experience_years) || 0,
                     phone: formData.phone
@@ -136,14 +139,14 @@ const UserManagement = () => {
                 response = await userManagementAPI.createParent({
                     name: formData.name,
                     email: formData.email,
-                    password: formData.password, // Optional now
+                    password: passwordPayload,
                     relationship: formData.relationship,
                     phone: formData.phone,
                     children_ids: []
                 });
             }
 
-            const data = response.data || response; // Handle Axios structure
+            const data = response.data || response;
 
             if (data.invitation_link) {
                 setInvitationModal({
@@ -163,7 +166,21 @@ const UserManagement = () => {
             fetchUsers();
         } catch (error) {
             console.error('Create failed:', error);
-            setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to create user' });
+
+            let errorText = 'Failed to create user';
+            const detail = error.response?.data?.detail;
+
+            if (typeof detail === 'string') {
+                errorText = detail;
+            } else if (Array.isArray(detail)) {
+                // Handle Pydantic validation error array
+                // e.g. [{ "loc": ["body", "password"], "msg": "Password must be at least 8 characters", "type": "value_error" }]
+                errorText = detail.map(err => err.msg).join(', ');
+            } else if (typeof detail === 'object') {
+                errorText = JSON.stringify(detail);
+            }
+
+            setMessage({ type: 'error', text: errorText });
         } finally {
             setIsLoading(false);
         }
