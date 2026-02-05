@@ -508,11 +508,15 @@ export const progressAPI = {
 export const userManagementAPI = {
     /**
      * Create a new therapist account
-     * @param {Object} data - Therapist creation data
+     * @param {Object} data - Therapist data
+     * @param {string} [assignedChildId] - Optional ID of child to assign
      */
-    createTherapist: async (data) => {
-        const response = await apiClient.post('/api/admin/users/therapist', data);
-        return response.data;
+    createTherapist: (data, assignedChildId = null) => {
+        let url = '/api/admin/users/therapist';
+        if (assignedChildId) {
+            url += `?assigned_child=${assignedChildId}`;
+        }
+        return apiClient.post(url, data);
     },
 
     /**
@@ -537,6 +541,39 @@ export const userManagementAPI = {
      */
     listParents: async () => {
         const response = await apiClient.get('/api/admin/users/parents');
+        return response.data;
+    },
+
+    /**
+     * Delete a therapist
+     */
+    deleteTherapist: async (id) => {
+        await apiClient.delete(`/api/admin/users/therapist/${id}`);
+    },
+
+    /**
+     * Delete a parent
+     */
+    deleteParent: async (id) => {
+        await apiClient.delete(`/api/admin/users/parent/${id}`);
+    },
+
+    /**
+     * Get list of children for assignment
+     */
+    listChildren: async () => {
+        const response = await apiClient.get('/api/admin/users/children');
+        return response.data;
+    }
+};
+
+// Public API
+export const publicAPI = {
+    /**
+     * Get users for demo login
+     */
+    getDemoUsers: async () => {
+        const response = await apiClient.get('/api/public/demo-users');
         return response.data;
     }
 };

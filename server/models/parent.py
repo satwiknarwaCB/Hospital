@@ -41,6 +41,7 @@ class ParentResponse(BaseModel):
     relationship: Optional[str] = None
     is_active: bool = True
     role: str = "parent"
+    invitation_link: Optional[str] = None
     
     class Config:
         json_encoders = {
@@ -54,15 +55,17 @@ class ParentCreate(BaseModel):
     """Parent creation model"""
     name: str = Field(..., min_length=2, max_length=100)
     email: EmailStr
-    password: str = Field(..., min_length=8)
+    password: Optional[str] = None
     phone: Optional[str] = None
     children_ids: List[str] = Field(default_factory=list)
     relationship: Optional[str] = None
     
     @field_validator('password')
     @classmethod
-    def validate_password(cls, v: str) -> str:
-        """Validate password strength"""
+    def validate_password(cls, v: Optional[str]) -> Optional[str]:
+        """Validate password strength if provided"""
+        if v is None:
+            return v
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters')
         if not any(c.isupper() for c in v):

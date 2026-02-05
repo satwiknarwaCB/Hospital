@@ -43,6 +43,7 @@ class DoctorResponse(BaseModel):
     license_number: Optional[str] = None
     is_active: bool = True
     role: str = "therapist"
+    invitation_link: Optional[str] = None
     
     class Config:
         json_encoders = {
@@ -56,7 +57,7 @@ class DoctorCreate(BaseModel):
     """Doctor creation model"""
     name: str = Field(..., min_length=2, max_length=100)
     email: EmailStr
-    password: str = Field(..., min_length=8)
+    password: Optional[str] = None
     specialization: str
     experience_years: int = Field(default=0, ge=0)
     assigned_patients: int = Field(default=0, ge=0)
@@ -65,8 +66,10 @@ class DoctorCreate(BaseModel):
     
     @field_validator('password')
     @classmethod
-    def validate_password(cls, v: str) -> str:
-        """Validate password strength"""
+    def validate_password(cls, v: Optional[str]) -> Optional[str]:
+        """Validate password strength if provided"""
+        if v is None:
+            return v
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters')
         if not any(c.isupper() for c in v):

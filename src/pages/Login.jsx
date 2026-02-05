@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { LogIn, Mail, Lock, AlertCircle, Loader2, ShieldCheck, User, Briefcase, Heart, Activity } from 'lucide-react';
+import { publicAPI } from '../lib/api';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -18,39 +19,75 @@ const Login = () => {
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [apiError, setApiError] = useState('');
+    const [demoUsers, setDemoUsers] = useState({ therapists: [], parents: [] });
 
-    // Demo Credentials
-    const demoAccounts = [
-        {
-            role: 'Parent',
-            icon: Heart,
-            color: 'text-pink-500',
-            bg: 'bg-pink-50',
-            users: [
-                { name: 'Priya Patel', email: 'priya.patel@parent.com', password: 'Parent@123' },
-                { name: 'Arun Sharma', email: 'arun.sharma@parent.com', password: 'Parent@123' }
-            ]
-        },
-        {
-            role: 'Therapist',
-            icon: Briefcase,
-            color: 'text-blue-500',
-            bg: 'bg-blue-50',
-            users: [
-                { name: 'Dr. Rajesh Kumar', email: 'dr.rajesh@therapist.com', password: 'Therapist@123' },
-                { name: 'Dr. Meera Singh', email: 'dr.meera@therapist.com', password: 'Therapist@123' }
-            ]
-        },
-        {
-            role: 'Admin',
-            icon: ShieldCheck,
-            color: 'text-slate-700',
-            bg: 'bg-slate-100',
-            users: [
-                { name: 'Director Anjali Sharma', email: 'anjali.sharma@neurobridge.com', password: 'Admin@123' }
-            ]
-        }
-    ];
+    React.useEffect(() => {
+        const fetchDemoUsers = async () => {
+            try {
+                const data = await publicAPI.getDemoUsers();
+                setDemoUsers(data);
+            } catch (error) {
+                console.error('Failed to fetch demo users:', error);
+            }
+        };
+        fetchDemoUsers();
+    }, []);
+
+    // Demo Credentials - Merge static with dynamic users
+    const getDemoAccounts = () => {
+        const staticParents = [
+            { name: 'Priya Patel', email: 'priya.patel@parent.com', password: 'User@123' },
+            { name: 'Arun Sharma', email: 'arun.sharma@parent.com', password: 'User@123' }
+        ];
+
+        const staticTherapists = [
+            { name: 'Dr. Rajesh Kumar', email: 'dr.rajesh@therapist.com', password: 'User@123' },
+            { name: 'Dr. Meera Singh', email: 'dr.meera@therapist.com', password: 'User@123' }
+        ];
+
+        // Merge dynamic users with static ones
+        const allParents = [
+            ...staticParents,
+            ...demoUsers.parents
+                .filter(p => !staticParents.find(sp => sp.email === p.email))
+                .map(p => ({ ...p, password: 'User@123' }))
+        ];
+
+        const allTherapists = [
+            ...staticTherapists,
+            ...demoUsers.therapists
+                .filter(t => !staticTherapists.find(st => st.email === t.email))
+                .map(t => ({ ...t, password: 'User@123' }))
+        ];
+
+        return [
+            {
+                role: 'Parent',
+                icon: Heart,
+                color: 'text-pink-500',
+                bg: 'bg-pink-50',
+                users: allParents
+            },
+            {
+                role: 'Therapist',
+                icon: Briefcase,
+                color: 'text-blue-500',
+                bg: 'bg-blue-50',
+                users: allTherapists
+            },
+            {
+                role: 'Admin',
+                icon: ShieldCheck,
+                color: 'text-slate-700',
+                bg: 'bg-slate-100',
+                users: [
+                    { name: 'Director Anjali Sharma', email: 'anjali.sharma@neurobridge.com', password: 'Admin@123' }
+                ]
+            }
+        ];
+    };
+
+    const demoAccounts = getDemoAccounts();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -128,7 +165,7 @@ const Login = () => {
                                 <div className="flex items-center gap-2 mb-3">
                                     <section.icon className={`w-4 h-4 ${section.color}`} />
                                     <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-                                        {section.role}s
+                                        {section.role}s (Static)
                                     </span>
                                 </div>
                                 <div className="space-y-2">

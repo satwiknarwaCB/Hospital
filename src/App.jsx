@@ -17,6 +17,7 @@ import Contact from './pages/Contact';
 import DoctorLogin from './pages/doctor/DoctorLogin';
 import DoctorPortal from './pages/doctor/DoctorPortal';
 import ProtectedRoute from './components/ProtectedRoute';
+import ActivateAccount from './pages/ActivateAccount';
 
 // Layout wrapper for public pages (Landing, About, Services)
 const PublicLayout = ({ children }) => {
@@ -49,6 +50,7 @@ function AppContent() {
             <Route path="/services" element={<PublicLayout><Services /></PublicLayout>} />
             <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
             <Route path="/login" element={<Login />} />
+            <Route path="/activate" element={<ActivateAccount />} />
 
             {/* Admin Module */}
             <Route path="/admin/login" element={<Login />} />

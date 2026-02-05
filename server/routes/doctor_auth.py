@@ -28,18 +28,30 @@ async def login(credentials: DoctorLogin):
     Raises:
         HTTPException: If credentials are invalid
     """
+    print(f"[LOGIN] Attempting login for email: {credentials.email}")
+    
     # Find doctor by email
     doctor_data = db_manager.doctors.find_one({"email": credentials.email})
     
     if not doctor_data:
+        print(f"[LOGIN ERROR] Doctor not found with email: {credentials.email}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    print(f"[LOGIN] Doctor found: {doctor_data.get('name')} (ID: {doctor_data.get('_id')})")
+    print(f"[LOGIN] Verifying password...")
+    
     # Verify password
-    if not verify_password(credentials.password, doctor_data["hashed_password"]):
+    password_valid = verify_password(credentials.password, doctor_data["hashed_password"])
+    print(f"[LOGIN] Password verification result: {password_valid}")
+    
+    if not password_valid:
+        print(f"[LOGIN ERROR] Password verification failed for {credentials.email}")
+        print(f"[DEBUG] Provided password length: {len(credentials.password)}")
+        print(f"[DEBUG] Stored hash starts with: {doctor_data['hashed_password'][:20]}...")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",

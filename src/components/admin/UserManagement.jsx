@@ -20,17 +20,21 @@ import {
     RefreshCcw,
     Trash2
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { userManagementAPI } from '../../lib/api';
 
 const UserManagement = () => {
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('therapists');
     const [isLoading, setIsLoading] = useState(false);
     const [therapists, setTherapists] = useState([]);
     const [parents, setParents] = useState([]);
+    const [childrenList, setChildrenList] = useState([]); // Available children for assignment
     const [isCreating, setIsCreating] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [activeMenu, setActiveMenu] = useState(null); // ID of user with open menu
 
     const [formData, setFormData] = useState({
         name: '',
@@ -39,14 +43,33 @@ const UserManagement = () => {
         specialization: 'Speech Therapy',
         experience_years: 5,
         relationship: 'Mother',
-        phone: ''
+        phone: '',
+        assignedChild: '' // For therapists
     });
 
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [invitationModal, setInvitationModal] = useState(null);
 
     useEffect(() => {
         fetchUsers();
+        fetchChildren();
     }, [activeTab]);
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = () => setActiveMenu(null);
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
+
+    const fetchChildren = async () => {
+        try {
+            const data = await userManagementAPI.listChildren();
+            setChildrenList(data);
+        } catch (error) {
+            console.error('Failed to fetch children:', error);
+        }
+    };
 
     const fetchUsers = async () => {
         setIsLoading(true);
@@ -71,66 +94,76 @@ const UserManagement = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleDeleteUser = async (e, userId, userName) => {
+        e.stopPropagation(); // Prevent card click
+        if (!window.confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) return;
+
+        setIsLoading(true);
+        try {
+            if (activeTab === 'therapists') {
+                await userManagementAPI.deleteTherapist(userId);
+            } else {
+                await userManagementAPI.deleteParent(userId);
+            }
+            setMessage({ type: 'success', text: 'Account deleted successfully' });
+            fetchUsers(); // Refresh list
+        } catch (error) {
+            console.error('Delete failed:', error);
+            setMessage({ type: 'error', text: 'Failed to delete user' });
+        } finally {
+            setIsLoading(false);
+            setActiveMenu(null);
+        }
+    };
+
     const handleCreateUser = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         setMessage({ type: '', text: '' });
 
         try {
+            let response;
             if (activeTab === 'therapists') {
-                await userManagementAPI.createTherapist({
+                response = await userManagementAPI.createTherapist({
                     name: formData.name,
                     email: formData.email,
-                    password: formData.password,
+                    password: formData.password, // Optional now
                     specialization: formData.specialization,
                     experience_years: parseInt(formData.experience_years) || 0,
                     phone: formData.phone
-                });
-                setMessage({ type: 'success', text: 'Therapist account created successfully!' });
+                }, formData.assignedChild);
             } else {
-                await userManagementAPI.createParent({
+                response = await userManagementAPI.createParent({
                     name: formData.name,
                     email: formData.email,
-                    password: formData.password,
+                    password: formData.password, // Optional now
                     relationship: formData.relationship,
                     phone: formData.phone,
-                    children_ids: [] // Admin may need to assign kids later
+                    children_ids: []
                 });
-                setMessage({ type: 'success', text: 'Parent account created successfully!' });
+            }
+
+            const data = response.data || response; // Handle Axios structure
+
+            if (data.invitation_link) {
+                setInvitationModal({
+                    email: formData.email,
+                    link: data.invitation_link
+                });
+                setMessage({ type: 'success', text: 'User invited successfully!' });
+            } else {
+                setMessage({ type: 'success', text: 'Account created successfully!' });
             }
 
             setIsCreating(false);
             setFormData({
-                name: '',
-                email: '',
-                password: '',
-                specialization: 'Speech Therapy',
-                experience_years: 5,
-                relationship: 'Mother',
-                phone: ''
+                name: '', email: '', password: '', specialization: 'Speech Therapy',
+                experience_years: 5, relationship: 'Mother', phone: '', assignedChild: ''
             });
             fetchUsers();
         } catch (error) {
-            console.error('Failed to create user:', error);
-
-            let errorMessage = 'Failed to create user account';
-
-            if (error.response?.data?.detail) {
-                const detail = error.response.data.detail;
-                if (typeof detail === 'string') {
-                    errorMessage = detail;
-                } else if (Array.isArray(detail)) {
-                    // Handle validation errors (422)
-                    errorMessage = detail.map(d => d.msg).join(', ');
-                }
-            } else if (error.message) {
-                errorMessage = error.message;
-            }
-
-            setMessage({
-                type: 'error',
-                text: errorMessage
-            });
+            console.error('Create failed:', error);
+            setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to create user' });
         } finally {
             setIsLoading(false);
         }
@@ -141,7 +174,7 @@ const UserManagement = () => {
             ...formData,
             name: user.name,
             email: user.email,
-            password: 'User@123' // Standard demo password
+            password: 'User@123'
         });
     };
 
@@ -262,44 +295,73 @@ const UserManagement = () => {
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-neutral-700 flex items-center gap-2">
                                         <Lock className="h-4 w-4 text-neutral-400" />
-                                        Password
+                                        Default Password (Optional)
                                     </label>
                                     <input
-                                        type="password"
+                                        type="text"
                                         name="password"
                                         value={formData.password}
                                         onChange={handleInputChange}
-                                        required
                                         className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 transition-all outline-none"
-                                        placeholder="••••••••"
+                                        placeholder="Leave blank to generate invitation link"
                                     />
+                                    <p className="text-xs text-neutral-500">
+                                        If left blank, an invitation link will be generated for the user to set their own password.
+                                    </p>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-neutral-700 flex items-center gap-2">
                                         <RefreshCcw className="h-4 w-4 text-neutral-400" />
                                         {activeTab === 'therapists' ? 'Specialization' : 'Relationship'}
                                     </label>
-                                    <select
-                                        name={activeTab === 'therapists' ? 'specialization' : 'relationship'}
-                                        value={activeTab === 'therapists' ? formData.specialization : formData.relationship}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 transition-all outline-none appearance-none"
-                                    >
-                                        {activeTab === 'therapists' ? (
-                                            <>
+                                    {activeTab === 'therapists' ? (
+                                        <div className="space-y-4">
+                                            <select
+                                                name="specialization"
+                                                value={formData.specialization}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 transition-all outline-none appearance-none"
+                                            >
                                                 <option>Speech Therapy</option>
                                                 <option>Occupational Therapy</option>
                                                 <option>Physical Therapy</option>
                                                 <option>Behavioral Therapy</option>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <option>Mother</option>
-                                                <option>Father</option>
-                                                <option>Guardian</option>
-                                            </>
-                                        )}
-                                    </select>
+                                            </select>
+
+                                            {/* Assign Child Option */}
+                                            <div className="pt-2">
+                                                <label className="text-sm font-bold text-neutral-700 flex items-center gap-2 mb-2">
+                                                    <User className="h-4 w-4 text-neutral-400" />
+                                                    Assign Patient (Optional)
+                                                </label>
+                                                <select
+                                                    name="assignedChild"
+                                                    value={formData.assignedChild}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none appearance-none"
+                                                >
+                                                    <option value="">No specific assignment (Will auto-create demo)</option>
+                                                    {childrenList.map(c => (
+                                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                                    ))}
+                                                </select>
+                                                <p className="text-xs text-neutral-400 mt-1">
+                                                    If no patient assigned, a demo patient will be created automatically.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <select
+                                            name="relationship"
+                                            value={formData.relationship}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 transition-all outline-none appearance-none"
+                                        >
+                                            <option>Mother</option>
+                                            <option>Father</option>
+                                            <option>Guardian</option>
+                                        </select>
+                                    )}
                                 </div>
                             </div>
 
@@ -369,18 +431,18 @@ const UserManagement = () => {
                     ))
                 ) : filteredUsers.length > 0 ? (
                     filteredUsers.map((user) => (
-                        <Card key={user.id} className="group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none shadow-md ring-1 ring-neutral-200 relative overflow-hidden">
+                        <Card key={user.id} className="group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none shadow-md ring-1 ring-neutral-200 relative overflow-visible z-0">
                             <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-10 group-hover:scale-150 transition-transform ${activeTab === 'therapists' ? 'bg-primary-500' : 'bg-pink-500'}`} />
 
                             <CardContent className="p-6">
-                                <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-start justify-between mb-4 relative z-10">
                                     <div className={`h-14 w-14 rounded-2xl flex items-center justify-center text-xl font-bold ${activeTab === 'therapists'
                                         ? 'bg-primary-100 text-primary-600'
                                         : 'bg-pink-100 text-pink-600'
                                         }`}>
                                         {user.name.charAt(0)}
                                     </div>
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-1 relative">
                                         {user.is_active ? (
                                             <span className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full uppercase tracking-tighter">
                                                 <CheckCircle2 className="h-3 w-3" />
@@ -392,13 +454,34 @@ const UserManagement = () => {
                                                 Suspended
                                             </span>
                                         )}
-                                        <button className="p-1 hover:bg-neutral-100 rounded-lg">
+
+                                        {/* Dropdown Menu Trigger */}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveMenu(activeMenu === user.id ? null : user.id);
+                                            }}
+                                            className="p-1 hover:bg-neutral-100 rounded-lg transition-colors relative"
+                                        >
                                             <MoreVertical className="h-4 w-4 text-neutral-400" />
                                         </button>
+
+                                        {/* Dropdown Menu */}
+                                        {activeMenu === user.id && (
+                                            <div className="absolute right-0 top-8 bg-white rounded-xl shadow-xl border border-neutral-100 py-1 w-32 z-50 animate-in fade-in zoom-in-95 duration-200">
+                                                <button
+                                                    onClick={(e) => handleDeleteUser(e, user.id, user.name)}
+                                                    className="w-full text-left px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                                >
+                                                    <Trash2 className="h-3 w-3" />
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
-                                <div className="space-y-1">
+                                <div className="space-y-1 relative z-10">
                                     <h3 className="font-bold text-neutral-800 text-lg group-hover:text-primary-600 transition-colors">{user.name}</h3>
                                     <p className="text-sm text-neutral-500 flex items-center gap-2">
                                         <Mail className="h-3 w-3" />
@@ -406,7 +489,7 @@ const UserManagement = () => {
                                     </p>
                                 </div>
 
-                                <div className="mt-6 pt-6 border-t border-neutral-100 flex items-center justify-between">
+                                <div className="mt-6 pt-6 border-t border-neutral-100 flex items-center justify-between relative z-10">
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">
                                             {activeTab === 'therapists' ? 'Specialization' : 'Relationship'}
@@ -415,7 +498,16 @@ const UserManagement = () => {
                                             {activeTab === 'therapists' ? user.specialization : user.relationship}
                                         </p>
                                     </div>
-                                    <Button variant="ghost" size="sm" className="text-primary-600 hover:bg-primary-50 font-bold group">
+                                    <Button
+                                        onClick={() => {
+                                            if (activeTab === 'therapists') {
+                                                navigate('/admin/overview', { state: { therapistId: user.id } });
+                                            }
+                                        }}
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-primary-600 hover:bg-primary-50 font-bold group"
+                                    >
                                         View Portal
                                         <ChevronRight className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
                                     </Button>
@@ -450,6 +542,42 @@ const UserManagement = () => {
                     <button onClick={() => setMessage({ text: '', type: '' })} className="ml-4 hover:scale-110">
                         <XCircle className="h-5 w-5" />
                     </button>
+                </div>
+            )}
+
+            {invitationModal && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+                    <Card className="w-full max-w-lg shadow-2xl bg-white border-0">
+                        <CardHeader className="bg-primary-50 border-b border-primary-100">
+                            <CardTitle className="text-xl flex items-center gap-2 text-primary-900">
+                                <CheckCircle2 className="h-6 w-6 text-green-500" />
+                                Invitation Link Generated
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6 space-y-4">
+                            <p className="text-neutral-600">
+                                The account for <strong>{invitationModal.email}</strong> has been created.
+                                <br />Please share this invitation link so they can set their password:
+                            </p>
+                            <div className="bg-neutral-100 p-4 rounded-xl font-mono text-sm break-all border border-neutral-200 select-all text-neutral-700">
+                                {invitationModal.link}
+                            </div>
+                            <div className="flex justify-end gap-3 pt-2">
+                                <Button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(invitationModal.link);
+                                        setMessage({ type: 'success', text: 'Link copied to clipboard' });
+                                    }}
+                                    variant="outline"
+                                >
+                                    Copy Link
+                                </Button>
+                                <Button onClick={() => setInvitationModal(null)}>
+                                    Done
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             )}
         </div>

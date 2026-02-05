@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import ChildHealthAssessment from './ChildHealthAssessment';
 import {
     PieChart, Pie, Cell,
@@ -41,7 +42,21 @@ const TherapistProgressOverview = () => {
     const [expandedChildren, setExpandedChildren] = useState(new Set());
     const [downloadingId, setDownloadingId] = useState(null);
     const [isGlobalDownloading, setIsGlobalDownloading] = useState(false);
+    const location = useLocation();
     const [assessmentChild, setAssessmentChild] = useState(null);
+
+    useEffect(() => {
+        if (location.state?.therapistId) {
+            setExpandedTherapists(new Set([location.state.therapistId]));
+            // Scroll to the therapist card if possible
+            setTimeout(() => {
+                const element = document.getElementById(`therapist-${location.state.therapistId}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+        }
+    }, [location.state]);
 
     const generateClinicalPDF = (therapist, child, detail) => {
         const doc = new jsPDF();
@@ -323,7 +338,7 @@ const TherapistProgressOverview = () => {
                     const highRiskCount = therapistKids.filter(k => getChildDetailData(k.id).isAtRisk).length;
 
                     return (
-                        <div key={therapist.id} className="relative">
+                        <div key={therapist.id} id={`therapist-${therapist.id}`} className="relative">
                             <Card className={`group border-none shadow-xl transition-all duration-500 rounded-[2.5rem] overflow-hidden ${isExpanded ? 'ring-2 ring-primary-500 shadow-primary-100' : 'hover:ring-2 hover:ring-neutral-200'}`}>
 
                                 {/* Status Badge (Production Level Governance) */}
