@@ -42,6 +42,7 @@ class DoctorResponse(BaseModel):
     phone: Optional[str] = None
     license_number: Optional[str] = None
     is_active: bool = True
+    created_at: Optional[datetime] = None
     role: str = "therapist"
     invitation_link: Optional[str] = None
     

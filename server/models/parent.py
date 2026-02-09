@@ -40,6 +40,7 @@ class ParentResponse(BaseModel):
     childId: Optional[str] = None
     relationship: Optional[str] = None
     is_active: bool = True
+    created_at: Optional[datetime] = None
     role: str = "parent"
     invitation_link: Optional[str] = None
     

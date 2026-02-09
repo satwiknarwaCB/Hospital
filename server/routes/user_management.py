@@ -8,13 +8,34 @@ from models.admin import AdminResponse
 from middleware.auth_middleware import get_current_admin
 from datetime import datetime, timezone
 import uuid
+from utils.email import send_invitation_email
+from fastapi import BackgroundTasks
+from config import settings
 
 router = APIRouter(prefix="/api/admin/users", tags=["Admin User Management"])
+
+@router.get("/stats")
+async def get_admin_stats(current_admin: AdminResponse = Depends(get_current_admin)):
+    """
+    Get global statistics for the admin dashboard.
+    """
+    therapist_count = db_manager.doctors.count_documents({})
+    parent_count = db_manager.parents.count_documents({})
+    child_count = db_manager.patients.count_documents({}) # Assuming patients collection stores children
+    
+    return {
+        "therapist_count": therapist_count,
+        "parent_count": parent_count,
+        "child_count": child_count,
+        "active_children": child_count # Simplified for now
+    }
+
 
 @router.post("/therapist", response_model=DoctorResponse, status_code=status.HTTP_201_CREATED)
 async def create_therapist(
     request: Request,
     therapist: DoctorCreate,
+    background_tasks: BackgroundTasks,
     current_admin: AdminResponse = Depends(get_current_admin)
 ):
     """
@@ -26,43 +47,19 @@ async def create_therapist(
         raise HTTPException(status_code=400, detail="Therapist with this email already exists")
     
     doctor_id = str(uuid.uuid4())
-    activation_token = None
-    invitation_link = None
+    activation_token = str(uuid.uuid4())
+    invitation_link = f"{settings.FRONTEND_URL}/activate?token={activation_token}&role=therapist"
     
     if therapist.password:
         hashed_password = hash_password(therapist.password)
         is_active = True
     else:
-        # Invitation flow
-        activation_token = str(uuid.uuid4())
+        # Full invitation flow (starts inactive)
         hashed_password = hash_password(str(uuid.uuid4())) # Random placeholder
-        invitation_link = f"http://localhost:5173/activate?token={activation_token}&role=therapist"
-        is_active = False # Inactive until password set
+        is_active = False
     
-    # Check for assigned child ID (Seeding Logic)
-    assigned_child_id = request.query_params.get("assigned_child")
-    
-    if not assigned_child_id:
-        # Create Demo Patient
-        demo_patient_id = str(uuid.uuid4())
-        demo_patient = {
-            "_id": demo_patient_id,
-            "name": f"Demo Patient for {therapist.name.split()[0]}",
-            "age": 6,
-            "diagnosis": "Autism Spectrum Disorder",
-            "therapist_ids": [doctor_id],
-            "created_at": datetime.now(timezone.utc)
-        }
-        try:
-            db_manager.patients.insert_one(demo_patient)
-            assigned_child_id = demo_patient_id
-        except Exception as e:
-            print(f"Failed to create demo patient: {e}")
-    else:
-        db_manager.patients.update_one(
-            {"_id": assigned_child_id},
-            {"$addToSet": {"therapist_ids": doctor_id}}
-        )
+    # Patient assignment logic removed as requested.
+    assigned_child_id = None
 
     doctor_data = {
         "_id": doctor_id,
@@ -82,6 +79,16 @@ async def create_therapist(
     
     db_manager.doctors.insert_one(doctor_data)
     
+    # Send invitation email if it's an invitation flow
+    if invitation_link:
+        background_tasks.add_task(
+            send_invitation_email,
+            email=therapist.email,
+            name=therapist.name,
+            role="therapist",
+            invitation_link=invitation_link
+        )
+    
     return DoctorResponse(
         id=doctor_id,
         name=doctor_data["name"],
@@ -100,6 +107,7 @@ async def create_therapist(
 async def create_parent(
     request: Request,
     parent: ParentCreate,
+    background_tasks: BackgroundTasks,
     current_admin: AdminResponse = Depends(get_current_admin)
 ):
     """
@@ -111,37 +119,18 @@ async def create_parent(
         raise HTTPException(status_code=400, detail="Parent with this email already exists")
     
     parent_id = str(uuid.uuid4())
-    activation_token = None
-    invitation_link = None
+    activation_token = str(uuid.uuid4())
+    invitation_link = f"{settings.FRONTEND_URL}/activate?token={activation_token}&role=parent"
     
     if parent.password:
         hashed_password = hash_password(parent.password)
         is_active = True
     else:
-        # Invitation flow
-        activation_token = str(uuid.uuid4())
+        # Full invitation flow (starts inactive)
         hashed_password = hash_password(str(uuid.uuid4()))
-        invitation_link = f"http://localhost:5173/activate?token={activation_token}&role=parent"
         is_active = False
 
     children_ids = parent.children_ids
-    
-    # Auto-create demo child logic
-    if not children_ids:
-        child_id = str(uuid.uuid4())
-        child_data = {
-            "_id": child_id,
-            "name": f"Child of {parent.name.split()[0]}",
-            "age": 5,
-            "parent_id": parent_id,
-            "diagnosis": "Pending Assessment",
-            "created_at": datetime.now(timezone.utc)
-        }
-        try:
-            db_manager.patients.insert_one(child_data)
-            children_ids = [child_id]
-        except Exception as e:
-            print(f"Failed to create demo child: {e}")
 
     parent_data = {
         "_id": parent_id,
@@ -158,6 +147,16 @@ async def create_parent(
     }
     
     db_manager.parents.insert_one(parent_data)
+    
+    # Send invitation email if it's an invitation flow
+    if invitation_link:
+        background_tasks.add_task(
+            send_invitation_email,
+            email=parent.email,
+            name=parent.name,
+            role="parent",
+            invitation_link=invitation_link
+        )
     
     return ParentResponse(
         id=parent_id,
@@ -198,16 +197,131 @@ async def delete_parent(
         raise HTTPException(status_code=404, detail="Parent not found")
     return None
 
-@router.get("/children", response_model=List[dict])
+from models.child import ChildCreate, ChildResponse
+
+# ... (other imports remain)
+
+# ... (existing code)
+
+@router.get("/children", response_model=List[ChildResponse])
 async def list_children(current_admin: AdminResponse = Depends(get_current_admin)):
     """
-    List all children for assignment
+    List all children with full details
     """
-    # Assuming 'patients' collection holds children data. 
-    # If not, we might need to look at parents' children_ids, but separate collection is better.
-    # checking db_manager.patients
-    children = list(db_manager.patients.find({}, {"name": 1, "_id": 1}))
-    return [{"id": str(c["_id"]), "name": c["name"]} for c in children]
+    children = list(db_manager.patients.find())
+    return [
+        ChildResponse(
+            id=str(c["_id"]),
+            name=c["name"],
+            age=c.get("age", 0),
+            gender=c.get("gender", "Unknown"),
+            condition=c.get("condition", "None"),
+            school_name=c.get("school_name"),
+            parent_id=c.get("parent_id", ""),
+            therapistId=c.get("therapistId"),
+            created_at=c.get("created_at", datetime.now(timezone.utc))
+        ) for c in children
+    ]
+
+@router.post("/child", response_model=ChildResponse, status_code=status.HTTP_201_CREATED)
+async def create_child(
+    child: ChildCreate,
+    current_admin: AdminResponse = Depends(get_current_admin)
+):
+    """
+    Create a new child record and link to parent
+    """
+    
+    # Check if parent exists
+    parent = db_manager.parents.find_one({"_id": child.parent_id})
+    if not parent:
+        raise HTTPException(status_code=404, detail="Parent not found")
+
+    child_id = str(uuid.uuid4())
+    current_time = datetime.now(timezone.utc)
+    
+    child_data = {
+        "_id": child_id,
+        "name": child.name,
+        "age": child.age,
+        "gender": child.gender,
+        "condition": child.condition,
+        "school_name": child.school_name,
+        "parent_id": child.parent_id,
+        "therapistId": None,
+        "status": "active",
+        "created_at": current_time,
+        "updated_at": current_time
+    }
+    
+    # Insert child
+    db_manager.patients.insert_one(child_data)
+    
+    # Update parent's children_ids
+    db_manager.parents.update_one(
+        {"_id": child.parent_id},
+        {"$push": {"children_ids": child_id}}
+    )
+    
+    return ChildResponse(
+        id=child_id,
+        name=child.name,
+        age=child.age,
+        gender=child.gender,
+        condition=child.condition,
+        school_name=child.school_name,
+        parent_id=child.parent_id,
+        therapistId=None,
+        created_at=current_time
+    )
+
+@router.delete("/child/{child_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_child(
+    child_id: str,
+    current_admin: AdminResponse = Depends(get_current_admin)
+):
+    """
+    Delete a child record
+    """
+    child = db_manager.patients.find_one({"_id": child_id})
+    if not child:
+        raise HTTPException(status_code=404, detail="Child not found")
+        
+    parent_id = child.get("parent_id")
+    
+    # Remove from parent's list
+    if parent_id:
+        db_manager.parents.update_one(
+            {"_id": parent_id},
+            {"$pull": {"children_ids": child_id}}
+        )
+        
+    # Delete child
+    result = db_manager.patients.delete_one({"_id": child_id})
+    
+    return None
+
+@router.patch("/child/{child_id}/assign/{therapist_id}")
+async def assign_child_to_therapist(
+    child_id: str,
+    therapist_id: str,
+    current_admin: AdminResponse = Depends(get_current_admin)
+):
+    """
+    Assign a child to a therapist. Use 'none' to unassign.
+    """
+    # Use "none" as a special value to unassign
+    update_val = therapist_id if therapist_id.lower() != "none" else None
+    
+    result = db_manager.patients.update_one(
+        {"_id": child_id},
+        {"$set": {"therapistId": update_val, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Child not found")
+        
+    return {"message": "Success"}
 
 
 @router.get("/therapists", response_model=List[DoctorResponse])
@@ -227,6 +341,7 @@ async def list_therapists(current_admin: AdminResponse = Depends(get_current_adm
             phone=d.get("phone"),
             license_number=d.get("license_number"),
             is_active=d.get("is_active", True),
+            created_at=d.get("created_at"),
             role="therapist"
         ) for d in doctors
     ]
@@ -247,6 +362,7 @@ async def list_parents(current_admin: AdminResponse = Depends(get_current_admin)
             childId=p.get("child_id") or (p.get("children_ids")[0] if p.get("children_ids") else None),
             relationship=p.get("relationship"),
             is_active=p.get("is_active", True),
+            created_at=p.get("created_at"),
             role="parent"
         ) for p in parents
     ]

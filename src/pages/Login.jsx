@@ -50,14 +50,20 @@ const Login = () => {
             ...staticParents,
             ...demoUsers.parents
                 .filter(p => !staticParents.find(sp => sp.email === p.email))
-                .map(p => ({ ...p, password: 'User@123' }))
+                .map(p => ({
+                    ...p,
+                    password: localStorage.getItem(`demo_pwd_${p.email}`) || 'User@123'
+                }))
         ];
 
         const allTherapists = [
             ...staticTherapists,
             ...demoUsers.therapists
                 .filter(t => !staticTherapists.find(st => st.email === t.email))
-                .map(t => ({ ...t, password: 'User@123' }))
+                .map(t => ({
+                    ...t,
+                    password: localStorage.getItem(`demo_pwd_${t.email}`) || 'User@123'
+                }))
         ];
 
         return [
@@ -115,6 +121,9 @@ const Login = () => {
         try {
             const user = await login(formData.email, formData.password);
 
+            // SUCCESS: Save password for Quick Fill (Local Persistence)
+            localStorage.setItem(`demo_pwd_${formData.email}`, formData.password);
+
             // Redirect based on role
             if (user.role === 'parent') {
                 navigate('/parent/today');
@@ -165,7 +174,7 @@ const Login = () => {
                                 <div className="flex items-center gap-2 mb-3">
                                     <section.icon className={`w-4 h-4 ${section.color}`} />
                                     <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-                                        {section.role}s (Static)
+                                        {section.role} Accounts
                                     </span>
                                 </div>
                                 <div className="space-y-2">
@@ -173,10 +182,18 @@ const Login = () => {
                                         <button
                                             key={u.email}
                                             onClick={() => fillDemo(u.email, u.password)}
-                                            className="w-full text-left p-3 rounded-xl bg-white border border-neutral-100 hover:border-primary-300 hover:shadow-md transition-all group"
+                                            className="w-full text-left p-4 rounded-xl bg-white border border-neutral-100 hover:border-primary-300 hover:shadow-md transition-all group relative"
                                         >
-                                            <p className="text-sm font-semibold text-neutral-700 group-hover:text-primary-600">{u.name}</p>
-                                            <p className="text-xs text-neutral-400">Click to fill</p>
+                                            <div className="flex items-center justify-between mb-1">
+                                                <p className="text-sm font-bold text-neutral-700 group-hover:text-primary-600">{u.name}</p>
+                                                <span className="text-[9px] text-neutral-300 bg-neutral-50 px-1 rounded uppercase">
+                                                    {u.email.includes('@therapist.com') || u.email.includes('@parent.com') || u.email.includes('@neurobridge.com') ? 'System' : 'New'}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-primary-500 font-bold text-[10px]">
+                                                <Activity className="w-3 h-3" />
+                                                Quick Fill Access
+                                            </div>
                                         </button>
                                     ))}
                                 </div>

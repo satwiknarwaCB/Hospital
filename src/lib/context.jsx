@@ -19,7 +19,7 @@ import {
     SKILL_GOALS,
     DOCUMENTS
 } from '../data/mockData';
-import { sessionAPI, communityAPI, messagesAPI, progressAPI } from './api';
+import { sessionAPI, communityAPI, messagesAPI, progressAPI, userManagementAPI } from './api';
 import { cryptoUtils } from './crypto';
 
 const AppContext = createContext();
@@ -27,6 +27,7 @@ const AppContext = createContext();
 export const AppProvider = ({ children }) => {
     // ============ Core State ============
     const [users] = useState(USERS);
+    const [realChildren, setRealChildren] = useState([]);
     const [kids, setKids] = useState(CHILDREN);
     const [sessions, setSessions] = useState(SESSIONS);
     const [skillScores, setSkillScores] = useState(SKILL_SCORES);
@@ -36,6 +37,12 @@ export const AppProvider = ({ children }) => {
     const [consentRecords] = useState(CONSENT_RECORDS);
     const [auditLogs, setAuditLogs] = useState(AUDIT_LOGS);
     const [cdcMetrics] = useState(CDC_METRICS);
+    const [adminStats, setAdminStats] = useState({
+        therapist_count: CDC_METRICS.therapistCount,
+        parent_count: 2, // Mock baseline
+        child_count: CDC_METRICS.activeChildren,
+        active_children: CDC_METRICS.activeChildren
+    });
     const [skillProgress, setSkillProgress] = useState(() => {
         const saved = localStorage.getItem('neurobridge_skill_progress');
         return saved ? JSON.parse(saved) : SKILL_PROGRESS;
@@ -135,7 +142,37 @@ export const AppProvider = ({ children }) => {
     // ============ Auth State ============
     const [currentUser, setCurrentUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [realTherapists, setRealTherapists] = useState([]);
+    const [realParents, setRealParents] = useState([]);
 
+    const refreshChildren = useCallback(async () => {
+        try {
+            const childrenData = await userManagementAPI.listChildren();
+            setRealChildren(Array.isArray(childrenData) ? childrenData : []);
+        } catch (err) {
+            console.warn('Failed to refresh children:', err);
+        }
+    }, []);
+
+    const refreshUsers = useCallback(async () => {
+        try {
+            const [tData, pData] = await Promise.all([
+                userManagementAPI.listTherapists(),
+                userManagementAPI.listParents()
+            ]);
+            setRealTherapists(Array.isArray(tData) ? tData : []);
+            setRealParents(Array.isArray(pData) ? pData : []);
+        } catch (err) {
+            console.warn('Failed to refresh real users:', err);
+        }
+    }, []);
+
+    // Initial fetch for users
+    useEffect(() => {
+        if (isAuthenticated && currentUser?.role === 'admin') {
+            refreshUsers();
+        }
+    }, [isAuthenticated, currentUser, refreshUsers]);
     // Sync with localStorage on mount and when authentication changes
     useEffect(() => {
         const syncAuth = () => {
@@ -147,11 +184,8 @@ export const AppProvider = ({ children }) => {
                 try {
                     const parent = JSON.parse(parentData);
                     const mockUser = users.find(u => u.email?.toLowerCase() === parent.email?.toLowerCase());
-                    // Real data (parent) should overwrite mock data, especially the ID
                     const user = { ...mockUser, ...parent };
-
                     if (!user.role) user.role = 'parent';
-
                     setCurrentUser(user);
                     setIsAuthenticated(true);
                 } catch (err) {
@@ -161,11 +195,8 @@ export const AppProvider = ({ children }) => {
                 try {
                     const doctor = JSON.parse(doctorData);
                     const mockUser = users.find(u => u.email?.toLowerCase() === doctor.email?.toLowerCase());
-                    // Real data (doctor) should overwrite mock data
                     const user = { ...mockUser, ...doctor };
-
                     if (!user.role) user.role = 'therapist';
-
                     setCurrentUser(user);
                     setIsAuthenticated(true);
                 } catch (err) {
@@ -175,11 +206,8 @@ export const AppProvider = ({ children }) => {
                 try {
                     const admin = JSON.parse(adminData);
                     const mockUser = users.find(u => u.email?.toLowerCase() === admin.email?.toLowerCase());
-                    // Real data (admin) should overwrite mock data
                     const user = { ...mockUser, ...admin };
-
                     if (!user.role) user.role = 'admin';
-
                     setCurrentUser(user);
                     setIsAuthenticated(true);
                 } catch (err) {
@@ -192,18 +220,75 @@ export const AppProvider = ({ children }) => {
         };
 
         syncAuth();
-
-        // Listen for storage changes (for multiple tabs)
         window.addEventListener('storage', syncAuth);
-
-        // Also listen for a custom event we can trigger on login
         window.addEventListener('auth-change', syncAuth);
-
         return () => {
             window.removeEventListener('storage', syncAuth);
             window.removeEventListener('auth-change', syncAuth);
         };
     }, [users]);
+
+    // Derived full user list (Merge mock with real)
+    const allUsers = useMemo(() => {
+        const normalizedRealTherapists = realTherapists.map(t => ({
+            ...t,
+            id: t.id || t._id,
+            avatar: t.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${t.name}`,
+            role: 'therapist'
+        }));
+
+        const normalizedRealParents = realParents.map(p => ({
+            ...p,
+            id: p.id || p._id,
+            avatar: p.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.name}`,
+            role: 'parent'
+        }));
+
+        const filteredMock = users.filter(mu =>
+            !normalizedRealTherapists.find(rt => rt.email.toLowerCase() === mu.email.toLowerCase()) &&
+            !normalizedRealParents.find(rp => rp.email.toLowerCase() === mu.email.toLowerCase())
+        );
+
+        return [...normalizedRealTherapists, ...normalizedRealParents, ...filteredMock];
+    }, [users, realTherapists, realParents]);
+
+    // Sync kids with realChildren
+    useEffect(() => {
+        const normalizedRealChildren = realChildren.map(c => ({
+            ...c,
+            id: c.id || c._id,
+            avatar: c.avatar || (c.gender === 'Female'
+                ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.name}&hair=long`
+                : `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.name}`),
+        }));
+
+        setKids(prev => {
+            const mockChildren = CHILDREN.filter(mc => !normalizedRealChildren.find(rc => rc.id === mc.id));
+            return [...normalizedRealChildren, ...mockChildren];
+        });
+    }, [realChildren]);
+
+    const refreshAdminStats = useCallback(async () => {
+        try {
+            if (currentUser?.role === 'admin') {
+                const [stats] = await Promise.all([
+                    userManagementAPI.getStats(),
+                    refreshUsers(),
+                    refreshChildren()
+                ]);
+                setAdminStats(stats);
+            }
+        } catch (err) {
+            console.warn('Failed to refresh admin stats:', err);
+        }
+    }, [currentUser, refreshUsers]);
+
+    // Initial fetch for admin stats
+    useEffect(() => {
+        if (isAuthenticated && currentUser?.role === 'admin') {
+            refreshAdminStats();
+        }
+    }, [isAuthenticated, currentUser, refreshAdminStats]);
 
     // Production-Level Message Synchronization
     useEffect(() => {
@@ -597,7 +682,7 @@ export const AppProvider = ({ children }) => {
 
     // ============ Auth Actions ============
     const login = useCallback((role, id) => {
-        const user = users.find(u => u.role === role && (id ? u.id === id : true));
+        const user = allUsers.find(u => u.role === role && (id ? u.id === id : true));
         if (user) {
             setCurrentUser(user);
             setIsAuthenticated(true);
@@ -613,7 +698,7 @@ export const AppProvider = ({ children }) => {
             return true;
         }
         return false;
-    }, [users]);
+    }, [allUsers]);
 
     const logout = useCallback(() => {
         if (currentUser) {
@@ -715,6 +800,34 @@ export const AppProvider = ({ children }) => {
                 : k
         ));
     }, []);
+
+    const assignChildToTherapist = useCallback(async (childId, therapistId) => {
+        // Optimistic update
+        setKids(prev => prev.map(k =>
+            k.id === childId
+                ? { ...k, therapistId: therapistId }
+                : k
+        ));
+
+        try {
+            await userManagementAPI.assignTherapist(childId, therapistId);
+            // Refresh to ensure we have the latest server state
+            refreshChildren();
+        } catch (err) {
+            console.error("Failed to persist therapist assignment:", err);
+            // Revert on failure could be added here
+        }
+
+        // Log audit event
+        const childName = kids.find(k => k.id === childId)?.name || 'Unknown Child';
+        const action = therapistId ? 'ASSIGN_THERAPIST' : 'UNASSIGN_THERAPIST';
+        addAuditLog({
+            action: action,
+            userId: currentUser?.id,
+            userName: currentUser?.name,
+            details: `${action === 'ASSIGN_THERAPIST' ? 'Assigned' : 'Unassigned'} ${childName} ${therapistId ? `to therapist ${therapistId}` : 'from therapist'}`
+        });
+    }, [currentUser, kids, refreshChildren]);
 
     // ============ Skill Score Actions ============
     const getChildSkillScores = useCallback((childId, limit = null) => {
@@ -1236,8 +1349,11 @@ export const AppProvider = ({ children }) => {
     // ============ Context Value ============
     const value = useMemo(() => ({
         // State
-        users,
+        users: allUsers,
+        realUsers: allUsers,
+        refreshUsers,
         kids,
+        refreshChildren,
         sessions,
         skillScores,
         roadmap,
@@ -1246,6 +1362,8 @@ export const AppProvider = ({ children }) => {
         consentRecords,
         auditLogs,
         cdcMetrics,
+        adminStats,
+        refreshAdminStats,
         currentUser,
         isAuthenticated,
         notifications,
@@ -1270,6 +1388,7 @@ export const AppProvider = ({ children }) => {
         getChildrenByTherapist,
         getChildrenByParent,
         updateChildMood,
+        assignChildToTherapist,
 
         // Skill Score Actions
         getChildSkillScores,
@@ -1335,11 +1454,15 @@ export const AppProvider = ({ children }) => {
         // UI Actions
         setIsLoading
     }), [
-        users, kids, sessions, skillScores, roadmap, homeActivities, messages,
-        consentRecords, auditLogs, cdcMetrics, currentUser, isAuthenticated,
+        allUsers,
+        refreshUsers,
+        kids,
+        refreshChildren,
+        sessions, skillScores, roadmap, homeActivities, messages,
+        consentRecords, auditLogs, cdcMetrics, adminStats, refreshAdminStats, currentUser, isAuthenticated,
         notifications, isLoading, login, logout, getChildSessions, getRecentSessions,
         addSession, getSessionsByTherapist, getTodaysSessions, getChildById,
-        getChildrenByTherapist, getChildrenByParent, updateChildMood, getChildSkillScores,
+        getChildrenByTherapist, getChildrenByParent, updateChildMood, assignChildToTherapist, getChildSkillScores,
         getLatestSkillScores, getSkillHistory, getChildRoadmap, updateRoadmapProgress,
         completeMilestone, getChildHomeActivities, logActivityCompletion, getActivityAdherence,
         getActivityAdherence20Days, completeQuickTestGame, getLatestQuickTestResult,

@@ -511,12 +511,13 @@ export const userManagementAPI = {
      * @param {Object} data - Therapist data
      * @param {string} [assignedChildId] - Optional ID of child to assign
      */
-    createTherapist: (data, assignedChildId = null) => {
+    createTherapist: async (data, assignedChildId = null) => {
         let url = '/api/admin/users/therapist';
         if (assignedChildId) {
             url += `?assigned_child=${assignedChildId}`;
         }
-        return apiClient.post(url, data);
+        const response = await apiClient.post(url, data);
+        return response.data;
     },
 
     /**
@@ -564,16 +565,54 @@ export const userManagementAPI = {
     listChildren: async () => {
         const response = await apiClient.get('/api/admin/users/children');
         return response.data;
+    },
+
+    /**
+     * Get global admin statistics
+     */
+    getStats: async () => {
+        const response = await apiClient.get('/api/admin/users/stats');
+        return response.data;
+    },
+
+    /**
+     * Create a new child record
+     * @param {Object} data - Child data including parent_id
+     */
+    createChild: async (data) => {
+        const response = await apiClient.post('/api/admin/users/child', data);
+        return response.data;
+    },
+
+    /**
+     * Delete a child record
+     */
+    deleteChild: async (id) => {
+        await apiClient.delete(`/api/admin/users/child/${id}`);
+    },
+
+    /**
+     * Assign a child to a therapist
+     */
+    assignTherapist: async (childId, therapistId) => {
+        const tId = therapistId || 'none';
+        const response = await apiClient.patch(`/api/admin/users/child/${childId}/assign/${tId}`);
+        return response.data;
     }
 };
 
 // Public API
 export const publicAPI = {
-    /**
-     * Get users for demo login
-     */
     getDemoUsers: async () => {
         const response = await apiClient.get('/api/public/demo-users');
+        return response.data;
+    },
+
+    /**
+     * Activate account with token and password
+     */
+    activateAccount: async (data) => {
+        const response = await apiClient.post('/api/public/activate', data);
         return response.data;
     }
 };

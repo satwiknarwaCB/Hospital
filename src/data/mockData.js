@@ -32,7 +32,7 @@ export const USERS = [
         role: 'therapist',
         specialization: 'Speech & Language Therapy',
         caseload: ['c1', 'c2'],
-        avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=200',
+        avatar: '/therapist_professional_4.png',
         experience: '12 years',
         certifications: ['BCBA', 'SLP-CCC'],
         joinedAt: '2024-01-10'
@@ -44,7 +44,7 @@ export const USERS = [
         role: 'therapist',
         specialization: 'Occupational Therapy',
         caseload: ['c1', 'c4', 'c5'],
-        avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200',
+        avatar: '/therapy_session_2.png',
         experience: '8 years',
         certifications: ['OTR/L', 'SIPT'],
         joinedAt: '2024-03-15'
@@ -54,7 +54,7 @@ export const USERS = [
         name: 'Dr. Ananya Verma',
         email: 'dr.ananya@neurobridge.com',
         role: 'clinical_lead',
-        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200',
+        avatar: '/family_clinic_3.png',
         joinedAt: '2023-06-01'
     },
     {

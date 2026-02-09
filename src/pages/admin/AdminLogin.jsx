@@ -193,24 +193,14 @@ const AdminLogin = () => {
                     <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
                         <p className="text-xs font-medium text-slate-700 mb-3">Clinical Director Access:</p>
 
-                        <div className="p-3 bg-white rounded-lg border border-slate-100">
-                            <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm font-semibold text-slate-800">Director Anjali Sharma</p>
-                                <button
-                                    type="button"
-                                    onClick={fillDemoCredentials}
-                                    className="text-xs text-slate-600 hover:text-slate-700 font-medium hover:underline"
-                                >
-                                    Quick Fill
-                                </button>
-                            </div>
-                            <p className="text-xs text-slate-600">
-                                <span className="font-medium">Email:</span> anjali.sharma@neurobridge.com
-                            </p>
-                            <p className="text-xs text-slate-600">
-                                <span className="font-medium">Password:</span> Admin@123
-                            </p>
-                        </div>
+                        <button
+                            type="button"
+                            onClick={fillDemoCredentials}
+                            className="w-full flex items-center justify-between p-3 bg-white rounded-lg border border-slate-100 hover:border-slate-300 transition-colors group"
+                        >
+                            <p className="text-sm font-semibold text-slate-800">Fill Director Anjali Sharma</p>
+                            <ShieldCheck className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
+                        </button>
                     </div>
                 </div>
 

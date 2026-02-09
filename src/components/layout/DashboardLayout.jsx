@@ -159,7 +159,7 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                 </main>
 
                 {/* Mobile Bottom Navigation Bar */}
-                <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-neutral-200 px-6 py-3 flex items-center justify-between lg:hidden z-50">
+                <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-neutral-100 px-6 py-4 flex items-center justify-between lg:hidden z-[60] shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)]">
                     {sidebarItems.slice(0, 5).map((item) => {
                         const isActive = location.pathname.startsWith(item.path);
                         return (
@@ -167,19 +167,19 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                                 key={item.path}
                                 to={item.path}
                                 className={cn(
-                                    "flex flex-col items-center gap-1 transition-all duration-200",
-                                    isActive ? "text-primary-600" : "text-neutral-400"
+                                    "relative flex flex-col items-center gap-1 transition-all duration-300",
+                                    isActive ? "text-primary-600 scale-110" : "text-neutral-400 hover:text-neutral-600"
                                 )}
                             >
                                 <div className={cn(
-                                    "p-1 rounded-lg transition-all",
-                                    isActive && "bg-primary-50 text-primary-600"
+                                    "p-1.5 rounded-xl transition-all duration-300",
+                                    isActive && "bg-primary-50 shadow-sm ring-1 ring-primary-100"
                                 )}>
-                                    {item.icon && <item.icon className="h-6 w-6" />}
+                                    {item.icon && <item.icon className="h-5 w-5" />}
                                 </div>
-                                <span className="text-[10px] font-bold uppercase tracking-widest">{item.label.split(' ')[0]}</span>
+                                <span className="text-[8px] font-black uppercase tracking-[0.15em]">{item.label.split(' ')[0]}</span>
                                 {item.badge > 0 && (
-                                    <span className="absolute top-2 translate-x-3 px-1.5 py-0.5 text-[8px] font-black bg-red-500 text-white rounded-full">
+                                    <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[8px] font-black bg-rose-500 text-white rounded-full border-2 border-white">
                                         {item.badge}
                                     </span>
                                 )}

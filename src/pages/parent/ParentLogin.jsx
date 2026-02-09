@@ -204,44 +204,26 @@ const ParentLogin = () => {
                     <div className="mt-6 p-4 bg-violet-50 rounded-xl border border-violet-100">
                         <p className="text-xs font-medium text-violet-700 mb-3">Demo Credentials:</p>
 
-                        {/* Priya Patel */}
-                        <div className="mb-3 p-3 bg-white rounded-lg border border-violet-100">
-                            <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm font-semibold text-violet-800">Priya Patel (Mother)</p>
-                                <button
-                                    type="button"
-                                    onClick={() => fillDemoCredentials('priya.patel@parent.com')}
-                                    className="text-xs text-violet-600 hover:text-violet-700 font-medium hover:underline"
-                                >
-                                    Quick Fill
-                                </button>
-                            </div>
-                            <p className="text-xs text-violet-600">
-                                <span className="font-medium">Email:</span> priya.patel@parent.com
-                            </p>
-                            <p className="text-xs text-violet-600">
-                                <span className="font-medium">Password:</span> Parent@123
-                            </p>
-                        </div>
+                        <div className="space-y-2">
+                            {/* Priya Patel */}
+                            <button
+                                type="button"
+                                onClick={() => fillDemoCredentials('priya.patel@parent.com')}
+                                className="w-full flex items-center justify-between p-3 bg-white rounded-lg border border-violet-100 hover:border-violet-300 transition-colors group"
+                            >
+                                <p className="text-sm font-semibold text-violet-800">Fill Priya Patel (Mother)</p>
+                                <LogIn className="w-4 h-4 text-violet-400 group-hover:text-violet-600" />
+                            </button>
 
-                        {/* Arun Sharma */}
-                        <div className="p-3 bg-white rounded-lg border border-violet-100">
-                            <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm font-semibold text-violet-800">Arun Sharma (Father)</p>
-                                <button
-                                    type="button"
-                                    onClick={() => fillDemoCredentials('arun.sharma@parent.com')}
-                                    className="text-xs text-violet-600 hover:text-violet-700 font-medium hover:underline"
-                                >
-                                    Quick Fill
-                                </button>
-                            </div>
-                            <p className="text-xs text-violet-600">
-                                <span className="font-medium">Email:</span> arun.sharma@parent.com
-                            </p>
-                            <p className="text-xs text-violet-600">
-                                <span className="font-medium">Password:</span> Parent@123
-                            </p>
+                            {/* Arun Sharma */}
+                            <button
+                                type="button"
+                                onClick={() => fillDemoCredentials('arun.sharma@parent.com')}
+                                className="w-full flex items-center justify-between p-3 bg-white rounded-lg border border-violet-100 hover:border-violet-300 transition-colors group"
+                            >
+                                <p className="text-sm font-semibold text-violet-800">Fill Arun Sharma (Father)</p>
+                                <LogIn className="w-4 h-4 text-violet-400 group-hover:text-violet-600" />
+                            </button>
                         </div>
                     </div>
                 </div>

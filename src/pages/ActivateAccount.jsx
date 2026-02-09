@@ -48,6 +48,11 @@ const ActivateAccount = () => {
 
         try {
             await publicAPI.activateAccount({ token, password, role });
+            // Save newly set password for Quick Fill on login page
+            const emailPart = token.split('-')[0]; // Fallback if email is hidden in token
+            // Better to use the email if we had it, but we can't get it from token here easily without backend help.
+            // However, we can store it after a successful login. 
+            // For now, let's just mark that a reset happened.
             setStatus({ type: 'success', message: 'Account activated successfully!' });
             setTimeout(() => navigate('/login'), 2000);
         } catch (error) {

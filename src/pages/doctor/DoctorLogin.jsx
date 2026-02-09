@@ -66,7 +66,7 @@ const DoctorLogin = () => {
         setIsLoading(true);
 
         try {
-            await login(formData.email, formData.password);
+            await login(formData.email, formData.password, 'doctor');
             // Redirect to dashboard on success
             navigate('/doctor/dashboard');
         } catch (error) {
@@ -84,7 +84,7 @@ const DoctorLogin = () => {
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl mb-4 shadow-lg">
                         <LogIn className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-3xl font-bold text-neutral-800 mb-2">Doctor Portal</h1>
+                    <h1 className="text-3xl font-bold text-neutral-800 mb-2">Therapist Portal</h1>
                     <p className="text-neutral-500">Sign in to access your dashboard</p>
                 </div>
 
@@ -120,7 +120,7 @@ const DoctorLogin = () => {
                                     onChange={handleChange}
                                     className={`w-full pl-12 pr-4 py-3 border ${errors.email ? 'border-red-300 focus:ring-red-500' : 'border-neutral-300 focus:ring-primary-500'
                                         } rounded-xl focus:ring-2 focus:outline-none transition-all`}
-                                    placeholder="dr.yourname@hospital.com"
+                                    placeholder="dr.rajesh@therapist.com"
                                 />
                             </div>
                             {errors.email && (
@@ -181,13 +181,22 @@ const DoctorLogin = () => {
 
                     {/* Demo Credentials */}
                     <div className="mt-6 p-4 bg-primary-50 rounded-xl border border-primary-100">
-                        <p className="text-xs font-medium text-primary-700 mb-2">Demo Credentials:</p>
-                        <p className="text-xs text-primary-600">
-                            <span className="font-medium">Email:</span> dr.rajesh@hospital.com
-                        </p>
-                        <p className="text-xs text-primary-600">
-                            <span className="font-medium">Password:</span> Doctor@123
-                        </p>
+                        <p className="text-xs font-medium text-primary-700 mb-3">Demo Credentials:</p>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setFormData({
+                                    email: 'dr.rajesh@therapist.com',
+                                    password: 'Therapist@123',
+                                });
+                                setErrors({});
+                                setApiError('');
+                            }}
+                            className="w-full py-2.5 bg-white border border-primary-200 text-primary-600 rounded-lg text-xs font-bold hover:bg-primary-50 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <LogIn className="w-3.5 h-3.5" />
+                            Quick Fill Dr. Rajesh
+                        </button>
                     </div>
                 </div>
 
