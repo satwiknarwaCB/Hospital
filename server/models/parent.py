@@ -19,6 +19,7 @@ class ParentInDB(BaseModel):
     email: EmailStr
     hashed_password: str
     phone: Optional[str] = None
+    address: Optional[str] = None
     children_ids: List[str] = Field(default_factory=list, description="IDs of children")
     child_id: Optional[str] = Field(None, description="Primary child ID for portal")
     relationship: Optional[str] = None  # e.g., "Mother", "Father"
@@ -36,6 +37,7 @@ class ParentResponse(BaseModel):
     name: str
     email: str
     phone: Optional[str] = None
+    address: Optional[str] = None
     children_ids: List[str] = []
     childId: Optional[str] = None
     relationship: Optional[str] = None
@@ -58,6 +60,7 @@ class ParentCreate(BaseModel):
     email: EmailStr
     password: Optional[str] = None
     phone: Optional[str] = None
+    address: Optional[str] = None
     children_ids: List[str] = Field(default_factory=list)
     relationship: Optional[str] = None
     

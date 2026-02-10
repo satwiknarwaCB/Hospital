@@ -78,11 +78,11 @@ const TherapistProgressOverview = () => {
         doc.text('Clinical Progress Audit & Narrative Report', 20, 28);
         doc.text(`Generated: ${timestamp}`, 140, 20);
 
-        // Patient Section
+        // Child Section
         doc.setTextColor(50, 50, 50);
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.text('PATIENT INFORMATION', 20, 55);
+        doc.text('CHILD INFORMATION', 20, 55);
 
         doc.setLineWidth(0.5);
         doc.line(20, 58, 190, 58);
@@ -145,7 +145,7 @@ const TherapistProgressOverview = () => {
 
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
-        const summary = `Clinical observations indicate that ${child.name} is currently performing at ${detail.avgAchieved}% of the assigned developmental curriculum. Under the direct supervision of Dr. ${therapist.name}, the patient has shown a trajectory indicative of ${detail.isAtRisk ? 'slight resistance to the current protocol' : 'high responsiveness to sensory-motor integration'}.`;
+        const summary = `Clinical observations indicate that ${child.name} is currently performing at ${detail.avgAchieved}% of the assigned developmental curriculum. Under the direct supervision of Dr. ${therapist.name}, the child has shown a trajectory indicative of ${detail.isAtRisk ? 'slight resistance to the current protocol' : 'high responsiveness to sensory-motor integration'}.`;
         const splitSummary = doc.splitTextToSize(summary, 170);
         doc.text(splitSummary, 20, finalY + 12);
 
@@ -229,7 +229,7 @@ const TherapistProgressOverview = () => {
                 body: [
                     ['Resource Utilization', `${therapistKids.length}/10`, '8/10', therapistKids.length >= 8 ? 'Optimal' : 'Available'],
                     ['Session Completion rate', `${Math.round(perf.successRate || 0)}%`, '90%', (perf.successRate || 0) >= 90 ? 'Exceeds' : 'Standard'],
-                    ['Average Patient Mastery', `${Math.round(perf.absorption || 0)}%`, '70%', (perf.absorption || 0) >= 70 ? 'Excellent' : 'Review'],
+                    ['Average Child Mastery', `${Math.round(perf.absorption || 0)}%`, '70%', (perf.absorption || 0) >= 70 ? 'Excellent' : 'Review'],
                     ['Knowledge Delivery Efficacy', `${Math.round(perf.taught || 0)}%`, '80%', 'Verified'],
                 ],
                 theme: 'grid',
@@ -250,7 +250,7 @@ const TherapistProgressOverview = () => {
             const caseloadData = therapistKids.map(k => {
                 const detail = getChildDetailData(k.id);
                 return [
-                    k.name || 'Unknown Patient',
+                    k.name || 'Unknown Child',
                     k.id || 'N/A',
                     `${detail.avgAchieved || 0}%`,
                     detail.isAtRisk ? 'INTERVENTION' : 'NOMINAL'
@@ -259,8 +259,8 @@ const TherapistProgressOverview = () => {
 
             autoTable(doc, {
                 startY: tableY + 8,
-                head: [['Patient', 'ID', 'Current Mastery', 'Status']],
-                body: caseloadData.length > 0 ? caseloadData : [['No patients assigned', '-', '-', '-']],
+                head: [['Child', 'ID', 'Current Mastery', 'Status']],
+                body: caseloadData.length > 0 ? caseloadData : [['No children assigned', '-', '-', '-']],
                 theme: 'striped'
             });
 
@@ -274,7 +274,7 @@ const TherapistProgressOverview = () => {
             doc.setFont('helvetica', 'bold');
             doc.text('GOVERNANCE ANALYSIS:', 20, finalY);
             doc.setFont('helvetica', 'normal');
-            const analysis = `Preliminary audit indicates that Dr. ${therapist.name || ''} is maintaining a clinical standard of ${Math.round(perf.successRate || 0)}% session success across a caseload of ${therapistKids.length} patients. Performance in ${therapist.specialization || 'Clinical'} modules aligns with hospital benchmarks.`;
+            const analysis = `Preliminary audit indicates that Dr. ${therapist.name || ''} is maintaining a clinical standard of ${Math.round(perf.successRate || 0)}% session success across a caseload of ${therapistKids.length} children. Performance in ${therapist.specialization || 'Clinical'} modules aligns with hospital benchmarks.`;
             const splitAnalysis = doc.splitTextToSize(analysis, 170);
             doc.text(splitAnalysis, 20, finalY + 8);
 
@@ -545,7 +545,7 @@ const TherapistProgressOverview = () => {
                                                 <div className="flex items-center gap-3 group/stat">
                                                     <div className="p-2 md:p-2.5 bg-primary-50 rounded-xl transition-colors group-hover/stat:bg-primary-100"><Users className="h-4 w-4 md:h-5 md:w-5 text-primary-600" /></div>
                                                     <div>
-                                                        <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mb-0.5">Current Patient</p>
+                                                        <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mb-0.5">Current Caseload</p>
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-20 md:w-24 h-1.5 md:h-2 bg-neutral-100 rounded-full overflow-hidden shadow-inner">
                                                                 <div className="h-full bg-gradient-to-r from-primary-500 to-indigo-600" style={{ width: `${perf.capacity}%` }} />
@@ -636,7 +636,7 @@ const TherapistProgressOverview = () => {
                                             {/* Row 2: Child-Wise Production Mapping */}
                                             <div className="p-4 md:p-6 lg:p-8 pb-8 md:pb-12 max-w-full overflow-hidden">
                                                 <h4 className="text-[10px] md:text-xs font-black text-neutral-800 uppercase tracking-[0.12em] md:tracking-widest mb-4 md:mb-6 flex items-center gap-2">
-                                                    <Zap className="h-3.5 w-3.5 md:h-4 md:w-4 text-amber-500" /> Patient Progress Ledger
+                                                    <Zap className="h-3.5 w-3.5 md:h-4 md:w-4 text-amber-500" /> Child Progress Ledger
                                                 </h4>
 
 

@@ -335,14 +335,14 @@ const RoadmapEditor = () => {
 
     // Get therapist's patients
     const therapistId = currentUser?.id || 't1';
-    const myPatients = kids.filter(k => k.therapistId === therapistId);
+    const myChildren = kids.filter(k => k.therapistId === therapistId);
 
     // Set default selected child
     React.useEffect(() => {
-        if (myPatients.length > 0 && !selectedChildId) {
-            setSelectedChildId(myPatients[0].id);
+        if (myChildren.length > 0 && !selectedChildId) {
+            setSelectedChildId(myChildren[0].id);
         }
-    }, [myPatients, selectedChildId]);
+    }, [myChildren, selectedChildId]);
 
     const selectedChild = kids.find(k => k.id === selectedChildId);
     const roadmap = selectedChildId ? getChildRoadmap(selectedChildId) : [];
@@ -392,7 +392,7 @@ const RoadmapEditor = () => {
 
             {/* Patient Selector */}
             <div className="flex gap-2 overflow-x-auto pb-2">
-                {myPatients.map(child => (
+                {myChildren.map(child => (
                     <button
                         key={child.id}
                         className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-colors ${selectedChildId === child.id
@@ -566,7 +566,7 @@ const RoadmapEditor = () => {
             ) : (
                 <Card cla ssName="p-8 text-center">
                     <Target className="h-12 w-12 text-neutral-300 mx-auto mb-4" />
-                    <p className="text-neutral-500">Select a patient to view their roadmap.</p>
+                    <p className="text-neutral-500">Select a child to view their roadmap.</p>
                 </Card>
             )}
 

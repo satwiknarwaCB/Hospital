@@ -36,13 +36,13 @@ const Login = () => {
     // Demo Credentials - Merge static with dynamic users
     const getDemoAccounts = () => {
         const staticParents = [
-            { name: 'Priya Patel', email: 'priya.patel@parent.com', password: 'User@123' },
-            { name: 'Arun Sharma', email: 'arun.sharma@parent.com', password: 'User@123' }
+            { name: 'Priya Patel', email: 'priya.patel@parent.com', password: 'Parent@123' },
+            { name: 'Arun Sharma', email: 'arun.sharma@parent.com', password: 'Parent@123' }
         ];
 
         const staticTherapists = [
-            { name: 'Dr. Rajesh Kumar', email: 'dr.rajesh@therapist.com', password: 'User@123' },
-            { name: 'Dr. Meera Singh', email: 'dr.meera@therapist.com', password: 'User@123' }
+            { name: 'Dr. Rajesh Kumar', email: 'dr.rajesh@therapist.com', password: 'Therapist@123' },
+            { name: 'Dr. Meera Singh', email: 'dr.meera@therapist.com', password: 'Therapist@123' }
         ];
 
         // Merge dynamic users with static ones

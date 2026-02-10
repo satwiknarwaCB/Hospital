@@ -21,7 +21,7 @@ async def get_admin_stats(current_admin: AdminResponse = Depends(get_current_adm
     """
     therapist_count = db_manager.doctors.count_documents({})
     parent_count = db_manager.parents.count_documents({})
-    child_count = db_manager.patients.count_documents({}) # Assuming patients collection stores children
+    child_count = db_manager.children.count_documents({}) # Assuming children collection stores children
     
     return {
         "therapist_count": therapist_count,
@@ -68,7 +68,7 @@ async def create_therapist(
         "hashed_password": hashed_password,
         "specialization": therapist.specialization,
         "experience_years": therapist.experience_years,
-        "assigned_patients": 1 if assigned_child_id else 0,
+        "assigned_children": 1 if assigned_child_id else 0,
         "phone": therapist.phone,
         "license_number": therapist.license_number,
         "created_at": datetime.now(timezone.utc),
@@ -95,7 +95,7 @@ async def create_therapist(
         email=doctor_data["email"],
         specialization=doctor_data["specialization"],
         experience_years=doctor_data["experience_years"],
-        assigned_patients=doctor_data["assigned_patients"],
+        assigned_children=doctor_data["assigned_children"],
         phone=doctor_data.get("phone"),
         license_number=doctor_data.get("license_number"),
         is_active=doctor_data["is_active"],
@@ -138,6 +138,7 @@ async def create_parent(
         "email": parent.email,
         "hashed_password": hashed_password,
         "phone": parent.phone,
+        "address": parent.address,
         "children_ids": children_ids,
         "relationship": parent.relationship,
         "created_at": datetime.now(timezone.utc),
@@ -163,6 +164,7 @@ async def create_parent(
         name=parent_data["name"],
         email=parent_data["email"],
         phone=parent_data.get("phone"),
+        address=parent_data.get("address"),
         children_ids=parent_data["children_ids"],
         childId=parent_data["children_ids"][0] if parent_data["children_ids"] else None,
         relationship=parent_data.get("relationship"),
@@ -196,6 +198,30 @@ async def delete_parent(
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Parent not found")
     return None
+    
+@router.patch("/{role}/{user_id}/status")
+async def toggle_user_status(
+    role: str,
+    user_id: str,
+    current_admin: AdminResponse = Depends(get_current_admin)
+):
+    """
+    Toggle a user's account status (enabled/disabled)
+    """
+    collection = db_manager.doctors if role == "therapist" else db_manager.parents
+    
+    user = collection.find_one({"_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail=f"{role.capitalize()} not found")
+        
+    new_status = not user.get("is_active", True)
+    
+    collection.update_one(
+        {"_id": user_id},
+        {"$set": {"is_active": new_status, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    return {"status": "success", "is_active": new_status}
 
 from models.child import ChildCreate, ChildResponse
 
@@ -208,7 +234,7 @@ async def list_children(current_admin: AdminResponse = Depends(get_current_admin
     """
     List all children with full details
     """
-    children = list(db_manager.patients.find())
+    children = list(db_manager.children.find())
     return [
         ChildResponse(
             id=str(c["_id"]),
@@ -255,7 +281,7 @@ async def create_child(
     }
     
     # Insert child
-    db_manager.patients.insert_one(child_data)
+    db_manager.children.insert_one(child_data)
     
     # Update parent's children_ids
     db_manager.parents.update_one(
@@ -283,7 +309,7 @@ async def delete_child(
     """
     Delete a child record
     """
-    child = db_manager.patients.find_one({"_id": child_id})
+    child = db_manager.children.find_one({"_id": child_id})
     if not child:
         raise HTTPException(status_code=404, detail="Child not found")
         
@@ -297,7 +323,7 @@ async def delete_child(
         )
         
     # Delete child
-    result = db_manager.patients.delete_one({"_id": child_id})
+    result = db_manager.children.delete_one({"_id": child_id})
     
     return None
 
@@ -313,7 +339,7 @@ async def assign_child_to_therapist(
     # Use "none" as a special value to unassign
     update_val = therapist_id if therapist_id.lower() != "none" else None
     
-    result = db_manager.patients.update_one(
+    result = db_manager.children.update_one(
         {"_id": child_id},
         {"$set": {"therapistId": update_val, "updated_at": datetime.now(timezone.utc)}}
     )
@@ -337,7 +363,7 @@ async def list_therapists(current_admin: AdminResponse = Depends(get_current_adm
             email=d["email"],
             specialization=d["specialization"],
             experience_years=d.get("experience_years", 0),
-            assigned_patients=d.get("assigned_patients", 0),
+            assigned_children=d.get("assigned_children", 0),
             phone=d.get("phone"),
             license_number=d.get("license_number"),
             is_active=d.get("is_active", True),
@@ -358,6 +384,7 @@ async def list_parents(current_admin: AdminResponse = Depends(get_current_admin)
             name=p["name"],
             email=p["email"],
             phone=p.get("phone"),
+            address=p.get("address"),
             children_ids=p.get("children_ids", []),
             childId=p.get("child_id") or (p.get("children_ids")[0] if p.get("children_ids") else None),
             relationship=p.get("relationship"),

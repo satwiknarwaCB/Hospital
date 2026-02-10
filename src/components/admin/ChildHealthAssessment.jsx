@@ -31,7 +31,7 @@ const ChildHealthAssessment = ({ isOpen, onClose, child }) => {
                 name: child.name || '',
                 age: child.age || '',
                 gender: child.gender || 'Male',
-                medicalHistory: `Patient shows typical developmental markers for ${child.diagnosis || 'ASD'}. No major surgical history. Previous clinical notes indicate good response to routine-based interventions.`,
+                medicalHistory: `Child shows typical developmental markers for ${child.diagnosis || 'ASD'}. No major surgical history. Previous clinical notes indicate good response to routine-based interventions.`,
                 observations: 'Engages well with clinical staff. Demonstrates emerging joint attention and improved task persistence during structured sessions.',
                 symptoms: 'Social communication challenges, selective attention, and mild sensory processing sensitivities consistent with clinical profile.',
                 developmentalScore: 'Average to Slightly Below in functional communication domains.',
@@ -77,7 +77,7 @@ const ChildHealthAssessment = ({ isOpen, onClose, child }) => {
         doc.setTextColor(50, 50, 50);
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.text('1. PATIENT BIOMETRICS', 20, 60);
+        doc.text('1. CHILD BIOMETRICS', 20, 60);
         doc.setLineWidth(0.5);
         doc.line(20, 63, 190, 63);
 
@@ -184,13 +184,13 @@ const ChildHealthAssessment = ({ isOpen, onClose, child }) => {
                 {/* Main Content - Single Scrollable Page */}
                 <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
 
-                    {/* Section 1: Patient Bio */}
+                    {/* Section 1: Child Bio */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="w-8 h-8 rounded-xl bg-primary-50 flex items-center justify-center">
                                 <User className="h-4 w-4 text-primary-600" />
                             </div>
-                            <h4 className="text-[11px] font-black text-neutral-800 uppercase tracking-[0.2em]">1. Patient Biometrics</h4>
+                            <h4 className="text-[11px] font-black text-neutral-800 uppercase tracking-[0.2em]">1. Child Biometrics</h4>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

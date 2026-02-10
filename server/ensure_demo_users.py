@@ -59,7 +59,7 @@ def ensure_demo_users():
                 "hashed_password": hashed,
                 "specialization": t["specialization"],
                 "experience_years": 10,
-                "assigned_patients": 0,
+                "assigned_children": 0,
                 "created_at": datetime.utcnow(),
                 "role": "therapist",
                 "is_active": True

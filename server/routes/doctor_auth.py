@@ -78,7 +78,7 @@ async def login(credentials: DoctorLogin):
         email=str(doctor_data["email"]),
         specialization=str(doctor_data["specialization"]),
         experience_years=int(doctor_data["experience_years"]),
-        assigned_patients=int(doctor_data.get("assigned_patients", 0)),
+        assigned_children=int(doctor_data.get("assigned_children", doctor_data.get("assigned_patients", 0))),
         phone=str(doctor_data.get("phone")) if doctor_data.get("phone") else None,
         license_number=str(doctor_data.get("license_number")) if doctor_data.get("license_number") else None,
         is_active=bool(doctor_data.get("is_active", True)),

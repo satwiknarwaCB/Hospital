@@ -52,8 +52,8 @@ class DatabaseManager:
         return self.get_database()["doctors"]
     
     @property
-    def patients(self):
-        """Get patients collection"""
+    def children(self):
+        """Get children collection"""
         return self.get_database()["patients"]
     
     @property

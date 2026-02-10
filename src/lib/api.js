@@ -598,6 +598,15 @@ export const userManagementAPI = {
         const tId = therapistId || 'none';
         const response = await apiClient.patch(`/api/admin/users/child/${childId}/assign/${tId}`);
         return response.data;
+    },
+
+    /**
+     * Toggle a user's enabled/disabled status
+     * @param {string} role - 'therapist' or 'parent'
+     * @param {string} userId - ID of the user
+     */
+    toggleUserStatus: async (role, userId) => {
+        return await apiClient.patch(`/api/admin/users/${role}/${userId}/status`);
     }
 };
 

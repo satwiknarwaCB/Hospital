@@ -20,7 +20,7 @@ class DoctorInDB(BaseModel):
     hashed_password: str
     specialization: str
     experience_years: int
-    assigned_patients: int
+    assigned_children: int
     phone: Optional[str] = None
     license_number: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -38,7 +38,7 @@ class DoctorResponse(BaseModel):
     email: str
     specialization: str
     experience_years: int
-    assigned_patients: int
+    assigned_children: int
     phone: Optional[str] = None
     license_number: Optional[str] = None
     is_active: bool = True
@@ -61,7 +61,7 @@ class DoctorCreate(BaseModel):
     password: Optional[str] = None
     specialization: str
     experience_years: int = Field(default=0, ge=0)
-    assigned_patients: int = Field(default=0, ge=0)
+    assigned_children: int = Field(default=0, ge=0)
     phone: Optional[str] = None
     license_number: Optional[str] = None
     

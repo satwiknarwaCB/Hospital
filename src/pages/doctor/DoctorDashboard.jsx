@@ -82,7 +82,7 @@ const DoctorDashboard = () => {
                             <div className="text-[10px] font-black text-primary-300 uppercase tracking-widest">Growth Yrs</div>
                         </div>
                         <div className="bg-white/10 backdrop-blur-md rounded-[2rem] p-6 text-center border border-white/10 shadow-xl min-w-[120px]">
-                            <div className="text-4xl font-black text-green-400">{profileData.assigned_patients}</div>
+                            <div className="text-4xl font-black text-green-400">{profileData.assigned_children}</div>
                             <div className="text-[10px] font-black text-green-300/70 uppercase tracking-widest">Lives Impacted</div>
                         </div>
                     </div>
@@ -112,7 +112,7 @@ const DoctorDashboard = () => {
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-widest text-green-500">Active</span>
                         </div>
-                        <p className="text-3xl font-black text-neutral-800 mb-1">{profileData.assigned_patients}</p>
+                        <p className="text-3xl font-black text-neutral-800 mb-1">{profileData.assigned_children}</p>
                         <p className="text-xs font-bold text-neutral-400 uppercase tracking-tighter">Total Children</p>
                     </CardContent>
                 </Card>
@@ -144,7 +144,7 @@ const DoctorDashboard = () => {
                 </Card>
             </div>
 
-            {/* Glanceable Patient Status Grid (The Traffic Light) */}
+            {/* Glanceable Child Status Grid (The Traffic Light) */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-black text-neutral-800 tracking-tight">Child Care Tracking 🏥</h2>

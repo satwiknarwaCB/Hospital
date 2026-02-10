@@ -77,7 +77,7 @@ async def get_current_doctor(
         email=doctor_data["email"],
         specialization=doctor_data["specialization"],
         experience_years=doctor_data["experience_years"],
-        assigned_patients=doctor_data["assigned_patients"],
+        assigned_children=doctor_data.get("assigned_children", doctor_data.get("assigned_patients", 0)),
         phone=doctor_data.get("phone"),
         license_number=doctor_data.get("license_number"),
         is_active=doctor_data.get("is_active", True),
