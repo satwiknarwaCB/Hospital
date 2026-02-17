@@ -25,7 +25,7 @@ const TherapistProgressTracking = () => {
 
     // Filter kids assigned to this therapist or all if admin (demo logic)
     const therapistKids = kids.filter(k =>
-        (k.therapistId === (currentUser?.id || 't1')) &&
+        (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(currentUser?.id || 't1') &&
         k.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 

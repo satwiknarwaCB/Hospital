@@ -19,9 +19,11 @@ class DoctorInDB(BaseModel):
     email: EmailStr
     hashed_password: str
     specialization: str
+    qualification: Optional[str] = None
     experience_years: int
     assigned_children: int
     phone: Optional[str] = None
+    profile_photo: Optional[str] = None
     license_number: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -37,9 +39,11 @@ class DoctorResponse(BaseModel):
     name: str
     email: str
     specialization: str
+    qualification: Optional[str] = None
     experience_years: int
     assigned_children: int
     phone: Optional[str] = None
+    profile_photo: Optional[str] = None
     license_number: Optional[str] = None
     is_active: bool = True
     created_at: Optional[datetime] = None
@@ -60,9 +64,11 @@ class DoctorCreate(BaseModel):
     email: EmailStr
     password: Optional[str] = None
     specialization: str
+    qualification: Optional[str] = None
     experience_years: int = Field(default=0, ge=0)
     assigned_children: int = Field(default=0, ge=0)
     phone: Optional[str] = None
+    profile_photo: Optional[str] = None
     license_number: Optional[str] = None
     
     @field_validator('password')

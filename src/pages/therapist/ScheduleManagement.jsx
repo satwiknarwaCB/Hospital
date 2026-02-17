@@ -345,7 +345,7 @@ const ScheduleManagement = () => {
 
     // Get therapist's data
     const therapistId = currentUser?.id || 't1';
-    const myChildren = kids.filter(k => k.therapistId === therapistId);
+    const myChildren = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
     const mySessions = sessions.filter(s => s.therapistId === therapistId);
 
     // Calendar navigation

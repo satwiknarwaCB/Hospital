@@ -592,11 +592,18 @@ export const userManagementAPI = {
     },
 
     /**
-     * Assign a child to a therapist
+     * Assign a child to a therapist (adds to list)
      */
     assignTherapist: async (childId, therapistId) => {
-        const tId = therapistId || 'none';
-        const response = await apiClient.patch(`/api/admin/users/child/${childId}/assign/${tId}`);
+        const response = await apiClient.patch(`/api/admin/users/child/${childId}/assign/${therapistId}`);
+        return response.data;
+    },
+
+    /**
+     * Unassign a child from a therapist (removes from list)
+     */
+    unassignTherapist: async (childId, therapistId) => {
+        const response = await apiClient.delete(`/api/admin/users/child/${childId}/assign/${therapistId}`);
         return response.data;
     },
 

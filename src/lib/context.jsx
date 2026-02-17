@@ -145,9 +145,24 @@ export const AppProvider = ({ children }) => {
     const [realTherapists, setRealTherapists] = useState([]);
     const [realParents, setRealParents] = useState([]);
 
+    // ============ Audit Log Actions ============
+    const addAuditLog = useCallback((log) => {
+        const newLog = {
+            ...log,
+            id: `audit${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            ipAddress: '192.168.1.100' // Mock IP
+        };
+        setAuditLogs(prev => [newLog, ...prev]);
+    }, []);
+
     const refreshChildren = useCallback(async () => {
         try {
             const childrenData = await userManagementAPI.listChildren();
+            console.log(`[AppProvider] Refreshed ${childrenData?.length} children from API`);
+            if (childrenData?.length > 0) {
+                console.log(`[AppProvider] Sample child therapistIds:`, childrenData[0].therapistIds);
+            }
             setRealChildren(Array.isArray(childrenData) ? childrenData : []);
         } catch (err) {
             console.warn('Failed to refresh children:', err);
@@ -263,7 +278,12 @@ export const AppProvider = ({ children }) => {
         }));
 
         setKids(prev => {
-            const mockChildren = CHILDREN.filter(mc => !normalizedRealChildren.find(rc => rc.id === mc.id));
+            const mockChildren = CHILDREN.filter(mc =>
+                !normalizedRealChildren.find(rc =>
+                    rc.id === mc.id ||
+                    (rc.name && mc.name && rc.name.trim().toLowerCase() === mc.name.trim().toLowerCase())
+                )
+            );
             return [...normalizedRealChildren, ...mockChildren];
         });
     }, [realChildren]);
@@ -489,7 +509,7 @@ export const AppProvider = ({ children }) => {
 
                 // Therapist View: Fetch for their active caseload
                 if (currentUser.role === 'therapist') {
-                    const therapistKids = kids.filter(k => k.therapistId === currentUser.id);
+                    const therapistKids = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(currentUser.id));
                     for (const kid of therapistKids) {
                         try {
                             const [goals, progress] = await Promise.all([
@@ -786,7 +806,7 @@ export const AppProvider = ({ children }) => {
     }, [kids]);
 
     const getChildrenByTherapist = useCallback((therapistId) => {
-        return kids.filter(k => k.therapistId === therapistId);
+        return kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
     }, [kids]);
 
     const getChildrenByParent = useCallback((parentId) => {
@@ -802,32 +822,87 @@ export const AppProvider = ({ children }) => {
     }, []);
 
     const assignChildToTherapist = useCallback(async (childId, therapistId) => {
-        // Optimistic update
-        setKids(prev => prev.map(k =>
-            k.id === childId
-                ? { ...k, therapistId: therapistId }
-                : k
-        ));
+        console.log(`[AppProvider] Assigning child ${childId} to therapist ${therapistId}`);
+        // 1. Optimistic Update
+        setKids(prev => prev.map(k => {
+            if (k.id === childId) {
+                const currentIds = k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : []);
+                if (!currentIds.includes(therapistId)) {
+                    return {
+                        ...k,
+                        therapistIds: [...currentIds, therapistId],
+                        therapistId: therapistId
+                    };
+                }
+            }
+            return k;
+        }));
 
         try {
-            await userManagementAPI.assignTherapist(childId, therapistId);
-            // Refresh to ensure we have the latest server state
+            // 2. API Call
+            const response = await userManagementAPI.assignTherapist(childId, therapistId);
+            console.log(`[AppProvider] Successfully assigned therapist. API Response:`, response);
+
+            // 3. Final State Sync (using response)
+            if (response && response.therapistIds) {
+                setKids(prev => prev.map(k =>
+                    k.id === childId ? { ...k, therapistIds: response.therapistIds, therapistId: therapistId } : k
+                ));
+            }
+
+            // 4. Background Refresh
             refreshChildren();
+
         } catch (err) {
-            console.error("Failed to persist therapist assignment:", err);
-            // Revert on failure could be added here
+            console.error("Failed to assign therapist:", err);
+            // 5. Revert on error via refresh
+            refreshChildren();
         }
 
-        // Log audit event
-        const childName = kids.find(k => k.id === childId)?.name || 'Unknown Child';
-        const action = therapistId ? 'ASSIGN_THERAPIST' : 'UNASSIGN_THERAPIST';
         addAuditLog({
-            action: action,
+            action: 'ASSIGN_THERAPIST',
             userId: currentUser?.id,
             userName: currentUser?.name,
-            details: `${action === 'ASSIGN_THERAPIST' ? 'Assigned' : 'Unassigned'} ${childName} ${therapistId ? `to therapist ${therapistId}` : 'from therapist'}`
+            details: `Assigned child ${childId} to therapist ${therapistId}`
         });
-    }, [currentUser, kids, refreshChildren]);
+    }, [currentUser, refreshChildren, addAuditLog]);
+
+    const unassignChildFromTherapist = useCallback(async (childId, therapistId) => {
+        console.log(`[AppProvider] Unassigning child ${childId} from therapist ${therapistId}`);
+        // 1. Optimistic Update
+        setKids(prev => prev.map(k => {
+            if (k.id === childId) {
+                const currentIds = k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : []);
+                const newIds = currentIds.filter(id => id !== therapistId);
+                return {
+                    ...k,
+                    therapistIds: newIds,
+                    therapistId: newIds[0] || null
+                };
+            }
+            return k;
+        }));
+
+        try {
+            // 2. API Call
+            await userManagementAPI.unassignTherapist(childId, therapistId);
+            console.log(`[AppProvider] Successfully unassigned therapist via API`);
+
+            // 3. Background Refresh
+            refreshChildren();
+        } catch (err) {
+            console.error("Failed to unassign therapist:", err);
+            // 4. Revert on error via refresh
+            refreshChildren();
+        }
+
+        addAuditLog({
+            action: 'UNASSIGN_THERAPIST',
+            userId: currentUser?.id,
+            userName: currentUser?.name,
+            details: `Unassigned child ${childId} from therapist ${therapistId}`
+        });
+    }, [currentUser, refreshChildren, addAuditLog]);
 
     // ============ Skill Score Actions ============
     const getChildSkillScores = useCallback((childId, limit = null) => {
@@ -1077,16 +1152,6 @@ export const AppProvider = ({ children }) => {
         ));
     }, []);
 
-    // ============ Audit Log Actions ============
-    const addAuditLog = useCallback((log) => {
-        const newLog = {
-            ...log,
-            id: `audit${Date.now()}`,
-            timestamp: new Date().toISOString(),
-            ipAddress: '192.168.1.100' // Mock IP
-        };
-        setAuditLogs(prev => [newLog, ...prev]);
-    }, []);
 
     // ============ Notification Actions ============
     const removeNotification = useCallback((id) => {
@@ -1329,7 +1394,7 @@ export const AppProvider = ({ children }) => {
 
     const getTherapistStats = useCallback((therapistId) => {
         const therapistSessions = sessions.filter(s => s.therapistId === therapistId);
-        const children = kids.filter(k => k.therapistId === therapistId);
+        const children = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
         const completedToday = therapistSessions.filter(s =>
             s.status === 'completed' &&
             s.date.startsWith(new Date().toISOString().split('T')[0])
@@ -1389,6 +1454,7 @@ export const AppProvider = ({ children }) => {
         getChildrenByParent,
         updateChildMood,
         assignChildToTherapist,
+        unassignChildFromTherapist,
 
         // Skill Score Actions
         getChildSkillScores,
@@ -1462,7 +1528,7 @@ export const AppProvider = ({ children }) => {
         consentRecords, auditLogs, cdcMetrics, adminStats, refreshAdminStats, currentUser, isAuthenticated,
         notifications, isLoading, login, logout, getChildSessions, getRecentSessions,
         addSession, getSessionsByTherapist, getTodaysSessions, getChildById,
-        getChildrenByTherapist, getChildrenByParent, updateChildMood, assignChildToTherapist, getChildSkillScores,
+        getChildrenByTherapist, getChildrenByParent, updateChildMood, assignChildToTherapist, unassignChildFromTherapist, getChildSkillScores,
         getLatestSkillScores, getSkillHistory, getChildRoadmap, updateRoadmapProgress,
         completeMilestone, getChildHomeActivities, logActivityCompletion, getActivityAdherence,
         getActivityAdherence20Days, completeQuickTestGame, getLatestQuickTestResult,

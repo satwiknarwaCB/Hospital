@@ -8,11 +8,31 @@ from models.admin import AdminResponse
 from middleware.auth_middleware import get_current_admin
 from datetime import datetime, timezone
 import uuid
+import re
 from utils.email import send_invitation_email
 from fastapi import BackgroundTasks
 from config import settings
 
 router = APIRouter(prefix="/api/admin/users", tags=["Admin User Management"])
+
+def get_next_id(collection, prefix: str) -> str:
+    """
+    Find the next available ID for a given prefix (e.g., TH-1001)
+    """
+    # Regex to find IDs starting with PREFIX-
+    pattern = f"^{prefix}-\d+$"
+    docs = list(collection.find({"_id": {"$regex": pattern}}))
+    
+    max_num = 1000
+    for doc in docs:
+        try:
+            num = int(doc["_id"].split("-")[1])
+            if num > max_num:
+                max_num = num
+        except (ValueError, IndexError):
+            continue
+            
+    return f"{prefix}-{max_num + 1}"
 
 @router.get("/stats")
 async def get_admin_stats(current_admin: AdminResponse = Depends(get_current_admin)):
@@ -46,7 +66,7 @@ async def create_therapist(
     if db_manager.doctors.find_one({"email": therapist.email}):
         raise HTTPException(status_code=400, detail="Therapist with this email already exists")
     
-    doctor_id = str(uuid.uuid4())
+    doctor_id = get_next_id(db_manager.doctors, "TH")
     activation_token = str(uuid.uuid4())
     invitation_link = f"{settings.FRONTEND_URL}/activate?token={activation_token}&role=therapist"
     
@@ -67,9 +87,11 @@ async def create_therapist(
         "email": therapist.email,
         "hashed_password": hashed_password,
         "specialization": therapist.specialization,
+        "qualification": therapist.qualification,
         "experience_years": therapist.experience_years,
         "assigned_children": 1 if assigned_child_id else 0,
         "phone": therapist.phone,
+        "profile_photo": therapist.profile_photo,
         "license_number": therapist.license_number,
         "created_at": datetime.now(timezone.utc),
         "updated_at": datetime.now(timezone.utc),
@@ -94,9 +116,11 @@ async def create_therapist(
         name=doctor_data["name"],
         email=doctor_data["email"],
         specialization=doctor_data["specialization"],
+        qualification=doctor_data.get("qualification"),
         experience_years=doctor_data["experience_years"],
         assigned_children=doctor_data["assigned_children"],
         phone=doctor_data.get("phone"),
+        profile_photo=doctor_data.get("profile_photo"),
         license_number=doctor_data.get("license_number"),
         is_active=doctor_data["is_active"],
         role="therapist",
@@ -118,7 +142,7 @@ async def create_parent(
     if db_manager.parents.find_one({"email": parent.email}):
         raise HTTPException(status_code=400, detail="Parent with this email already exists")
     
-    parent_id = str(uuid.uuid4())
+    parent_id = get_next_id(db_manager.parents, "PA")
     activation_token = str(uuid.uuid4())
     invitation_link = f"{settings.FRONTEND_URL}/activate?token={activation_token}&role=parent"
     
@@ -208,7 +232,10 @@ async def toggle_user_status(
     """
     Toggle a user's account status (enabled/disabled)
     """
-    collection = db_manager.doctors if role == "therapist" else db_manager.parents
+    if role == "child":
+        collection = db_manager.children
+    else:
+        collection = db_manager.doctors if role == "therapist" else db_manager.parents
     
     user = collection.find_one({"_id": user_id})
     if not user:
@@ -223,6 +250,124 @@ async def toggle_user_status(
     
     return {"status": "success", "is_active": new_status}
 
+@router.put("/therapist/{user_id}")
+async def update_therapist(
+    user_id: str,
+    therapist_update: dict,
+    current_admin: AdminResponse = Depends(get_current_admin)
+):
+    """
+    Update therapist details (name, email, specialization, experience, phone, license)
+    """
+    therapist = db_manager.doctors.find_one({"_id": user_id})
+    if not therapist:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    # Prepare update fields
+    update_fields = {}
+    allowed_fields = ["name", "email", "specialization", "qualification", "experience_years", "phone", "profile_photo", "license_number"]
+    
+    for field in allowed_fields:
+        if field in therapist_update and therapist_update[field] is not None:
+            update_fields[field] = therapist_update[field]
+    
+    # Check if email is being changed and if it's already taken
+    if "email" in update_fields and update_fields["email"] != therapist["email"]:
+        existing = db_manager.doctors.find_one({"email": update_fields["email"]})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already in use by another therapist")
+    
+    if update_fields:
+        update_fields["updated_at"] = datetime.now(timezone.utc)
+        db_manager.doctors.update_one(
+            {"_id": user_id},
+            {"$set": update_fields}
+        )
+    
+    return {"status": "success", "message": "Therapist updated successfully"}
+
+@router.put("/parent/{user_id}")
+async def update_parent(
+    user_id: str,
+    parent_update: dict,
+    current_admin: AdminResponse = Depends(get_current_admin)
+):
+    """
+    Update parent details (name, email, phone, address, relationship)
+    """
+    parent = db_manager.parents.find_one({"_id": user_id})
+    if not parent:
+        raise HTTPException(status_code=404, detail="Parent not found")
+    
+    # Prepare update fields
+    update_fields = {}
+    allowed_fields = ["name", "email", "phone", "address", "relationship"]
+    
+    for field in allowed_fields:
+        if field in parent_update and parent_update[field] is not None:
+            update_fields[field] = parent_update[field]
+    
+    # Check if email is being changed and if it's already taken
+    if "email" in update_fields and update_fields["email"] != parent["email"]:
+        existing = db_manager.parents.find_one({"email": update_fields["email"]})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already in use by another parent")
+    
+    if update_fields:
+        update_fields["updated_at"] = datetime.now(timezone.utc)
+        db_manager.parents.update_one(
+            {"_id": user_id},
+            {"$set": update_fields}
+        )
+    
+    return {"status": "success", "message": "Parent updated successfully"}
+
+@router.post("/reset-password")
+async def reset_password(
+    request_data: dict,
+    current_admin: AdminResponse = Depends(get_current_admin)
+):
+    """
+    Reset password for a user (therapist or parent)
+    Admin can set a new password when user can't login
+    """
+    role = request_data.get("role")  # 'therapist' or 'parent'
+    user_id = request_data.get("user_id")
+    new_password = request_data.get("new_password")
+    
+    if not all([role, user_id, new_password]):
+        raise HTTPException(status_code=400, detail="Missing required fields: role, user_id, new_password")
+    
+    # Validate password strength (minimum 8 characters)
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
+    
+    collection = db_manager.doctors if role == "therapist" else db_manager.parents
+    
+    user = collection.find_one({"_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail=f"{role.capitalize()} not found")
+    
+    # Hash the new password
+    hashed_password = hash_password(new_password)
+    
+    # Update password and set account as active
+    collection.update_one(
+        {"_id": user_id},
+        {
+            "$set": {
+                "hashed_password": hashed_password,
+                "is_active": True,  # Ensure account is active after password reset
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    return {
+        "status": "success", 
+        "message": f"Password reset successfully for {user['name']}"
+    }
+
 from models.child import ChildCreate, ChildResponse
 
 # ... (other imports remain)
@@ -234,9 +379,21 @@ async def list_children(current_admin: AdminResponse = Depends(get_current_admin
     """
     List all children with full details
     """
-    children = list(db_manager.children.find())
-    return [
-        ChildResponse(
+    children_docs = list(db_manager.children.find())
+    print(f"[DEBUG] Fetched {len(children_docs)} children from database")
+    
+    response_list = []
+    for c in children_docs:
+        # Reconcile therapistId and therapistIds
+        t_id = c.get("therapistId")
+        t_ids = c.get("therapistIds", [])
+        if t_ids is None: t_ids = []
+        
+        # Backward compatibility: ensure primary is in the list
+        if t_id and t_id not in t_ids:
+            t_ids.append(t_id)
+            
+        response_list.append(ChildResponse(
             id=str(c["_id"]),
             name=c["name"],
             age=c.get("age", 0),
@@ -244,10 +401,13 @@ async def list_children(current_admin: AdminResponse = Depends(get_current_admin
             condition=c.get("condition", "None"),
             school_name=c.get("school_name"),
             parent_id=c.get("parent_id", ""),
-            therapistId=c.get("therapistId"),
+            therapistId=t_id,
+            therapistIds=t_ids,
+            is_active=c.get("is_active", True),
             created_at=c.get("created_at", datetime.now(timezone.utc))
-        ) for c in children
-    ]
+        ))
+    
+    return response_list
 
 @router.post("/child", response_model=ChildResponse, status_code=status.HTTP_201_CREATED)
 async def create_child(
@@ -263,7 +423,7 @@ async def create_child(
     if not parent:
         raise HTTPException(status_code=404, detail="Parent not found")
 
-    child_id = str(uuid.uuid4())
+    child_id = get_next_id(db_manager.children, "CH")
     current_time = datetime.now(timezone.utc)
     
     child_data = {
@@ -275,7 +435,8 @@ async def create_child(
         "school_name": child.school_name,
         "parent_id": child.parent_id,
         "therapistId": None,
-        "status": "active",
+        "therapistIds": [],
+        "is_active": True,
         "created_at": current_time,
         "updated_at": current_time
     }
@@ -298,8 +459,40 @@ async def create_child(
         school_name=child.school_name,
         parent_id=child.parent_id,
         therapistId=None,
+        therapistIds=[],
+        is_active=True,
         created_at=current_time
     )
+
+@router.put("/child/{child_id}")
+async def update_child(
+    child_id: str,
+    child_update: dict,
+    current_admin: AdminResponse = Depends(get_current_admin)
+):
+    """
+    Update child details (name, age, gender, condition, school_name)
+    """
+    child = db_manager.children.find_one({"_id": child_id})
+    if not child:
+        raise HTTPException(status_code=404, detail="Child not found")
+    
+    # Prepare update fields
+    update_fields = {}
+    allowed_fields = ["name", "age", "gender", "condition", "school_name"]
+    
+    for field in allowed_fields:
+        if field in child_update and child_update[field] is not None:
+            update_fields[field] = child_update[field]
+    
+    if update_fields:
+        update_fields["updated_at"] = datetime.now(timezone.utc)
+        db_manager.children.update_one(
+            {"_id": child_id},
+            {"$set": update_fields}
+        )
+    
+    return {"status": "success", "message": "Child updated successfully"}
 
 @router.delete("/child/{child_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_child(
@@ -334,20 +527,76 @@ async def assign_child_to_therapist(
     current_admin: AdminResponse = Depends(get_current_admin)
 ):
     """
-    Assign a child to a therapist. Use 'none' to unassign.
+    Assign a child to a therapist (adds to therapistIds list)
+    Supports multiple therapists per child
     """
-    # Use "none" as a special value to unassign
-    update_val = therapist_id if therapist_id.lower() != "none" else None
+    print(f"[ASSIGN] Assigning {child_id} to {therapist_id}")
     
+    # 1. Get current state to ensure we don't lose the existing primary therapist
+    child = db_manager.children.find_one({"_id": child_id})
+    if not child:
+        print(f"[ASSIGN] ERROR: Child {child_id} not found")
+        raise HTTPException(status_code=404, detail="Child not found")
+        
+    current_primary = child.get("therapistId")
+    current_ids = child.get("therapistIds", [])
+    
+    # Ensure current primary is in the list
+    if current_primary and current_primary not in current_ids:
+        current_ids.append(current_primary)
+    
+    # Add the new therapist
+    if therapist_id not in current_ids:
+        current_ids.append(therapist_id)
+        
+    # 2. Update with the full list and set the new one as primary
     result = db_manager.children.update_one(
         {"_id": child_id},
-        {"$set": {"therapistId": update_val, "updated_at": datetime.now(timezone.utc)}}
+        {
+            "$set": {
+                "therapistIds": current_ids,
+                "therapistId": therapist_id, # Set newest as primary
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    print(f"[ASSIGN] SUCCESS: Child {child_id} now has therapists: {current_ids}")
+    return {"message": "Therapist assigned successfully", "therapistIds": current_ids}
+
+@router.delete("/child/{child_id}/assign/{therapist_id}")
+async def unassign_child_from_therapist(
+    child_id: str,
+    therapist_id: str,
+    current_admin: AdminResponse = Depends(get_current_admin)
+):
+    """
+    Unassign a child from a specific therapist (removes from therapistIds list)
+    """
+    # Remove from therapistIds list
+    result = db_manager.children.update_one(
+        {"_id": child_id},
+        {
+            "$pull": {"therapistIds": therapist_id},
+            "$set": {"updated_at": datetime.now(timezone.utc)}
+        }
     )
     
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Child not found")
+    
+    # If the removed therapist was the primary, update to another one or None
+    child = db_manager.children.find_one({"_id": child_id})
+    if child and child.get("therapistId") == therapist_id:
+        remaining_therapists = child.get("therapistIds", [])
+        new_primary = remaining_therapists[0] if remaining_therapists else None
         
-    return {"message": "Success"}
+        db_manager.children.update_one(
+            {"_id": child_id},
+            {"$set": {"therapistId": new_primary}}
+        )
+        
+    return {"message": "Therapist unassigned successfully"}
 
 
 @router.get("/therapists", response_model=List[DoctorResponse])
@@ -362,9 +611,11 @@ async def list_therapists(current_admin: AdminResponse = Depends(get_current_adm
             name=d["name"],
             email=d["email"],
             specialization=d["specialization"],
+            qualification=d.get("qualification"),
             experience_years=d.get("experience_years", 0),
             assigned_children=d.get("assigned_children", 0),
             phone=d.get("phone"),
+            profile_photo=d.get("profile_photo"),
             license_number=d.get("license_number"),
             is_active=d.get("is_active", True),
             created_at=d.get("created_at"),
@@ -390,6 +641,7 @@ async def list_parents(current_admin: AdminResponse = Depends(get_current_admin)
             relationship=p.get("relationship"),
             is_active=p.get("is_active", True),
             created_at=p.get("created_at"),
+            last_login=p.get("last_login"),
             role="parent"
         ) for p in parents
     ]

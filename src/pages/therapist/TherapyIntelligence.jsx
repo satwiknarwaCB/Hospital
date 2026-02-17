@@ -178,7 +178,7 @@ const TherapyIntelligence = () => {
 
     // Get therapist's children
     const therapistId = currentUser?.id || 't1';
-    const myChildren = kids.filter(k => k.therapistId === therapistId);
+    const myChildren = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
 
     // Load AI intelligence
     useEffect(() => {

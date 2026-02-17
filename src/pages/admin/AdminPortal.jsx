@@ -49,7 +49,7 @@ const AdminDashboard = () => {
 
     // Dynamic Therapist Performance Data
     const therapistPerformance = therapists.map(t => {
-        const assignedKids = kids.filter(k => k.therapistId === t.id);
+        const assignedKids = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(t.id));
         const caseload = assignedKids.length;
         const utilization = Math.min(Math.round((caseload / MAX_CASELOAD) * 100), 100);
 
@@ -339,21 +339,24 @@ const AdminDashboard = () => {
 // Operations Management Page
 // ============================================================
 const OperationsPage = () => {
-    const { cdcMetrics, sessions, kids, users, adminStats, assignChildToTherapist } = useApp();
+    const { cdcMetrics, sessions, kids, users, adminStats, assignChildToTherapist, unassignChildFromTherapist } = useApp();
     const [selectedTherapist, setSelectedTherapist] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
     const assignedKids = useMemo(() => {
         if (!selectedTherapist) return [];
-        return kids.filter(k => k.therapistId === selectedTherapist.id);
+        return kids.filter(k => {
+            const ids = k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : []);
+            return ids.includes(selectedTherapist.id);
+        });
     }, [kids, selectedTherapist]);
 
     const availableKids = useMemo(() => {
         if (!selectedTherapist) return [];
-        return kids.filter(k =>
-            (!k.therapistId || k.therapistId !== selectedTherapist.id) &&
-            k.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        return kids.filter(k => {
+            const ids = k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : []);
+            return !ids.includes(selectedTherapist.id) && k.name.toLowerCase().includes(searchTerm.toLowerCase());
+        });
     }, [kids, selectedTherapist, searchTerm]);
 
     const usersMap = useMemo(() => {
@@ -415,7 +418,7 @@ const OperationsPage = () => {
                 <CardContent>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {users.filter(u => u.role === 'therapist').map((therapist) => {
-                            const assignedKidsCount = kids.filter(k => k.therapistId === therapist.id).length;
+                            const assignedKidsCount = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapist.id)).length;
                             const utilization = Math.min(Math.round((assignedKidsCount / 15) * 100), 100);
 
                             return (
@@ -479,7 +482,7 @@ const OperationsPage = () => {
                                             size="sm"
                                             variant="ghost"
                                             className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 px-3 text-[10px] font-black uppercase"
-                                            onClick={() => assignChildToTherapist(kid.id, null)}
+                                            onClick={() => unassignChildFromTherapist(kid.id, selectedTherapist.id)}
                                         >
                                             Unassign
                                         </Button>
@@ -516,7 +519,11 @@ const OperationsPage = () => {
                                         <div>
                                             <p className="text-sm font-bold text-neutral-900">{kid.name}</p>
                                             <p className="text-[10px] text-neutral-500 uppercase tracking-wide">
-                                                {kid.therapistId ? `Assigned to ${usersMap[kid.therapistId]?.name || kid.therapistId}` : 'Unassigned'}
+                                                {(kid.therapistIds && kid.therapistIds.length > 0)
+                                                    ? `Assigned to: ${kid.therapistIds.map(id => usersMap[id]?.name || id).join(', ')}`
+                                                    : (kid.therapistId
+                                                        ? `Assigned to ${usersMap[kid.therapistId]?.name || kid.therapistId}`
+                                                        : 'Unassigned')}
                                             </p>
                                         </div>
                                     </div>

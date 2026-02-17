@@ -18,7 +18,9 @@ class ChildResponse(BaseModel):
     condition: str
     school_name: Optional[str] = None
     parent_id: str
-    therapistId: Optional[str] = None
+    therapistId: Optional[str] = None  # Primary therapist (for backward compatibility)
+    therapistIds: List[str] = []  # List of all assigned therapists
+    is_active: bool = True
     created_at: datetime
     
     class Config:

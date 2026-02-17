@@ -1,0 +1,7 @@
+﻿C:\Users\Admin\Desktop\website@cognitbotz\Hospital\src\index.css
+C:\Users\Admin\Desktop\website@cognitbotz\Hospital\src\components\admin
+C:\Users\Admin\Desktop\website@cognitbotz\Hospital\src\components\admin\UserManagement.jsx
+C:\Users\Admin\Desktop\website@cognitbotz\Hospital\src\lib\api.js
+C:\Users\Admin\Desktop\website@cognitbotz\Hospital\src\lib\context.jsx
+C:\Users\Admin\Desktop\website@cognitbotz\Hospital\src\pages\Login.jsx
+C:\Users\Admin\Desktop\website@cognitbotz\Hospital\src\pages\admin\AdminPortal.jsx

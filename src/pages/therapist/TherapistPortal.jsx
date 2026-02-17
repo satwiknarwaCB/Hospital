@@ -87,8 +87,8 @@ const TherapistDashboard = () => {
     const therapistId = currentUser?.id || 't1'; // Assuming 't1' is Dr. Rajesh Kumar for mock data
 
     // RELAXED FILTER: Show all kids if none are specifically assigned to avoid empty states
-    const myChildren = kids.filter(k => k.therapistId === therapistId).length > 0
-        ? kids.filter(k => k.therapistId === therapistId)
+    const myChildren = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId)).length > 0
+        ? kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId))
         : kids;
 
     const stats = getTherapistStats(therapistId);

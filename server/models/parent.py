@@ -26,9 +26,7 @@ class ParentInDB(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_active: bool = True
-    
-    class Config:
-        populate_by_name = True
+    last_login: Optional[datetime] = None
 
 
 class ParentResponse(BaseModel):
@@ -43,6 +41,7 @@ class ParentResponse(BaseModel):
     relationship: Optional[str] = None
     is_active: bool = True
     created_at: Optional[datetime] = None
+    last_login: Optional[datetime] = None
     role: str = "parent"
     invitation_link: Optional[str] = None
     
