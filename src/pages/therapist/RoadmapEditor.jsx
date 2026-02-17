@@ -238,7 +238,7 @@ const RoadmapGoalCard = ({ goal, onEdit, onToggleLock, onCompleteMilestone }) =>
                         <div className="mt-4">
                             <div className="flex justify-between text-xs text-neutral-500 mb-1">
                                 <span>{completedMilestones}/{totalMilestones} milestones</span>
-                                <span>Target: {new Date(goal.targetDate).toLocaleDateString()}</span>
+                                <span>Target: {goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : 'No Target'}</span>
                             </div>
                             <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
                                 <div
@@ -370,10 +370,10 @@ const RoadmapEditor = () => {
 
     // Group goals by status
     const groupedGoals = {
-        'in-progress': roadmap.filter(g => g.status === 'in-progress'),
-        'at-risk': roadmap.filter(g => g.status === 'at-risk'),
-        'completed': roadmap.filter(g => g.status === 'completed'),
-        'upcoming': roadmap.filter(g => g.status === 'upcoming')
+        'in-progress': (Array.isArray(roadmap) ? roadmap : []).filter(g => g && g.status === 'in-progress'),
+        'at-risk': (Array.isArray(roadmap) ? roadmap : []).filter(g => g && g.status === 'at-risk'),
+        'completed': (Array.isArray(roadmap) ? roadmap : []).filter(g => g && g.status === 'completed'),
+        'upcoming': (Array.isArray(roadmap) ? roadmap : []).filter(g => g && g.status === 'upcoming')
     };
 
     return (
@@ -564,7 +564,7 @@ const RoadmapEditor = () => {
                     )}
                 </div>
             ) : (
-                <Card cla ssName="p-8 text-center">
+                <Card className="p-8 text-center">
                     <Target className="h-12 w-12 text-neutral-300 mx-auto mb-4" />
                     <p className="text-neutral-500">Select a child to view their roadmap.</p>
                 </Card>

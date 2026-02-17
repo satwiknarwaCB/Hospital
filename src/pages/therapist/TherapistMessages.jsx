@@ -175,15 +175,18 @@ const TherapistMessages = () => {
     }, [activeTab]);
 
     // Get all children assigned to this therapist
-    const myPatients = kids.filter(k => k.therapistId === therapistId);
+    const safeKids = Array.isArray(kids) ? kids : [];
+    const myPatients = safeKids.filter(k => k && k.therapistId === therapistId);
     const myPatientIds = myPatients.map(p => p.id);
 
     // Group messages into threads by child
     const threads = useMemo(() => {
         const threadMap = {};
+        const safeMessages = Array.isArray(allMessages) ? allMessages : [];
 
-        allMessages
+        safeMessages
             .filter(m =>
+                m &&
                 // Allow messages if I am a participant, regardless of patient list strictness
                 (m.senderId === therapistId || m.recipientId === therapistId || m.recipient_id === therapistId) &&
                 m.type !== 'weekly-summary'
@@ -192,8 +195,8 @@ const TherapistMessages = () => {
                 // Fix: Group by childId instead of threadId to prevent "double double" chat lists
                 const groupKey = message.childId || 'c1';
                 if (!threadMap[groupKey]) {
-                    const child = kids.find(k => k.id === groupKey);
-                    const parent = users.find(u => u.id === (child?.parentId || message.senderId));
+                    const child = safeKids.find(k => k && k.id === groupKey);
+                    const parent = (Array.isArray(users) ? users : []).find(u => u && (u.id === (child?.parentId || message.senderId)));
 
                     threadMap[groupKey] = {
                         id: groupKey,
@@ -210,15 +213,24 @@ const TherapistMessages = () => {
 
         // Sort messages within each thread by timestamp
         Object.values(threadMap).forEach(thread => {
-            thread.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            if (Array.isArray(thread.messages)) {
+                thread.messages.sort((a, b) => {
+                    const timeA = a && a.timestamp ? new Date(a.timestamp).getTime() : 0;
+                    const timeB = b && b.timestamp ? new Date(b.timestamp).getTime() : 0;
+                    return timeA - timeB;
+                });
+            }
         });
 
         // Sort threads by latest message
-        return Object.values(threadMap).sort((a, b) =>
-            new Date(b.messages[b.messages.length - 1].timestamp) -
-            new Date(a.messages[a.messages.length - 1].timestamp)
-        );
-    }, [allMessages, myPatientIds, therapistId, kids, users]);
+        return Object.values(threadMap).filter(t => t.messages.length > 0).sort((a, b) => {
+            const latestA = a.messages[a.messages.length - 1];
+            const latestB = b.messages[b.messages.length - 1];
+            const timeA = latestA && latestA.timestamp ? new Date(latestA.timestamp).getTime() : 0;
+            const timeB = latestB && latestB.timestamp ? new Date(latestB.timestamp).getTime() : 0;
+            return timeB - timeA;
+        });
+    }, [allMessages, therapistId, safeKids, users]);
 
     // Filter threads by search
     const filteredThreads = useMemo(() => {

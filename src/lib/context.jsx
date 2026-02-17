@@ -1328,20 +1328,27 @@ export const AppProvider = ({ children }) => {
     }, []);
 
     const getTherapistStats = useCallback((therapistId) => {
-        const therapistSessions = sessions.filter(s => s.therapistId === therapistId);
-        const children = kids.filter(k => k.therapistId === therapistId);
+        const safeSessions = Array.isArray(sessions) ? sessions : [];
+        const safeKids = Array.isArray(kids) ? kids : [];
+
+        const therapistSessions = safeSessions.filter(s => s && s.therapistId === therapistId);
+        const children = safeKids.filter(k => k && k.therapistId === therapistId);
+        const todayStr = new Date().toISOString().split('T')[0];
+
         const completedToday = therapistSessions.filter(s =>
-            s.status === 'completed' &&
-            s.date.startsWith(new Date().toISOString().split('T')[0])
+            s && s.status === 'completed' &&
+            s.date && typeof s.date === 'string' && s.date.startsWith(todayStr)
         ).length;
+
+        const sessionsWithEngagement = therapistSessions.filter(s => s && s.engagement);
 
         return {
             totalChildren: children.length,
             totalSessions: therapistSessions.length,
             completedToday,
             avgEngagement: Math.round(
-                therapistSessions.reduce((a, b) => a + (b.engagement || 0), 0) /
-                (therapistSessions.filter(s => s.engagement).length || 1)
+                sessionsWithEngagement.reduce((a, b) => a + (b.engagement || 0), 0) /
+                (sessionsWithEngagement.length || 1)
             )
         };
     }, [sessions, kids]);

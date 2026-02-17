@@ -176,12 +176,16 @@ const SessionLog = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-neutral-700">Child</label>
                 <select
-                  className="w-full p-2 border border-neutral-200 rounded-lg bg-neutral-50"
+                  className="w-full p-2 border border-neutral-200 rounded-lg bg-white text-neutral-900"
+                  style={{ color: '#171717', backgroundColor: '#ffffff' }}
                   value={selectedChild}
                   onChange={(e) => setSelectedChild(e.target.value)}
                 >
-                  {kids.map(c => (
-                    <option key={c.id} value={c.id}>{c.name} - {c.diagnosis}</option>
+                  <option value="" disabled className="text-neutral-400" style={{ color: '#a3a3a3' }}>Select a child</option>
+                  {(Array.isArray(kids) ? kids : []).map(c => (
+                    <option key={c.id} value={c.id} className="text-neutral-900" style={{ color: '#171717' }}>
+                      {c.name} - {c.diagnosis}
+                    </option>
                   ))}
                 </select>
               </div>

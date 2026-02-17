@@ -94,26 +94,29 @@ const InsightCard = ({ insight }) => {
 };
 
 // Activity Effectiveness Chart
-const ActivityEffectivenessChart = ({ activities }) => {
-    const maxEngagement = Math.max(...activities.map(a => a.avgEngagement));
+const ActivityEffectivenessChart = ({ activities = [] }) => {
+    const safeActivities = Array.isArray(activities) ? activities : [];
+    const maxEngagement = safeActivities.length > 0
+        ? Math.max(...safeActivities.map(a => a.avgEngagement || 0))
+        : 100;
 
     return (
         <div className="space-y-3">
-            {activities.map((activity, idx) => (
+            {safeActivities.map((activity, idx) => (
                 <div key={idx} className="flex items-center gap-3">
-                    <span className="w-32 text-sm text-neutral-600 truncate">{activity.activity}</span>
+                    <span className="w-32 text-sm text-neutral-600 truncate">{activity.activity || 'Unknown'}</span>
                     <div className="flex-1 h-6 bg-neutral-100 rounded-full overflow-hidden relative">
                         <div
                             className={`h-full rounded-full transition-all ${activity.avgEngagement >= 80 ? 'bg-green-500' :
                                 activity.avgEngagement >= 40 ? 'bg-yellow-500' : 'bg-red-500'
                                 }`}
-                            style={{ width: `${(activity.avgEngagement / maxEngagement) * 100}%` }}
+                            style={{ width: `${((activity.avgEngagement || 0) / (maxEngagement || 1)) * 100}%` }}
                         />
                         <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-neutral-700">
-                            {activity.avgEngagement}% avg engagement
+                            {activity.avgEngagement || 0}% avg engagement
                         </span>
                     </div>
-                    <span className="w-12 text-xs text-neutral-500">{activity.frequency}x</span>
+                    <span className="w-12 text-xs text-neutral-500">{activity.frequency || 0}x</span>
                 </div>
             ))}
         </div>
@@ -138,8 +141,8 @@ const ChildSkillHeatmap = ({ children, getLatestSkillScores }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {children.map(child => {
-                        const scores = getLatestSkillScores(child.id);
+                    {(Array.isArray(children) ? children : []).map(child => {
+                        const scores = typeof getLatestSkillScores === 'function' ? (getLatestSkillScores(child.id) || []) : [];
                         return (
                             <tr key={child.id} className="border-t border-neutral-100">
                                 <td className="py-2">
@@ -149,11 +152,11 @@ const ChildSkillHeatmap = ({ children, getLatestSkillScores }) => {
                                             alt={child.name}
                                             className="w-6 h-6 rounded-full"
                                         />
-                                        <span className="text-sm font-medium text-neutral-700">{child.name.split(' ')[0]}</span>
+                                        <span className="text-sm font-medium text-neutral-700">{child.name?.split(' ')[0]}</span>
                                     </div>
                                 </td>
                                 {domains.map(domain => {
-                                    const score = scores.find(s => s.domain === domain);
+                                    const score = scores.find(s => s && s.domain === domain);
                                     return (
                                         <td key={domain} className="py-2 px-1 text-center">
                                             {score ? <HeatmapCell value={score.score} /> : <span className="text-xs text-neutral-400">-</span>}
@@ -193,10 +196,10 @@ const TherapyIntelligence = () => {
                 // Check for anomalies in each child
                 const anomalyResults = {};
                 for (const child of myChildren) {
-                    const childSessions = getChildSessions(child.id);
+                    const childSessions = typeof getChildSessions === 'function' ? getChildSessions(child.id) : [];
                     const result = await detectAnomalies(child.id, childSessions);
-                    if (result.anomalies.length > 0) {
-                        anomalyResults[patient.id] = result;
+                    if (result && Array.isArray(result.anomalies) && result.anomalies.length > 0) {
+                        anomalyResults[child.id] = result;
                     }
                 }
                 setAnomalies(anomalyResults);
@@ -217,10 +220,10 @@ const TherapyIntelligence = () => {
         let totalImprovements = 0;
 
         myChildren.forEach(child => {
-            const scores = getLatestSkillScores(child.id);
+            const scores = typeof getLatestSkillScores === 'function' ? (getLatestSkillScores(child.id) || []) : [];
             scores.forEach(score => {
-                if (score.trend === 'improving') totalImprovements++;
-                if (score.trend === 'attention') totalRegressions++;
+                if (score && score.trend === 'improving') totalImprovements++;
+                if (score && score.trend === 'attention') totalRegressions++;
             });
         });
 

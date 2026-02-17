@@ -19,8 +19,10 @@ const BaselineArchive = () => {
     const fileInputRef = useRef(null);
 
     const filteredDocuments = useMemo(() => {
-        return childDocuments.filter(doc => {
-            const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const safeDocs = Array.isArray(childDocuments) ? childDocuments : [];
+        return safeDocs.filter(doc => {
+            if (!doc) return false;
+            const matchesSearch = (doc.title || '').toLowerCase().includes(searchQuery.toLowerCase());
             const matchesChild = selectedChild === 'All' || doc.childId === selectedChild;
             return matchesSearch && matchesChild;
         });
@@ -105,7 +107,7 @@ const BaselineArchive = () => {
                         onChange={(e) => setSelectedChild(e.target.value)}
                     >
                         <option value="All">All Children</option>
-                        {kids.map(k => <option key={k.id} value={k.id}>{k.name}</option>)}
+                        {(Array.isArray(kids) ? kids : []).map(k => <option key={k?.id} value={k?.id}>{k?.name || 'Unnamed'}</option>)}
                     </select>
                 </div>
             </div>
@@ -124,7 +126,7 @@ const BaselineArchive = () => {
                             </thead>
                             <tbody className="divide-y divide-neutral-50">
                                 {filteredDocuments.length > 0 ? filteredDocuments.map(doc => {
-                                    const child = kids.find(k => k.id === doc.childId);
+                                    const child = (Array.isArray(kids) ? kids : []).find(k => k.id === doc.childId);
                                     return (
                                         <tr key={doc.id} className="hover:bg-neutral-50/50 transition-colors group">
                                             <td className="px-6 py-4">
@@ -133,9 +135,9 @@ const BaselineArchive = () => {
                                                         <FileText className="h-5 w-5" />
                                                     </div>
                                                     <div>
-                                                        <p className="font-bold text-neutral-800 text-sm leading-tight">{doc.title}</p>
+                                                        <p className="font-bold text-neutral-800 text-sm leading-tight">{doc.title || 'Untitled Report'}</p>
                                                         <p className="text-[10px] text-neutral-400 font-medium uppercase tracking-tighter">
-                                                            {doc.fileSize} • {doc.format?.toUpperCase() || 'PDF'}
+                                                            {doc.fileSize || 'Unknown Size'} • {doc.format?.toUpperCase() || 'PDF'}
                                                             {doc.url?.startsWith('blob:') && <span className="ml-2 text-green-500 font-bold">• New Upload</span>}
                                                         </p>
                                                     </div>
@@ -143,23 +145,29 @@ const BaselineArchive = () => {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2">
-                                                    <img src={child?.photoUrl} className="h-6 w-6 rounded-full border border-neutral-100" alt="" />
-                                                    <span className="text-sm font-semibold text-neutral-600">{child?.name}</span>
+                                                    {child?.photoUrl ? (
+                                                        <img src={child.photoUrl} className="h-6 w-6 rounded-full border border-neutral-100" alt="" />
+                                                    ) : (
+                                                        <div className="h-6 w-6 rounded-full bg-neutral-100 flex items-center justify-center"><Baby className="h-3 w-3 text-neutral-400" /></div>
+                                                    )}
+                                                    <span className="text-sm font-semibold text-neutral-600">{child?.name || 'Unknown Patient'}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2 text-neutral-500 text-sm font-medium">
                                                     <Calendar className="h-3.5 w-3.5 opacity-40" />
-                                                    {new Date(doc.date).toLocaleDateString()}
+                                                    {doc.date ? new Date(doc.date).toLocaleDateString() : 'Unknown Date'}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex justify-end gap-1">
-                                                    <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                                                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-neutral-400 hover:text-primary-600">
-                                                            <Download className="h-4 w-4" />
-                                                        </Button>
-                                                    </a>
+                                                    {doc.url && (
+                                                        <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                                                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-neutral-400 hover:text-primary-600">
+                                                                <Download className="h-4 w-4" />
+                                                            </Button>
+                                                        </a>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

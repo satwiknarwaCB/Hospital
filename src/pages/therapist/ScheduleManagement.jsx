@@ -192,10 +192,10 @@ const SessionDetailModal = ({ session, child, onClose, onStatusChange }) => {
 };
 
 // New Session Modal
-const NewSessionModal = ({ children, onSave, onClose, isLoading }) => {
+const NewSessionModal = ({ kidsList = [], onSave, onClose, isLoading }) => {
     const [formData, setFormData] = useState({
-        childId: children[0]?.id || '',
-        type: THERAPY_TYPES[0].name,
+        childId: kidsList[0]?.id || '',
+        type: THERAPY_TYPES?.[0]?.name || '',
         date: new Date().toISOString().split('T')[0],
         time: '10:00',
         duration: 45,
@@ -213,21 +213,32 @@ const NewSessionModal = ({ children, onSave, onClose, isLoading }) => {
             return;
         }
 
-        // Combine date and time, ensuring we preserve the local date
-        const dateTime = new Date(`${formData.date}T${formData.time}`);
+        try {
+            // Combine date and time, ensuring we preserve the local date
+            const dateTime = new Date(`${formData.date}T${formData.time}`);
 
-        // Validate date is not in the past
-        if (dateTime < new Date()) {
-            if (!confirm('This session is scheduled in the past. Continue anyway?')) {
+            // Check if date is valid
+            if (isNaN(dateTime.getTime())) {
+                alert('Invalid date or time selected');
                 return;
             }
-        }
 
-        onSave({
-            ...formData,
-            date: dateTime.toISOString(),
-            status: 'scheduled'
-        });
+            // Validate date is not in the past
+            if (dateTime < new Date()) {
+                if (!confirm('This session is scheduled in the past. Continue anyway?')) {
+                    return;
+                }
+            }
+
+            onSave({
+                ...formData,
+                date: dateTime.toISOString(),
+                status: 'scheduled'
+            });
+        } catch (err) {
+            console.error('Error parsing date:', err);
+            alert('There was an error processing the selected date and time.');
+        }
     };
 
     return (
@@ -241,12 +252,14 @@ const NewSessionModal = ({ children, onSave, onClose, isLoading }) => {
                         <div>
                             <label className="text-sm font-medium text-neutral-700">Child</label>
                             <select
-                                className="w-full mt-1 p-2 border border-neutral-200 rounded-lg"
+                                className="w-full mt-1 p-2 border border-neutral-200 rounded-lg text-neutral-900 bg-white"
+                                style={{ color: '#171717', backgroundColor: '#ffffff' }}
                                 value={formData.childId}
                                 onChange={(e) => setFormData({ ...formData, childId: e.target.value })}
                             >
-                                {children.map(p => (
-                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                <option value="" disabled className="text-neutral-400">Select a child</option>
+                                {kidsList.map(p => (
+                                    <option key={p.id} value={p.id} className="text-neutral-900" style={{ color: '#171717' }}>{p.name}</option>
                                 ))}
                             </select>
                         </div>
@@ -259,7 +272,7 @@ const NewSessionModal = ({ children, onSave, onClose, isLoading }) => {
                                 value={formData.type}
                                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                             >
-                                {THERAPY_TYPES.map(t => (
+                                {(Array.isArray(THERAPY_TYPES) ? THERAPY_TYPES : []).map(t => (
                                     <option key={t.id} value={t.name}>{t.icon} {t.name}</option>
                                 ))}
                             </select>
@@ -345,8 +358,17 @@ const ScheduleManagement = () => {
 
     // Get therapist's data
     const therapistId = currentUser?.id || 't1';
-    const myChildren = kids.filter(k => k.therapistId === therapistId);
-    const mySessions = sessions.filter(s => s.therapistId === therapistId);
+
+    // DEFENSIVE CORE DATA
+    const safeKids = Array.isArray(kids) ? kids : [];
+    const safeSessions = Array.isArray(sessions) ? sessions : [];
+
+    // RELAXED FILTER: Show all kids if none are specifically assigned to avoid empty states
+    const myChildren = safeKids.filter(k => k.therapistId === therapistId).length > 0
+        ? safeKids.filter(k => k.therapistId === therapistId)
+        : safeKids;
+
+    const mySessions = safeSessions.filter(s => s.therapistId === therapistId);
 
     // Calendar navigation
     const navigateCalendar = (direction) => {
@@ -375,8 +397,13 @@ const ScheduleManagement = () => {
 
     // Get sessions for a specific date
     const getSessionsForDate = (date) => {
-        const dateStr = date.toISOString().split('T')[0];
-        return mySessions.filter(s => s.date.startsWith(dateStr));
+        if (!date) return [];
+        try {
+            const dateStr = date.toISOString().split('T')[0];
+            return mySessions.filter(s => s && s.date && String(s.date).startsWith(dateStr));
+        } catch (err) {
+            return [];
+        }
     };
 
     // Get selected date sessions
@@ -530,7 +557,7 @@ const ScheduleManagement = () => {
                                 key={idx}
                                 date={date}
                                 sessions={getSessionsForDate(date)}
-                                kids={kids}
+                                kids={safeKids}
                                 isToday={date.toDateString() === today.toDateString()}
                                 isSelected={date.toDateString() === selectedDate.toDateString()}
                                 onClick={() => setSelectedDate(date)}
@@ -553,7 +580,7 @@ const ScheduleManagement = () => {
                             {selectedDateSessions
                                 .sort((a, b) => new Date(a.date) - new Date(b.date))
                                 .map(session => {
-                                    const child = kids.find(k => k.id === session.childId);
+                                    const child = safeKids.find(k => k.id === session.childId);
                                     return (
                                         <TimeSlot
                                             key={session.id}
@@ -580,7 +607,7 @@ const ScheduleManagement = () => {
             {/* Modals */}
             {showNewSession && (
                 <NewSessionModal
-                    children={myChildren}
+                    kidsList={myChildren}
                     onSave={handleNewSession}
                     onClose={() => setShowNewSession(false)}
                     isLoading={isLoading}

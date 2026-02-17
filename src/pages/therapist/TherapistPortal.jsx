@@ -86,25 +86,30 @@ const TherapistDashboard = () => {
 
     const therapistId = currentUser?.id || 't1'; // Assuming 't1' is Dr. Rajesh Kumar for mock data
 
-    // RELAXED FILTER: Show all kids if none are specifically assigned to avoid empty states
-    const myChildren = kids.filter(k => k.therapistId === therapistId).length > 0
-        ? kids.filter(k => k.therapistId === therapistId)
-        : kids;
+    // DEFENSIVE DATA
+    const safeKids = Array.isArray(kids) ? kids : [];
+    const safeSessions = Array.isArray(sessions) ? sessions : [];
 
-    const stats = getTherapistStats(therapistId);
+    // RELAXED FILTER: Show all kids if none are specifically assigned to avoid empty states
+    const myChildren = safeKids.filter(k => k.therapistId === therapistId).length > 0
+        ? safeKids.filter(k => k.therapistId === therapistId)
+        : safeKids;
+
+    const stats = typeof getTherapistStats === 'function' ? getTherapistStats(therapistId) : { totalChildren: 0, pendingReports: 0, weeklyHours: 0 };
     const totalUnread = (privateUnreadCount || 0) + (communityUnreadCount || 0);
 
     // Get today's sessions (matching mock data date)
     const today = new Date().toISOString().split('T')[0];
-    const todaySessions = sessions.filter(s =>
+    const todaySessions = safeSessions.filter(s =>
         s.therapistId === therapistId &&
-        (s.date.startsWith(today) || s.date.startsWith('2025-12-23'))
+        (s.date?.startsWith(today) || s.date?.startsWith('2025-12-23'))
     );
     const completedSessions = todaySessions.filter(s => s.status === 'completed');
 
     // Get children needing attention
     const childrenNeedingAttention = myChildren.filter(child => {
-        const scores = getLatestSkillScores(child.id);
+        if (typeof getLatestSkillScores !== 'function') return false;
+        const scores = getLatestSkillScores(child.id) || [];
         return scores.filter(s => s.trend === 'attention').length >= 2;
     });
 
@@ -131,7 +136,7 @@ const TherapistDashboard = () => {
                         <CardTitle className="text-lg">Active Children</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-3xl font-bold text-neutral-800">{stats.totalChildren}</p>
+                        <p className="text-3xl font-bold text-neutral-800">{stats?.totalChildren || 0}</p>
                         <p className="text-sm text-neutral-500">Total Caseload</p>
                     </CardContent>
                 </Card>

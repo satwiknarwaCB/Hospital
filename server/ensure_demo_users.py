@@ -43,17 +43,22 @@ def ensure_demo_users():
 
     # --- 2. ENSURE THERAPISTS ---
     therapists = [
-        {"name": "Dr. Rajesh Kumar", "email": "dr.rajesh@therapist.com", "password": "Therapist@123", "specialization": "Speech & Language Therapy"},
-        {"name": "Dr. Meera Singh", "email": "dr.meera@therapist.com", "password": "Therapist@123", "specialization": "Occupational Therapy"}
+        {"id": "t1", "name": "Dr. Rajesh Kumar", "email": "dr.rajesh@therapist.com", "password": "Therapist@123", "specialization": "Speech & Language Therapy"},
+        {"id": "t2", "name": "Dr. Meera Singh", "email": "dr.meera@therapist.com", "password": "Therapist@123", "specialization": "Occupational Therapy"}
     ]
 
     for t in therapists:
         existing = db_manager.doctors.find_one({"email": t["email"]})
+        if existing and existing.get("_id") != t["id"]:
+            print(f"⚠️ Therapist {t['email']} has wrong ID ({existing.get('_id')}). Deleting to reset...")
+            db_manager.doctors.delete_one({"email": t["email"]})
+            existing = None
+
         if not existing:
             print(f"⚠️ Therapist {t['email']} missing. Creating...")
             hashed = hash_password(t["password"])
             db_manager.doctors.insert_one({
-                "_id": t["email"].split("@")[0].replace(".", "_"),
+                "_id": t["id"],
                 "name": t["name"],
                 "email": t["email"],
                 "hashed_password": hashed,
@@ -64,7 +69,7 @@ def ensure_demo_users():
                 "role": "therapist",
                 "is_active": True
             })
-            print(f"✅ Created Therapist: {t['name']}")
+            print(f"✅ Created Therapist: {t['name']} (ID: {t['id']})")
         else:
             hashed = hash_password(t["password"])
             db_manager.doctors.update_one(

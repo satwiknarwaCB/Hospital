@@ -24,12 +24,14 @@ const TherapistProgressTracking = () => {
     const [activeView, setActiveView] = useState('clinical'); // 'clinical' or 'actual'
 
     // Filter kids assigned to this therapist or all if admin (demo logic)
-    const therapistKids = kids.filter(k =>
-        (k.therapistId === (currentUser?.id || 't1')) &&
-        k.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const therapistId = currentUser?.id || 't1';
+    const safeKids = Array.isArray(kids) ? kids : [];
+    const therapistKids = safeKids.filter(k =>
+        k && (k.therapistId === therapistId) &&
+        (k.name || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const selectedChild = kids.find(k => k.id === selectedChildId);
+    const selectedChild = safeKids.find(k => k && k.id === selectedChildId);
 
     return (
         <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">
@@ -67,11 +69,11 @@ const TherapistProgressTracking = () => {
                                 <div className="flex items-center gap-3 min-w-0">
                                     <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center font-bold ${selectedChildId === child.id ? 'bg-primary-600 text-white' : 'bg-neutral-100 text-neutral-600'
                                         }`}>
-                                        {child.name[0]}
+                                        {child.name ? child.name[0] : '?'}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-neutral-800 text-sm truncate">{child.name}</p>
-                                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest truncate">{child.diagnosis}</p>
+                                        <p className="font-bold text-neutral-800 text-sm truncate">{child.name || 'Unknown'}</p>
+                                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest truncate">{child.diagnosis || 'No Diagnosis'}</p>
                                     </div>
                                 </div>
                                 <ChevronRight className={`h-4 w-4 shrink-0 transition-transform ${selectedChildId === child.id ? 'text-primary-600 translate-x-1' : 'text-neutral-300'}`} />

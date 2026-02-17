@@ -31,14 +31,14 @@ import { Button } from '../../components/ui/Button';
 import { useApp } from '../../lib/context';
 
 // Child Card Component
-const ChildCard = ({ child, sessions, skillScores, onSelect }) => {
-    const recentSession = sessions[0];
-    const avgScore = skillScores.length > 0
-        ? Math.round(skillScores.reduce((a, b) => a + b.score, 0) / skillScores.length)
+const ChildCard = ({ child, sessions = [], skillScores = [], onSelect }) => {
+    const recentSession = Array.isArray(sessions) && sessions.length > 0 ? sessions[0] : null;
+    const avgScore = Array.isArray(skillScores) && skillScores.length > 0
+        ? Math.round(skillScores.reduce((a, b) => a + (b.score || 0), 0) / skillScores.length)
         : 0;
 
-    const improvingCount = skillScores.filter(s => s.trend === 'improving').length;
-    const attentionCount = skillScores.filter(s => s.trend === 'attention').length;
+    const improvingCount = Array.isArray(skillScores) ? skillScores.filter(s => s && s.trend === 'improving').length : 0;
+    const attentionCount = Array.isArray(skillScores) ? skillScores.filter(s => s && s.trend === 'attention').length : 0;
 
     const overallTrend = improvingCount > attentionCount ? 'improving' :
         attentionCount > improvingCount ? 'attention' : 'stable';
@@ -81,7 +81,7 @@ const ChildCard = ({ child, sessions, skillScores, onSelect }) => {
 
                         {/* Programs */}
                         <div className="flex flex-wrap gap-1 mt-2">
-                            {child.program.map((prog, idx) => (
+                            {(Array.isArray(child.program) ? child.program : []).map((prog, idx) => (
                                 <span key={idx} className="px-2 py-0.5 bg-neutral-100 text-neutral-600 rounded text-xs">
                                     {prog}
                                 </span>
@@ -112,7 +112,7 @@ const ChildCard = ({ child, sessions, skillScores, onSelect }) => {
                         <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-neutral-400" />
                             <span className="text-sm text-neutral-600">
-                                Last: {new Date(recentSession.date).toLocaleDateString()} - {recentSession.type}
+                                Last: {recentSession.date ? new Date(recentSession.date).toLocaleDateString() : 'N/A'} - {recentSession.type || 'N/A'}
                             </span>
                         </div>
                         {recentSession.engagement && (
@@ -438,15 +438,18 @@ const MyChildren = () => {
 
     // Get therapist's children
     const therapistId = currentUser?.id || 't1';
-    const myChildren = kids.filter(k => k.therapistId === therapistId);
+    const safeKids = Array.isArray(kids) ? kids : [];
+
+    const myChildren = safeKids.filter(k => k && k.therapistId === therapistId);
 
     // Filter children
     const filteredChildren = myChildren.filter(child => {
+        if (!child) return false;
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
             return (
-                child.name.toLowerCase().includes(query) ||
-                child.diagnosis.toLowerCase().includes(query)
+                (child.name || '').toLowerCase().includes(query) ||
+                (child.diagnosis || '').toLowerCase().includes(query)
             );
         }
         return true;
@@ -526,9 +529,10 @@ const MyChildren = () => {
                         <div>
                             <p className="text-2xl font-bold text-neutral-800">
                                 {myChildren.reduce((acc, p) => {
-                                    const sessions = getChildSessions(p.id);
-                                    const today = new Date().toISOString().split('T')[0];
-                                    return acc + sessions.filter(s => s.date.startsWith(today)).length;
+                                    if (!p) return acc;
+                                    const childSessions = typeof getChildSessions === 'function' ? getChildSessions(p.id) : [];
+                                    const todayStr = new Date().toISOString().split('T')[0];
+                                    return acc + (Array.isArray(childSessions) ? childSessions.filter(s => s && s.date && s.date.startsWith(todayStr)).length : 0);
                                 }, 0)}
                             </p>
                             <p className="text-sm text-neutral-500">Sessions Today</p>
