@@ -69,7 +69,9 @@ const UserManagement = () => {
         medical_condition: 'Autism',
         customCondition: '',
         school_name: '',
-        parent_id: ''
+        parent_id: '',
+        therapy_start_date: '',
+        therapy_type: 'Speech Therapy'
     });
 
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -99,10 +101,12 @@ const UserManagement = () => {
                 gender: childFormData.gender,
                 condition: childFormData.medical_condition === '+ Add Custom' ? childFormData.customCondition : childFormData.medical_condition,
                 school_name: childFormData.school_name,
-                parent_id: childFormData.parent_id
+                parent_id: childFormData.parent_id,
+                therapy_start_date: childFormData.therapy_start_date,
+                therapy_type: childFormData.therapy_type
             });
             setMessage({ type: 'success', text: 'Child record created successfully' });
-            setChildFormData({ name: '', age: '', gender: 'Male', medical_condition: 'Autism', customCondition: '', school_name: '', parent_id: '' });
+            setChildFormData({ name: '', age: '', gender: 'Male', medical_condition: 'Autism', customCondition: '', school_name: '', parent_id: '', therapy_start_date: '', therapy_type: 'Speech Therapy' });
             setIsCreating(false);
             fetchChildren();
             refreshChildren(); // Sync global state
@@ -241,10 +245,12 @@ const UserManagement = () => {
         // Populate editingUser state with current user data
         setEditingUser({
             ...user,
-            customSpecialization: '',
+            customCondition: '',
             qualification: user.qualification || '',
             profile_photo: user.profile_photo || '',
-            originalEmail: user.email // Track original email to check if it changed
+            originalEmail: user.email, // Track original email to check if it changed
+            therapy_start_date: user.therapy_start_date || '',
+            therapy_type: user.therapy_type || 'Speech Therapy'
         });
         setActiveMenu(null);
     };
@@ -288,6 +294,8 @@ const UserManagement = () => {
                     ? editingUser.customCondition
                     : editingUser.condition;
                 updateData.school_name = editingUser.school_name;
+                updateData.therapy_start_date = editingUser.therapy_start_date;
+                updateData.therapy_type = editingUser.therapy_type;
 
                 await userManagementAPI.updateChild(editingUser.id, updateData);
             }
@@ -699,6 +707,39 @@ const UserManagement = () => {
                                             className="w-full px-5 py-4 bg-neutral-100/50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 transition-all outline-none font-black text-sm tracking-tight"
                                             placeholder="School Name"
                                         />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-neutral-400 tracking-widest flex items-center gap-2 px-1">
+                                            <Clock className="h-3.5 w-3.5" />
+                                            Therapy Start Date
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={childFormData.therapy_start_date}
+                                            onChange={(e) => setChildFormData({ ...childFormData, therapy_start_date: e.target.value })}
+                                            className="w-full px-5 py-4 bg-neutral-100/50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 transition-all outline-none font-black text-sm tracking-tight cursor-pointer"
+                                        />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-neutral-400 tracking-widest flex items-center gap-2 px-1">
+                                            <Activity className="h-3.5 w-3.5" />
+                                            Therapy Type
+                                        </label>
+                                        <div className="relative">
+                                            <select
+                                                value={childFormData.therapy_type}
+                                                onChange={(e) => setChildFormData({ ...childFormData, therapy_type: e.target.value })}
+                                                className="w-full px-5 py-4 bg-neutral-100/50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 transition-all outline-none appearance-none font-black text-sm tracking-tight cursor-pointer"
+                                            >
+                                                <option>Speech Therapy</option>
+                                                <option>Occupational Therapy</option>
+                                                <option>Behavioral Therapy (ABA)</option>
+                                                <option>Physical Therapy</option>
+                                                <option>Social Skills</option>
+                                                <option>Sensory Integration</option>
+                                            </select>
+                                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex justify-end gap-3 pt-4 border-t border-neutral-100">
@@ -1571,6 +1612,33 @@ const UserManagement = () => {
                                                     onChange={(e) => setEditingUser({ ...editingUser, school_name: e.target.value })}
                                                     className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
                                                 />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Therapy Start Date</label>
+                                                <input
+                                                    type="date"
+                                                    value={editingUser.therapy_start_date}
+                                                    onChange={(e) => setEditingUser({ ...editingUser, therapy_start_date: e.target.value })}
+                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm cursor-pointer"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Therapy Type</label>
+                                                <div className="relative">
+                                                    <select
+                                                        value={editingUser.therapy_type}
+                                                        onChange={(e) => setEditingUser({ ...editingUser, therapy_type: e.target.value })}
+                                                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl appearance-none font-bold text-sm outline-none cursor-pointer"
+                                                    >
+                                                        <option>Speech Therapy</option>
+                                                        <option>Occupational Therapy</option>
+                                                        <option>Behavioral Therapy (ABA)</option>
+                                                        <option>Physical Therapy</option>
+                                                        <option>Social Skills</option>
+                                                        <option>Sensory Integration</option>
+                                                    </select>
+                                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+                                                </div>
                                             </div>
                                         </>
                                     )}

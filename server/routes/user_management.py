@@ -41,13 +41,31 @@ async def get_admin_stats(current_admin: AdminResponse = Depends(get_current_adm
     """
     therapist_count = db_manager.doctors.count_documents({})
     parent_count = db_manager.parents.count_documents({})
-    child_count = db_manager.children.count_documents({}) # Assuming children collection stores children
+    child_count = db_manager.children.count_documents({})
+    
+    # Ongoing therapies: Children who have at least one therapist assigned
+    ongoing_therapies = db_manager.children.count_documents({
+        "$or": [
+            {"therapistId": {"$ne": None, "$exists": True}},
+            {"therapistIds": {"$exists": True, "$not": {"$size": 0}}}
+        ]
+    })
+    
+    # Pending assignments: Children with no therapist assigned
+    pending_assignments = db_manager.children.count_documents({
+        "$and": [
+            {"$or": [{"therapistId": None}, {"therapistId": {"$exists": False}}]},
+            {"$or": [{"therapistIds": None}, {"therapistIds": {"$exists": False}}, {"therapistIds": {"$size": 0}}]}
+        ]
+    })
     
     return {
         "therapist_count": therapist_count,
         "parent_count": parent_count,
         "child_count": child_count,
-        "active_children": child_count # Simplified for now
+        "active_children": child_count, # Keeping for backward compatibility
+        "ongoing_therapies": ongoing_therapies,
+        "pending_assignments": pending_assignments
     }
 
 
@@ -404,6 +422,9 @@ async def list_children(current_admin: AdminResponse = Depends(get_current_admin
             therapistId=t_id,
             therapistIds=t_ids,
             is_active=c.get("is_active", True),
+            therapy_start_date=c.get("therapy_start_date") or c.get("enrollmentDate") or (c.get("created_at").isoformat() if hasattr(c.get("created_at"), 'isoformat') else str(c.get("created_at")) if c.get("created_at") else None),
+            therapy_type=c.get("therapy_type") or (c.get("program")[0] if c.get("program") and isinstance(c.get("program"), list) else "Speech Therapy"),
+            therapy_start_dates=c.get("therapy_start_dates", {}),
             created_at=c.get("created_at", datetime.now(timezone.utc))
         ))
     
@@ -434,6 +455,8 @@ async def create_child(
         "condition": child.condition,
         "school_name": child.school_name,
         "parent_id": child.parent_id,
+        "therapy_start_date": child.therapy_start_date,
+        "therapy_type": child.therapy_type,
         "therapistId": None,
         "therapistIds": [],
         "is_active": True,
@@ -461,6 +484,8 @@ async def create_child(
         therapistId=None,
         therapistIds=[],
         is_active=True,
+        therapy_start_date=child.therapy_start_date,
+        therapy_type=child.therapy_type,
         created_at=current_time
     )
 
@@ -479,7 +504,7 @@ async def update_child(
     
     # Prepare update fields
     update_fields = {}
-    allowed_fields = ["name", "age", "gender", "condition", "school_name"]
+    allowed_fields = ["name", "age", "gender", "condition", "school_name", "therapy_start_date", "therapy_type"]
     
     for field in allowed_fields:
         if field in child_update and child_update[field] is not None:
@@ -546,8 +571,14 @@ async def assign_child_to_therapist(
         current_ids.append(current_primary)
     
     # Add the new therapist
+    current_start_dates = child.get("therapy_start_dates", {})
+    if not isinstance(current_start_dates, dict):
+        current_start_dates = {}
+
     if therapist_id not in current_ids:
         current_ids.append(therapist_id)
+        # Set start date for THIS therapist assignment
+        current_start_dates[therapist_id] = datetime.now(timezone.utc).isoformat()
         
     # 2. Update with the full list and set the new one as primary
     result = db_manager.children.update_one(
@@ -556,6 +587,7 @@ async def assign_child_to_therapist(
             "$set": {
                 "therapistIds": current_ids,
                 "therapistId": therapist_id, # Set newest as primary
+                "therapy_start_dates": current_start_dates,
                 "updated_at": datetime.now(timezone.utc)
             }
         }

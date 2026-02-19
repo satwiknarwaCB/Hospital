@@ -41,7 +41,9 @@ export const AppProvider = ({ children }) => {
         therapist_count: CDC_METRICS.therapistCount,
         parent_count: 2, // Mock baseline
         child_count: CDC_METRICS.activeChildren,
-        active_children: CDC_METRICS.activeChildren
+        active_children: CDC_METRICS.activeChildren,
+        ongoing_therapies: 35, // Mock baseline
+        pending_assignments: 10 // Mock baseline
     });
     const [skillProgress, setSkillProgress] = useState(() => {
         const saved = localStorage.getItem('neurobridge_skill_progress');
@@ -828,10 +830,15 @@ export const AppProvider = ({ children }) => {
             if (k.id === childId) {
                 const currentIds = k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : []);
                 if (!currentIds.includes(therapistId)) {
+                    const currentStartDates = k.therapy_start_dates || {};
                     return {
                         ...k,
                         therapistIds: [...currentIds, therapistId],
-                        therapistId: therapistId
+                        therapistId: therapistId,
+                        therapy_start_dates: {
+                            ...currentStartDates,
+                            [therapistId]: new Date().toISOString()
+                        }
                     };
                 }
             }

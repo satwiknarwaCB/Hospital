@@ -85,6 +85,8 @@ export const CHILDREN = [
         streak: 12,
         schoolReadinessScore: 68,
         enrollmentDate: '2025-06-15',
+        therapy_start_date: '2025-06-15',
+        therapy_type: 'Speech Therapy',
         status: 'active'
     },
     {
@@ -103,6 +105,8 @@ export const CHILDREN = [
         streak: 5,
         schoolReadinessScore: 75,
         enrollmentDate: '2025-08-20',
+        therapy_start_date: '2025-08-20',
+        therapy_type: 'Speech Therapy',
         status: 'active'
     },
     {

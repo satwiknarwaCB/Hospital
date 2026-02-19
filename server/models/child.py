@@ -9,6 +9,8 @@ class ChildCreate(BaseModel):
     condition: str
     school_name: Optional[str] = None
     parent_id: str = Field(..., description="ID of the parent to link to")
+    therapy_start_date: Optional[str] = None
+    therapy_type: Optional[str] = None
 
 class ChildResponse(BaseModel):
     id: str
@@ -21,6 +23,9 @@ class ChildResponse(BaseModel):
     therapistId: Optional[str] = None  # Primary therapist (for backward compatibility)
     therapistIds: List[str] = []  # List of all assigned therapists
     is_active: bool = True
+    therapy_start_date: Optional[str] = None
+    therapy_type: Optional[str] = None
+    therapy_start_dates: Optional[dict] = None
     created_at: datetime
     
     class Config:
