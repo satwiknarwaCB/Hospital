@@ -9,7 +9,7 @@ from database import db_manager
 from utils.auth import hash_password
 
 def ensure_demo_users():
-    print("🚀 Checking Demo Users...")
+    print("Checking Demo Users...")
     db_manager.connect()
 
     # --- 1. ENSURE PARENTS ---
@@ -21,7 +21,7 @@ def ensure_demo_users():
     for p in parents:
         existing = db_manager.parents.find_one({"email": p["email"]})
         if not existing:
-            print(f"⚠️ Parent {p['email']} missing. Creating...")
+            print(f"Parent {p['email']} missing. Creating...")
             hashed = hash_password(p["password"])
             db_manager.parents.insert_one({
                 "name": p["name"],
@@ -31,7 +31,7 @@ def ensure_demo_users():
                 "role": "parent",
                 "child_id": p.get("child_id")
             })
-            print(f"✅ Created Parent: {p['name']}")
+            print(f"Created Parent: {p['name']}")
         else:
             # Update password to ensure it matches demo credentials
             hashed = hash_password(p["password"])
@@ -39,7 +39,7 @@ def ensure_demo_users():
                 {"email": p["email"]},
                 {"$set": {"hashed_password": hashed, "child_id": p.get("child_id")}}
             )
-            print(f"✅ Parent {p['name']} exists. Password and Child ID updated.")
+            print(f"Parent {p['name']} exists. Password and Child ID updated.")
 
     # --- 2. ENSURE THERAPISTS ---
     therapists = [
@@ -50,12 +50,12 @@ def ensure_demo_users():
     for t in therapists:
         existing = db_manager.doctors.find_one({"email": t["email"]})
         if existing and existing.get("_id") != t["id"]:
-            print(f"⚠️ Therapist {t['email']} has wrong ID ({existing.get('_id')}). Deleting to reset...")
+            print(f"Therapist {t['email']} has wrong ID ({existing.get('_id')}). Deleting to reset...")
             db_manager.doctors.delete_one({"email": t["email"]})
             existing = None
 
         if not existing:
-            print(f"⚠️ Therapist {t['email']} missing. Creating...")
+            print(f"Therapist {t['email']} missing. Creating...")
             hashed = hash_password(t["password"])
             db_manager.doctors.insert_one({
                 "_id": t["id"],
@@ -69,14 +69,14 @@ def ensure_demo_users():
                 "role": "therapist",
                 "is_active": True
             })
-            print(f"✅ Created Therapist: {t['name']} (ID: {t['id']})")
+            print(f"Created Therapist: {t['name']} (ID: {t['id']})")
         else:
             hashed = hash_password(t["password"])
             db_manager.doctors.update_one(
                 {"email": t["email"]},
                 {"$set": {"hashed_password": hashed}}
             )
-            print(f"✅ Therapist {t['name']} exists. Password updated.")
+            print(f"Therapist {t['name']} exists. Password updated.")
 
     # --- 3. ENSURE ADMIN ---
     admins = [
@@ -86,7 +86,7 @@ def ensure_demo_users():
     for a in admins:
         existing = db_manager.admins.find_one({"email": a["email"]})
         if not existing:
-            print(f"⚠️ Admin {a['email']} missing. Creating...")
+            print(f"Admin {a['email']} missing. Creating...")
             hashed = hash_password(a["password"])
             db_manager.admins.insert_one({
                 "name": a["name"],
@@ -96,16 +96,16 @@ def ensure_demo_users():
                 "role": "admin",
                 "is_super_admin": True
             })
-            print(f"✅ Created Admin: {a['name']}")
+            print(f"Created Admin: {a['name']}")
         else:
             hashed = hash_password(a["password"])
             db_manager.admins.update_one(
                 {"email": a["email"]},
                 {"$set": {"hashed_password": hashed}}
             )
-            print(f"✅ Admin {a['name']} exists. Password updated.")
+            print(f"Admin {a['name']} exists. Password updated.")
             
-    print("🏁 Demo User Check Complete.")
+    print("Demo User Check Complete.")
 
 if __name__ == "__main__":
     ensure_demo_users()

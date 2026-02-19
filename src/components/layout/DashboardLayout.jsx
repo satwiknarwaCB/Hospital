@@ -1,20 +1,108 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, LogOut, Menu, X, Bell, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, LogOut, Menu, X, Bell, MessageSquare, User } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/Button';
 import { useApp } from '../../lib/context';
+import ProfileEditModal from './ProfileEditModal';
+import { parentAuthAPI, doctorAuthAPI } from '../../lib/api';
 
 const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primary-700", onLogout }) => {
-    const [isSidebarOpen, setSidebarOpen] = React.useState(false);
+    const [isSidebarOpen, setSidebarOpen] = useState(false);
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const location = useLocation();
-    const { notifications, removeNotification } = useApp();
+    const { notifications, removeNotification, currentUser, addDocument } = useApp();
 
     const handleLogout = () => {
         if (onLogout) {
             onLogout();
         } else {
             window.location.href = '/';
+        }
+    };
+
+    const handleProfileSave = async (updatedData) => {
+        try {
+            // Determine user role and update accordingly
+            // Remove large fields like document and avatar before storing in localStorage
+            // We keep the full updatedData for the API call, but sanitize for local storage
+            // We keep the full updatedData for the API call, but include basic fields for local storage
+            const { document, documentName, ...sanitizedData } = updatedData;
+
+            if (currentUser?.role === 'parent') {
+                const parentToken = localStorage.getItem('parent_token');
+                if (parentToken) {
+                    // Update parent profile via API
+                    try {
+                        const freshProfile = await parentAuthAPI.updateProfile(updatedData);
+                        // Update localStorage with fresh data from server
+                        localStorage.setItem('parent_data', JSON.stringify(freshProfile));
+                    } catch (apiError) {
+                        console.warn('Backend update failed, saving locally only:', apiError);
+                        // Update localStorage with sanitized local data
+                        const updatedUser = { ...currentUser, ...sanitizedData };
+                        localStorage.setItem('parent_data', JSON.stringify(updatedUser));
+                    }
+
+                    // Link document to child if uploaded
+                    if (updatedData.document && updatedData.documentName && currentUser.childId) {
+                        addDocument({
+                            childId: currentUser.childId,
+                            title: updatedData.documentName,
+                            type: 'Parent Upload',
+                            category: 'Parent Documents',
+                            format: updatedData.documentName.split('.').pop() || 'pdf',
+                            uploadedBy: currentUser.name,
+                            fileSize: 'Managed via Profile',
+                            url: updatedData.document
+                        });
+                    }
+
+                    // Trigger auth-change event to refresh context
+                    window.dispatchEvent(new Event('auth-change'));
+                }
+            } else if (currentUser?.role === 'therapist' || currentUser?.role === 'doctor') {
+                const doctorToken = localStorage.getItem('doctor_token');
+                if (doctorToken) {
+                    // Update doctor/therapist profile via API
+                    try {
+                        const freshProfile = await doctorAuthAPI.updateProfile(updatedData);
+                        // Update localStorage with fresh data from server
+                        localStorage.setItem('doctor_data', JSON.stringify(freshProfile));
+                    } catch (apiError) {
+                        console.warn('Backend update failed, saving locally only:', apiError);
+                        // Update localStorage with sanitized local data
+                        const updatedUser = { ...currentUser, ...sanitizedData };
+                        try {
+                            localStorage.setItem('doctor_data', JSON.stringify(updatedUser));
+                        } catch (e) {
+                            console.warn('Local storage full, skipping doctor_data update');
+                        }
+                    }
+                    window.dispatchEvent(new Event('auth-change'));
+                }
+            } else if (currentUser?.role === 'admin') {
+                const adminToken = localStorage.getItem('admin_token');
+                if (adminToken) {
+                    // Update admin profile
+                    const updatedUser = { ...currentUser, ...sanitizedData };
+                    try {
+                        localStorage.setItem('admin_data', JSON.stringify(updatedUser));
+                    } catch (e) {
+                        console.warn('Local storage full, skipping admin_data update');
+                    }
+                    window.dispatchEvent(new Event('auth-change'));
+                }
+            }
+
+            alert('✅ Profile updated successfully!');
+        } catch (error) {
+            console.error('Failed to update profile:', error);
+            // Only throw if it's not a handled API error
+            if (error.name !== 'AxiosError' || error.code !== 'ERR_NETWORK') {
+                throw error;
+            }
+            alert('⚠️ Profile saved locally (Server connection lost)');
         }
     };
 
@@ -31,27 +119,30 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
             {/* Sidebar */}
             <aside
                 className={cn(
-                    "fixed inset-y-0 left-0 z-50 w-64 transform transition-all duration-300 ease-in-out bg-white border-r border-neutral-200 shadow-2xl lg:shadow-none",
+                    "fixed inset-y-0 left-0 z-50 w-64 transform transition-all duration-300 ease-in-out bg-white border-r border-neutral-200 shadow-2xl lg:shadow-none flex flex-col",
                     !isSidebarOpen && "-translate-x-full",
                     "lg:relative lg:translate-x-0"
                 )}
             >
-                <div className="h-16 flex items-center gap-3 px-6 border-b border-neutral-100">
+                <div className="h-16 flex items-center gap-3 px-6 border-b border-neutral-100 shrink-0">
                     <img src="/logo.svg" alt="NeuroBridge Logo" className="h-8 w-8" />
                     <span className="text-xl font-bold text-primary-900 font-serif tracking-tight">NeuroBridge™</span>
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="lg:hidden text-neutral-400 hover:text-neutral-600"
+                        className="lg:hidden text-neutral-400 hover:text-neutral-600 ml-auto"
                         onClick={() => setSidebarOpen(false)}
                     >
                         <X className="h-5 w-5" />
                     </Button>
                 </div>
 
-                <nav className="p-4 space-y-1">
+                <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
                     {sidebarItems.map((item) => {
                         const isActive = location.pathname.startsWith(item.path);
+                        const roleColorText = roleColor ? roleColor.replace('bg-', 'text-') : 'text-primary-600';
+                        const roleColorBg = roleColor ? roleColor.replace('bg-', 'bg-').replace('-600', '-50').replace('-700', '-50') : 'bg-primary-50';
+
                         return (
                             <Link
                                 key={item.path}
@@ -60,7 +151,7 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                                 className={cn(
                                     "flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group",
                                     isActive
-                                        ? `bg-primary-50 text-primary-700 shadow-sm border border-primary-100/50`
+                                        ? `${roleColorBg} ${roleColorText} shadow-sm border border-neutral-100`
                                         : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 border border-transparent"
                                 )}
                             >
@@ -68,7 +159,7 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                                     <item.icon
                                         className={cn(
                                             "mr-3 h-5 w-5 transition-colors",
-                                            isActive ? "text-primary-600" : "text-neutral-400 group-hover:text-neutral-600"
+                                            isActive ? roleColorText : "text-neutral-400 group-hover:text-neutral-600"
                                         )}
                                     />
                                 )}
@@ -83,7 +174,7 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                     })}
                 </nav>
 
-                <div className="absolute bottom-0 w-full p-4 border-t border-neutral-100">
+                <div className="p-4 border-t border-neutral-100 shrink-0">
                     <Button
                         variant="ghost"
                         className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -113,7 +204,27 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                     </div>
 
                     <div className="flex items-center space-x-4">
-                        <img src="/logo.svg" alt="NeuroBridge Logo" className="h-8 w-8 rounded-full border border-neutral-100 shadow-sm" />
+                        {/* User Profile Avatar */}
+                        <button
+                            onClick={() => setIsProfileModalOpen(true)}
+                            className="group relative"
+                            title="Edit Profile"
+                        >
+                            <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-neutral-200 group-hover:border-primary-500 transition-all shadow-md group-hover:shadow-lg">
+                                {currentUser?.avatar ? (
+                                    <img
+                                        src={currentUser.avatar}
+                                        alt={currentUser.name}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
+                                        <User className="h-6 w-6 text-white" />
+                                    </div>
+                                )}
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 border-2 border-white rounded-full" />
+                        </button>
                     </div>
                 </header>
 
@@ -160,7 +271,7 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
 
                 {/* Mobile Bottom Navigation Bar */}
                 <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-neutral-100 px-6 py-4 flex items-center justify-between lg:hidden z-[60] shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.05)]">
-                    {sidebarItems.slice(0, 5).map((item) => {
+                    {sidebarItems.slice(0, 4).map((item) => {
                         const isActive = location.pathname.startsWith(item.path);
                         return (
                             <Link
@@ -186,8 +297,27 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                             </Link>
                         );
                     })}
+                    {/* More Button to trigger full sidebar */}
+                    <button
+                        onClick={() => setSidebarOpen(true)}
+                        className="relative flex flex-col items-center gap-1 text-neutral-400 hover:text-neutral-600"
+                    >
+                        <div className="p-1.5 rounded-xl">
+                            <Menu className="h-5 w-5" />
+                        </div>
+                        <span className="text-[8px] font-black uppercase tracking-[0.15em]">More</span>
+                    </button>
                 </nav>
             </div>
+
+            {/* Profile Edit Modal */}
+            {isProfileModalOpen && (
+                <ProfileEditModal
+                    user={currentUser}
+                    onClose={() => setIsProfileModalOpen(false)}
+                    onSave={handleProfileSave}
+                />
+            )}
         </div>
     );
 };

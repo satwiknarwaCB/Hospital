@@ -18,6 +18,8 @@ const SessionLog = () => {
     childIdFromState || (kids && kids[0] ? kids[0].id : '')
   );
 
+  const baselineDocs = getChildDocuments(selectedChild);
+
   // Update selected child if passed from navigation
   useEffect(() => {
     if (childIdFromState) {
@@ -65,7 +67,7 @@ const SessionLog = () => {
 
       for (const type of typesToProcess) {
         const data = {
-          childName: child.name,
+          childName: child?.name || 'Unknown',
           activities,
           engagement,
           mood,

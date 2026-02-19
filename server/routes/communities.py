@@ -269,7 +269,8 @@ async def get_community_messages(
             sender_role=msg["sender_role"],
             content=msg["content"],
             attachments=msg.get("attachments", []),
-            timestamp=msg["timestamp"]
+            timestamp=msg["timestamp"],
+            reactions=msg.get("reactions", {})
         ))
     
     # Reverse to show oldest first in the list
@@ -312,19 +313,14 @@ async def send_community_message(
                 "$set": {"updated_at": datetime.now(timezone.utc)}
             }
         )
-        # Add welcome message
-        welcome_msg = {
-            "_id": str(ObjectId()),
-            "community_id": community_id,
-            "sender_id": "system",
-            "sender_name": "Community",
-            "sender_role": "system",
-            "content": f"Welcome {current_user['name']} to the community! 👋",
-            "attachments": [],
-            "timestamp": datetime.now(timezone.utc),
-            "is_deleted": False
-        }
-        db_manager.community_messages.insert_one(welcome_msg)
+    
+    # [RESTRICTION] Only therapists/staff can broadcast in official Support/Parent communities
+    is_support_comm = "parent" in community["name"].lower() or "support" in community["name"].lower()
+    if is_support_comm and current_user["role"] == "parent":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only therapists can broadcast messages in this community. You can react to messages!"
+        )
     
     # Create message
     new_message = {
@@ -336,6 +332,7 @@ async def send_community_message(
         "content": message_data.content.strip(),
         "attachments": message_data.attachments or [],
         "timestamp": datetime.now(timezone.utc),
+        "reactions": {},
         "is_deleted": False
     }
     
@@ -349,7 +346,71 @@ async def send_community_message(
         sender_role=new_message["sender_role"],
         content=new_message["content"],
         attachments=new_message["attachments"],
-        timestamp=new_message["timestamp"]
+        timestamp=new_message["timestamp"],
+        reactions=new_message["reactions"]
+    )
+
+
+@router.patch("/{community_id}/messages/{message_id}/react", response_model=CommunityMessageResponse)
+async def react_to_community_message(
+    community_id: str,
+    message_id: str,
+    emoji: str = Query(..., min_length=1),
+    current_user = Depends(get_current_community_user)
+):
+    """
+    Add or remove a reaction to/from a community message
+    """
+    message = db_manager.community_messages.find_one({
+        "_id": message_id,
+        "community_id": community_id
+    })
+    
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    # Auto-join parent to community if they react for the first time
+    if current_user["role"] == "parent":
+        community = db_manager.communities.find_one({"_id": community_id})
+        if community and current_user["id"] not in community.get("member_ids", []):
+            db_manager.communities.update_one(
+                {"_id": community_id},
+                {
+                    "$push": {"member_ids": current_user["id"]},
+                    "$set": {"updated_at": datetime.now(timezone.utc)}
+                }
+            )
+        
+    reactions = message.get("reactions", {})
+    user_id = current_user["id"]
+    
+    if emoji not in reactions:
+        reactions[emoji] = []
+        
+    if user_id in reactions[emoji]:
+        # Remove reaction (toggle)
+        reactions[emoji].remove(user_id)
+        if not reactions[emoji]:
+            del reactions[emoji]
+    else:
+        # Add reaction
+        reactions[emoji].append(user_id)
+        
+    db_manager.community_messages.update_one(
+        {"_id": message_id},
+        {"$set": {"reactions": reactions}}
+    )
+    
+    return CommunityMessageResponse(
+        id=str(message["_id"]),
+        community_id=message["community_id"],
+        sender_id=message["sender_id"],
+        sender_name=message["sender_name"],
+        sender_role=message["sender_role"],
+        content=message["content"],
+        attachments=message.get("attachments", []),
+        timestamp=message["timestamp"],
+        reactions=reactions
     )
 
 
@@ -390,3 +451,34 @@ async def get_community_members(
             ))
     
     return members
+
+
+@router.delete("/{community_id}/messages/{message_id}", response_model=dict)
+async def delete_community_message(
+    community_id: str,
+    message_id: str,
+    current_user = Depends(get_current_community_user)
+):
+    """
+    Soft-delete a community message.
+    Only the original sender can delete their own message.
+    Message is marked is_deleted=True and excluded from future fetches.
+    """
+    message = db_manager.community_messages.find_one({
+        "_id": message_id,
+        "community_id": community_id
+    })
+
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    if str(message.get("sender_id")) != str(current_user.get("id")):
+        raise HTTPException(status_code=403, detail="You can only delete your own messages")
+
+    db_manager.community_messages.update_one(
+        {"_id": message_id},
+        {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}}
+    )
+
+    return {"status": "deleted", "message_id": message_id}
+

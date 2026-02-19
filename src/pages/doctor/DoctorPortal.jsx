@@ -3,7 +3,7 @@
  * Routes and layout for the doctor module
  */
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import DoctorDashboard from './DoctorDashboard';
@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 // Wrapper component with logout button
-const DoctorLayoutWrapper = ({ children }) => {
+const DoctorLayoutWrapper = () => {
     const { logout } = useAuth();
     const navigate = useNavigate();
 
@@ -46,7 +46,7 @@ const DoctorLayoutWrapper = ({ children }) => {
             roleColor="bg-primary-600"
             onLogout={handleLogout}
         >
-            {children}
+            <Outlet />
         </DashboardLayout>
     );
 };

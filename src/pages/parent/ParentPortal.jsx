@@ -279,7 +279,50 @@ const ParentDashboard = () => {
         return <div className="p-8 text-center text-neutral-500">Please log in as a parent to view this dashboard.</div>;
     }
 
-    if (!child) return <div className="p-8">No child profile found.</div>;
+    if (!child) {
+        return (
+            <div className="min-h-[60vh] flex items-center justify-center p-6">
+                <Card className="max-w-2xl w-full border-none shadow-2xl overflow-hidden bg-white/80 backdrop-blur-md rounded-3xl">
+                    <CardContent className="p-12 text-center">
+                        <div className="w-24 h-24 bg-primary-100 rounded-3xl flex items-center justify-center mx-auto mb-8 animate-float">
+                            <span className="text-5xl">🐘</span>
+                        </div>
+                        <h2 className="text-3xl font-black text-neutral-800 mb-4 tracking-tight">
+                            Welcome to NeuroBridge™, {currentUser.name.split(' ')[0]}!
+                        </h2>
+                        <p className="text-lg text-neutral-600 mb-10 leading-relaxed font-medium">
+                            We're excited to have you join our community. Your account has been created successfully.
+                            To start tracking progress and connecting with your therapy team, we just need to set up your child's profile.
+                        </p>
+
+                        <div className="space-y-4">
+                            <Button
+                                className="w-full h-14 text-lg font-bold bg-primary-600 hover:bg-primary-700 shadow-xl shadow-primary-200 rounded-2xl"
+                                onClick={() => navigate('/parent/messages')}
+                            >
+                                Contact Administrator to Add Child
+                            </Button>
+                            <p className="text-sm text-neutral-400">
+                                Your clinical team will link your child's profile to your account shortly.
+                            </p>
+                        </div>
+
+                        <div className="mt-12 pt-8 border-t border-neutral-100 grid grid-cols-2 gap-6">
+                            <div className="text-left">
+                                <p className="text-xl font-bold text-neutral-800">Next Step</p>
+                                <p className="text-sm text-neutral-500">An admin will contact you via email or the secure portal messaging system.</p>
+                            </div>
+                            <div className="flex flex-col items-end justify-center">
+                                <span className="px-4 py-2 bg-green-50 text-green-700 rounded-full text-xs font-black uppercase tracking-widest border border-green-100">
+                                    Account Active
+                                </span>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     const childSessions = getChildSessions(child.id);
 
@@ -366,16 +409,16 @@ const ParentDashboard = () => {
         <div className="space-y-8 pb-safe-nav animate-slide-up">
             {/* Gajju Welcome Card */}
             <Card className="glass-card border-none overflow-hidden bg-gradient-to-r from-primary-500/10 to-violet-500/10 mb-8">
-                <CardContent className="p-6 flex items-center gap-6">
-                    <div className="relative">
-                        <div className="h-20 w-20 bg-white rounded-3xl shadow-xl flex items-center justify-center animate-float">
-                            <span className="text-4xl">🐘</span>
+                <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                    <div className="relative shrink-0">
+                        <div className="h-16 w-16 sm:h-20 sm:w-20 bg-white rounded-3xl shadow-xl flex items-center justify-center animate-float">
+                            <span className="text-3xl sm:text-4xl">🐘</span>
                         </div>
                         <div className="absolute -bottom-1 -right-1 h-6 w-6 bg-green-500 rounded-full border-4 border-white" title="Gajju is online!" />
                     </div>
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <h1 className="text-2xl font-black text-neutral-800 tracking-tight">
+                    <div className="text-center sm:text-left">
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
+                            <h1 className="text-xl sm:text-2xl font-black text-neutral-800 tracking-tight">
                                 Hi, {child.name.split(' ')[0]}'s Family! 👋
                             </h1>
                             <div className="flex items-center gap-1.5 bg-green-500/10 text-green-700 px-3 py-1 rounded-full border border-green-500/20 shadow-sm">
@@ -529,9 +572,9 @@ const ParentDashboard = () => {
 
                 {/* Periodic Clinical Reviews - 15 Day / Monthly Summaries */}
                 <div className="col-span-1 lg:col-span-3 space-y-4">
-                    <div className="flex items-center justify-between px-2">
-                        <h2 className="text-xl font-black text-neutral-800 tracking-tight flex items-center gap-2">
-                            <History className="h-5 w-5 text-violet-500" />
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-2">
+                        <h2 className="text-lg sm:text-xl font-black text-neutral-800 tracking-tight flex items-center gap-2">
+                            <History className="h-5 w-5 text-violet-500 shrink-0" />
                             Clinical Reviews & Milestones 📋
                         </h2>
                         <span className="text-sm font-bold text-neutral-400">15-30 Day Insights</span>
@@ -635,12 +678,12 @@ const ParentDashboard = () => {
                 {/* Therapy Mastery Overview */}
                 <Card className="col-span-1 md:col-span-2 shadow-sm border-neutral-200/60">
                     <CardHeader className="pb-2">
-                        <CardTitle className="flex items-center justify-between">
+                        <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div className="flex items-center gap-2">
-                                <TrendingUp className="h-5 w-5 text-primary-500" />
-                                <span className="text-xl font-black text-neutral-800 tracking-tight">Therapy Mastery</span>
+                                <TrendingUp className="h-5 w-5 text-primary-500 shrink-0" />
+                                <span className="text-lg sm:text-xl font-black text-neutral-800 tracking-tight">Therapy Mastery</span>
                             </div>
-                            <Button variant="ghost" size="sm" className="text-primary-600 font-bold hover:bg-primary-50" onClick={() => navigate('/parent/new-learning')}>
+                            <Button variant="ghost" size="sm" className="text-primary-600 font-bold hover:bg-primary-50 w-full sm:w-auto" onClick={() => navigate('/parent/new-learning')}>
                                 View Detailed Roadmap →
                             </Button>
                         </CardTitle>

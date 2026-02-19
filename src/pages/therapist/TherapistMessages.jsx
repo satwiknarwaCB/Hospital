@@ -14,7 +14,10 @@ import {
     ArrowLeft,
     Paperclip,
     Users,
-    Lock
+    Lock,
+    Smile,
+    UserX,
+    Trash
 } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -22,46 +25,159 @@ import { useApp } from '../../lib/context';
 import CommunityChat from '../../components/CommunityChat';
 import { communityAPI } from '../../lib/api';
 
+// ─── Common Emojis ────────────────────────────────────────────────────────────
+const QUICK_EMOJIS = ['❤️', '😂', '😮', '😢', '🙏', '👍'];
+
 // Message Bubble Component
-const MessageBubble = ({ message, isOwn }) => {
+const MessageBubble = ({ message, isOwn, currentUserId, onDeleteForMe, onDeleteForEveryone, onReact }) => {
+    const [showMenu, setShowMenu] = useState(false);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const menuRef = useRef(null);
+    const bubbleRef = useRef(null);
+
     const time = new Date(message.timestamp).toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
     });
 
+    const isDeletedForEveryone = message.is_deleted || message.is_deleted_for_everyone;
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target) &&
+                bubbleRef.current && !bubbleRef.current.contains(e.target)) {
+                setShowMenu(false);
+                setShowEmojiPicker(false);
+            }
+        };
+        if (showMenu || showEmojiPicker) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showMenu, showEmojiPicker]);
+
+    const handleContextMenu = (e) => {
+        e.preventDefault();
+        setShowMenu(true);
+        setShowEmojiPicker(false);
+    };
+
+    const handleReact = (emoji) => {
+        onReact(message.id || message._id, emoji);
+        setShowEmojiPicker(false);
+    };
+
+    const reactionEntries = Object.entries(message.reactions || {}).filter(([, ids]) => ids.length > 0);
+    const myReactions = reactionEntries
+        .filter(([, ids]) => ids.includes(currentUserId))
+        .map(([emoji]) => emoji);
+
     return (
-        <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4`}>
-            <div className={`max-w-[80%] ${isOwn ? 'order-2' : 'order-1'}`}>
-                {/* Sender Info */}
+        <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-3 group`}>
+            <div className={`max-w-[78%] ${isOwn ? 'order-2' : 'order-1'}`}>
+
                 {!isOwn && (
-                    <div className="flex items-center gap-2 mb-1">
-                        <div className="h-6 w-6 rounded-full bg-primary-100 flex items-center justify-center">
+                    <div className="flex items-center gap-1.5 mb-1 ml-1">
+                        <div className="h-5 w-5 rounded-full bg-primary-100 flex items-center justify-center">
                             <User className="h-3 w-3 text-primary-600" />
                         </div>
-                        <span className="text-xs font-medium text-neutral-600">
-                            {message.senderName} ({message.senderRole === 'therapist' ? 'Therapist' : 'Parent'})
+                        <span className="text-[11px] font-semibold text-neutral-500">
+                            {message.senderName}
+                            {message.senderRole === 'parent' && (
+                                <span className="ml-1 text-[10px] bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded-full">Parent</span>
+                            )}
                         </span>
                     </div>
                 )}
 
-                {/* Message Content */}
-                <div className={`rounded-2xl px-4 py-3 ${isOwn
-                    ? 'bg-secondary-600 text-white rounded-br-md'
-                    : 'bg-neutral-100 text-neutral-800 rounded-bl-md'
-                    }`}>
-                    {message.subject && (
-                        <p className={`font-semibold mb-2 ${isOwn ? 'text-white' : 'text-neutral-800'}`}>
-                            {message.subject}
+                <div className="relative" ref={bubbleRef}>
+                    <div
+                        onContextMenu={handleContextMenu}
+                        className={`rounded-2xl px-4 py-2.5 cursor-pointer select-text transition-all
+                            ${isOwn
+                                ? isDeletedForEveryone
+                                    ? 'bg-secondary-100 text-neutral-400 rounded-br-md border border-secondary-200'
+                                    : 'bg-secondary-600 text-white rounded-br-md shadow-md hover:bg-secondary-700'
+                                : isDeletedForEveryone
+                                    ? 'bg-neutral-50 text-neutral-400 rounded-bl-md border border-neutral-200'
+                                    : 'bg-white text-neutral-800 rounded-bl-md shadow-sm border border-neutral-100 hover:bg-neutral-50'
+                            }`}
+                    >
+                        {message.subject && !isDeletedForEveryone && (
+                            <p className={`font-semibold text-sm mb-1 ${isOwn ? 'text-white' : 'text-neutral-800'}`}>
+                                {message.subject}
+                            </p>
+                        )}
+                        <p className={`text-sm whitespace-pre-wrap leading-relaxed ${isDeletedForEveryone ? 'italic' : isOwn ? 'text-white' : 'text-neutral-700'
+                            }`}>
+                            {isDeletedForEveryone ? '🚫 This message was deleted' : message.content}
                         </p>
+                    </div>
+
+                    {/* Context menu */}
+                    {showMenu && !isDeletedForEveryone && (
+                        <div
+                            ref={menuRef}
+                            className={`absolute z-50 bottom-full mb-1 ${isOwn ? 'right-0' : 'left-0'} bg-white border border-neutral-200 rounded-xl shadow-xl overflow-hidden min-w-[200px] animate-in zoom-in-95 duration-150`}
+                        >
+                            <div className="flex items-center gap-1 px-3 py-2 border-b border-neutral-100 bg-neutral-50">
+                                {QUICK_EMOJIS.map(emoji => (
+                                    <button
+                                        key={emoji}
+                                        onClick={() => { handleReact(emoji); setShowMenu(false); }}
+                                        className={`text-lg hover:scale-125 transition-transform p-0.5 rounded-full
+                                            ${myReactions.includes(emoji) ? 'bg-secondary-100 ring-2 ring-secondary-300' : ''}`}
+                                    >
+                                        {emoji}
+                                    </button>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => { onDeleteForMe(message.id || message._id); setShowMenu(false); }}
+                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
+                            >
+                                <UserX className="h-4 w-4 text-neutral-500" />
+                                Delete for me
+                            </button>
+                            {isOwn && (
+                                <button
+                                    onClick={() => { onDeleteForEveryone(message.id || message._id); setShowMenu(false); }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-neutral-100"
+                                >
+                                    <Trash className="h-4 w-4 text-red-500" />
+                                    Delete for everyone
+                                </button>
+                            )}
+                        </div>
                     )}
-                    <p className={`text-sm whitespace-pre-wrap ${isOwn ? 'text-white' : 'text-neutral-700'}`}>
-                        {message.content}
-                    </p>
                 </div>
 
-                {/* Time & Status */}
-                <div className={`flex items-center gap-1 mt-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                    <span className="text-xs text-neutral-400">{time}</span>
+                {/* Reactions */}
+                {reactionEntries.length > 0 && !isDeletedForEveryone && (
+                    <div className={`flex flex-wrap gap-1 mt-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                        {reactionEntries.map(([emoji, userIds]) => {
+                            const iMine = userIds.includes(currentUserId);
+                            return (
+                                <button
+                                    key={emoji}
+                                    onClick={() => onReact(message.id || message._id, emoji)}
+                                    className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border transition-all
+                                        ${iMine
+                                            ? 'bg-secondary-100 border-secondary-300 text-secondary-700'
+                                            : 'bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}
+                                    title={`${userIds.length} reaction${userIds.length !== 1 ? 's' : ''}`}
+                                >
+                                    <span>{emoji}</span>
+                                    <span>{userIds.length}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* Time + read */}
+                <div className={`flex items-center gap-1 mt-0.5 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                    <span className="text-[10px] text-neutral-400">{time}</span>
                     {isOwn && (
                         message.read
                             ? <CheckCheck className="h-3 w-3 text-secondary-500" />
@@ -69,6 +185,35 @@ const MessageBubble = ({ message, isOwn }) => {
                     )}
                 </div>
             </div>
+
+            {/* Emoji picker button on hover */}
+            {!isDeletedForEveryone && (
+                <div className={`self-end mb-5 opacity-0 group-hover:opacity-100 transition-opacity relative
+                    ${isOwn ? 'order-1 mr-1' : 'order-2 ml-1'}`}>
+                    <button
+                        onClick={() => { setShowEmojiPicker(p => !p); setShowMenu(false); }}
+                        className="p-1.5 rounded-full bg-white border border-neutral-200 shadow-sm hover:scale-110 transition-transform"
+                        title="React"
+                    >
+                        <Smile className="h-4 w-4 text-neutral-400" />
+                    </button>
+                    {showEmojiPicker && (
+                        <div className={`absolute z-50 bottom-full mb-1 ${isOwn ? 'right-0' : 'left-0'}
+                            bg-white border border-neutral-200 rounded-full shadow-xl px-2 py-1.5 flex gap-1 animate-in zoom-in-95 duration-150`}>
+                            {QUICK_EMOJIS.map(emoji => (
+                                <button
+                                    key={emoji}
+                                    onClick={() => handleReact(emoji)}
+                                    className={`text-lg hover:scale-125 transition-transform p-0.5 rounded-full
+                                        ${myReactions.includes(emoji) ? 'bg-secondary-100 ring-2 ring-secondary-300' : ''}`}
+                                >
+                                    {emoji}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
@@ -133,6 +278,9 @@ const TherapistMessages = () => {
         messages: allMessages,
         sendMessage,
         markMessageRead,
+        deleteMessageForMe,
+        deleteMessageForEveryone,
+        reactToPrivateMessage,
         communityUnreadCount,
         setCommunityUnreadCount
     } = useApp();
@@ -403,12 +551,16 @@ const TherapistMessages = () => {
                                 </div>
 
                                 {/* Messages */}
-                                <div className="flex-1 overflow-y-auto p-4">
+                                <div className="flex-1 overflow-y-auto p-4 space-y-1">
                                     {currentThread.messages.map(message => (
                                         <MessageBubble
                                             key={message.id}
                                             message={message}
                                             isOwn={message.senderId === therapistId}
+                                            currentUserId={therapistId}
+                                            onDeleteForMe={deleteMessageForMe}
+                                            onDeleteForEveryone={deleteMessageForEveryone}
+                                            onReact={reactToPrivateMessage}
                                         />
                                     ))}
                                     <div ref={messagesEndRef} />

@@ -4,6 +4,7 @@ import {
     Search,
     Upload,
     Download,
+    Eye,
     CheckCircle2,
     Calendar,
     Baby
@@ -38,6 +39,39 @@ const BaselineArchive = () => {
             return;
         }
         fileInputRef.current.click();
+    };
+
+    const handleViewDocument = (doc) => {
+        if (!doc.url || doc.url === '#') {
+            addNotification({
+                type: 'error',
+                title: 'View Failed',
+                message: 'This document has no viewable content.'
+            });
+            return;
+        }
+
+        // Handle Data URLs by converting to Blob to prevent blank pages
+        if (doc.url.startsWith('data:')) {
+            try {
+                const parts = doc.url.split(',');
+                const type = parts[0].split(':')[1].split(';')[0];
+                const base64 = parts[1];
+                const binary = atob(base64);
+                const array = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    array[i] = binary.charCodeAt(i);
+                }
+                const blob = new Blob([array], { type });
+                const blobUrl = URL.createObjectURL(blob);
+                window.open(blobUrl, '_blank');
+            } catch (e) {
+                console.error('Error opening data URL:', e);
+                window.open(doc.url, '_blank');
+            }
+        } else {
+            window.open(doc.url, '_blank');
+        }
     };
 
     const handleFileChange = (event) => {
@@ -128,7 +162,11 @@ const BaselineArchive = () => {
                                 {filteredDocuments.length > 0 ? filteredDocuments.map(doc => {
                                     const child = (Array.isArray(kids) ? kids : []).find(k => k.id === doc.childId);
                                     return (
-                                        <tr key={doc.id} className="hover:bg-neutral-50/50 transition-colors group">
+                                        <tr
+                                            key={doc.id}
+                                            onClick={() => handleViewDocument(doc)}
+                                            className={`hover:bg-neutral-50/50 transition-colors group ${doc.url && doc.url !== '#' ? 'cursor-pointer' : 'cursor-default'}`}
+                                        >
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="p-2 bg-primary-50 text-primary-600 rounded-lg group-hover:bg-primary-100 transition-colors">
@@ -162,11 +200,22 @@ const BaselineArchive = () => {
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex justify-end gap-1">
                                                     {doc.url && (
-                                                        <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                                                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-neutral-400 hover:text-primary-600">
-                                                                <Download className="h-4 w-4" />
+                                                        <>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                className="h-8 w-8 p-0 text-neutral-400 hover:text-primary-600"
+                                                                title="View Report"
+                                                                onClick={(e) => { e.stopPropagation(); handleViewDocument(doc); }}
+                                                            >
+                                                                <Eye className="h-4 w-4" />
                                                             </Button>
-                                                        </a>
+                                                            <a href={doc.url} download={doc.title} onClick={(e) => e.stopPropagation()}>
+                                                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-neutral-400 hover:text-secondary-600" title="Download">
+                                                                    <Download className="h-4 w-4" />
+                                                                </Button>
+                                                            </a>
+                                                        </>
                                                     )}
                                                 </div>
                                             </td>

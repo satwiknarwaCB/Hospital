@@ -412,7 +412,7 @@ const ScheduleManagement = () => {
     // Today's stats
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
-    const todaySessions = mySessions.filter(s => s.date.startsWith(todayStr));
+    const todaySessions = mySessions.filter(s => s && s.date && typeof s.date === 'string' && s.date.startsWith(todayStr));
     const completedToday = todaySessions.filter(s => s.status === 'completed').length;
     const upcomingToday = todaySessions.filter(s => s.status === 'scheduled').length;
 

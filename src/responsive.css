@@ -1,0 +1,280 @@
+/* ============================================================
+   NeuroBridge™ - Responsive Design Overrides
+   Ensures full mobile/tablet/desktop responsiveness
+   ============================================================ */
+
+/* ── Global Reset for Responsive ── */
+#root {
+  max-width: 100%;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  margin: 0;
+}
+
+/* Ensure no horizontal overflow anywhere */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── Responsive Typography ── */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 1.75rem !important;
+    line-height: 1.25 !important;
+  }
+
+  h2 {
+    font-size: 1.35rem !important;
+  }
+
+  h3 {
+    font-size: 1.1rem !important;
+  }
+}
+
+/* ── Touch Targets: Minimum 44px for accessibility ── */
+@media (max-width: 768px) {
+  button,
+  a,
+  input[type="radio"],
+  input[type="checkbox"],
+  select {
+    min-height: 44px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="date"],
+  textarea,
+  select {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  }
+}
+
+/* ── Landing Page Hero Responsive ── */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* ── Login Page Responsive ── */
+@media (max-width: 768px) {
+  /* Ensure the login sidebar scrolls horizontally on small screens */
+  [class*="max-w-5xl"] {
+    flex-direction: column !important;
+  }
+
+  [class*="max-w-5xl"] > [class*="md:w-80"] {
+    max-height: 250px;
+  }
+}
+
+/* ── Tables: Horizontal scroll on small screens ── */
+@media (max-width: 768px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  table thead,
+  table tbody,
+  table tr {
+    display: table;
+    width: 100%;
+    table-layout: auto;
+  }
+}
+
+/* ── Dashboard Cards: Better grid on small screens ── */
+@media (max-width: 640px) {
+  /* Stat cards — force 2 columns on even the smallest screens */
+  [class*="grid-cols-2"][class*="md:grid-cols-4"],
+  [class*="grid-cols-2"][class*="md:grid-cols-5"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  /* Quick action cards — stack vertically on mobile */
+  [class*="md:grid-cols-3"]:not([class*="sm:grid-cols"]) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Modal Responsiveness ── */
+@media (max-width: 640px) {
+  /* Profile edit modal & other modals */
+  [class*="max-w-2xl"],
+  [class*="max-w-lg"],
+  [class*="max-w-xl"] {
+    max-width: 100% !important;
+    margin: 0.5rem;
+  }
+
+  /* Make modal action buttons stack on very small screens */
+  [class*="flex gap-3"] > button,
+  [class*="flex gap-3"] > [class*="Button"] {
+    min-width: 0;
+  }
+}
+
+/* ── Sidebar Responsive Overrides ── */
+@media (max-width: 1023px) {
+  /* Ensure sidebar overlay covers full screen */
+  aside[class*="fixed inset-y-0"] {
+    max-height: 100dvh;
+  }
+}
+
+/* ── Notification Toasts: Better mobile positioning ── */
+@media (max-width: 640px) {
+  [class*="fixed bottom-6 right-6"] {
+    left: 1rem;
+    right: 1rem;
+    bottom: 5rem; /* Above mobile bottom nav */
+  }
+}
+
+/* ── Map Section Responsive ── */
+@media (max-width: 640px) {
+  [class*="h-[450px]"] {
+    height: 250px !important;
+  }
+}
+
+/* ── Footer Responsive ── */
+@media (max-width: 640px) {
+  footer [class*="grid-cols-1"][class*="lg:grid-cols-4"] {
+    gap: 2rem;
+  }
+
+  footer [class*="flex"][class*="gap-6"] {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+}
+
+/* ── CTA Section Responsive ── */
+@media (max-width: 640px) {
+  [class*="rounded-3xl"][class*="p-12"] {
+    padding: 1.5rem !important;
+  }
+}
+
+/* ── Booking Modal: Stack form grid on mobile ── */
+@media (max-width: 480px) {
+  .grid.grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Session Cards: Stack horizontally laid cards on mobile ── */
+@media (max-width: 640px) {
+  [class*="flex items-center p-4"][class*="rounded-xl"] {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  [class*="flex items-center p-4"][class*="rounded-xl"] > div:last-child {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  [class*="flex items-center p-4"][class*="rounded-xl"] > div:last-child button,
+  [class*="flex items-center p-4"][class*="rounded-xl"] > div:last-child span {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ── Safe Area Insets for Modern Phones ── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  /* Bottom nav safe area */
+  nav[class*="fixed bottom-0"] {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  }
+
+  /* Main content: account for bottom nav */
+  main[class*="flex-1"][class*="overflow-auto"] {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* ── Activity Effectiveness Chart: Label truncation on mobile ── */
+@media (max-width: 640px) {
+  [class*="w-32"][class*="truncate"] {
+    width: 5rem;
+    font-size: 0.7rem;
+  }
+}
+
+/* ── Heatmap Cells: Smaller on mobile ── */
+@media (max-width: 640px) {
+  [class*="w-8 h-8"][class*="rounded"] {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.6rem;
+  }
+}
+
+/* ── Contact Page: Better spacing on mobile ── */
+@media (max-width: 1023px) {
+  [class*="lg:col-span-4"],
+  [class*="lg:col-span-8"] {
+    grid-column: span 12;
+  }
+}
+
+/* ── Smooth Scrolling & Momentum ── */
+@media (max-width: 768px) {
+  .overflow-y-auto,
+  .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ── Print Responsive: Hide nav elements ── */
+@media print {
+  nav[class*="fixed bottom-0"],
+  aside,
+  header[class*="sticky"] {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+/* ── Landscape Mode Adjustments ── */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Reduce header height in landscape */
+  header[class*="h-16"] {
+    height: 3rem;
+  }
+
+  /* Reduce bottom nav padding */
+  nav[class*="fixed bottom-0"] {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+}
+
+/* ── Ultra-Wide Screen Enhancement ── */
+@media (min-width: 1920px) {
+  .container {
+    max-width: 1440px;
+  }
+}

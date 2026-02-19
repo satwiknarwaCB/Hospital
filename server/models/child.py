@@ -19,6 +19,14 @@ class ChildResponse(BaseModel):
     school_name: Optional[str] = None
     parent_id: str
     therapistId: Optional[str] = None
+    photoUrl: Optional[str] = None
+    program: List[str] = []
+    currentMood: Optional[str] = None
+    moodContext: Optional[str] = None
+    streak: int = 0
+    schoolReadinessScore: int = 0
+    status: str = "active"
+    documents: List[dict] = []
     created_at: datetime
     
     class Config:

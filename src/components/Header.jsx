@@ -76,6 +76,12 @@ const Header = () => {
                             Sign In
                         </Button>
                         <Button
+                            className="bg-neutral-900 hover:bg-black text-white px-6"
+                            onClick={() => navigate('/login', { state: { openSignup: true } })}
+                        >
+                            Join NeuroBridge™
+                        </Button>
+                        <Button
                             className="bg-primary-600 hover:bg-primary-700"
                             onClick={() => setIsAppointmentModalOpen(true)}
                         >
@@ -120,6 +126,15 @@ const Header = () => {
                                     Sign In
                                 </Button>
                                 <Button
+                                    className="w-full bg-neutral-900 text-white"
+                                    onClick={() => {
+                                        setIsMobileMenuOpen(false);
+                                        navigate('/login', { state: { openSignup: true } });
+                                    }}
+                                >
+                                    Join NeuroBridge™
+                                </Button>
+                                <Button
                                     className="w-full"
                                     onClick={() => {
                                         setIsMobileMenuOpen(false);
@@ -132,7 +147,7 @@ const Header = () => {
                         </nav>
                     </div>
                 )}
-            </header>
+            </header >
         </>
     );
 };

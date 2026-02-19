@@ -24,6 +24,7 @@ import {
     FileText,
     Upload,
     Download,
+    Eye,
     PlusCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -92,7 +93,7 @@ const ChildCard = ({ child, sessions = [], skillScores = [], onSelect }) => {
                         <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-neutral-100">
                             <div className="text-center">
                                 <p className="text-lg font-bold text-neutral-800">{avgScore}%</p>
-                                <p className="text-xs text-neutral-500">Avg Score</p>
+                                <p className="text-xs text-neutral-500">Percentage</p>
                             </div>
                             <div className="text-center">
                                 <p className="text-lg font-bold text-neutral-800">{sessions.length}</p>
@@ -149,6 +150,39 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
 
     if (!child) return null;
 
+    const handleViewDocument = (doc) => {
+        if (!doc.url || doc.url === '#') {
+            addNotification({
+                type: 'error',
+                title: 'View Failed',
+                message: 'This document has no viewable content.'
+            });
+            return;
+        }
+
+        // Handle Data URLs (Base64) by converting to Blob to prevent blank pages in some browsers
+        if (doc.url.startsWith('data:')) {
+            try {
+                const parts = doc.url.split(',');
+                const type = parts[0].split(':')[1].split(';')[0];
+                const base64 = parts[1];
+                const binary = atob(base64);
+                const array = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    array[i] = binary.charCodeAt(i);
+                }
+                const blob = new Blob([array], { type });
+                const blobUrl = URL.createObjectURL(blob);
+                window.open(blobUrl, '_blank');
+            } catch (e) {
+                console.error('Error opening data URL:', e);
+                window.open(doc.url, '_blank');
+            }
+        } else {
+            window.open(doc.url, '_blank');
+        }
+    };
+
     const handleLogNewSession = () => {
         // Navigate to session log with childId in state
         navigate('/therapist/log', { state: { childId: child.id } });
@@ -159,7 +193,7 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
         // Navigate to child detail or expand view
         // For now, we'll show an expanded view with more details
         // In production, this could navigate to a dedicated child profile page
-        navigate('/therapist/patients', { state: { expandedPatient: child.id } });
+        navigate('/therapist/care-hub', { state: { expandedPatient: child.id } });
         onClose();
     };
 
@@ -200,7 +234,7 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
                             <h2 className="text-3xl font-black text-neutral-800 tracking-tight">{child.name}</h2>
                             <p className="text-neutral-500 font-bold uppercase text-[10px] tracking-widest mt-1">{child.age} years • {child.diagnosis}</p>
                             <div className="flex gap-2 mt-3">
-                                {child.program.map((prog, idx) => (
+                                {(Array.isArray(child.program) ? child.program : []).map((prog, idx) => (
                                     <span key={idx} className="px-3 py-1 bg-primary-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm">
                                         {prog}
                                     </span>
@@ -283,13 +317,20 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
                                     <h3 className="font-black text-neutral-800 tracking-tight uppercase text-xs mb-3">Key Clinical Reports</h3>
                                     <div className="space-y-2">
                                         {documents.slice(0, 2).map(doc => (
-                                            <div key={doc.id} className="flex items-center justify-between p-3 bg-violet-50/50 rounded-xl border border-violet-100/50 hover:bg-violet-100/50 transition-colors">
+                                            <button
+                                                key={doc.id}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleViewDocument(doc);
+                                                }}
+                                                className={`flex items-center justify-between p-3 bg-violet-50/50 rounded-xl border border-violet-100/50 hover:bg-violet-100/50 transition-colors ${doc.url && doc.url !== '#' ? 'cursor-pointer' : 'cursor-default'}`}
+                                            >
                                                 <div className="flex items-center gap-2">
                                                     <FileText className="h-4 w-4 text-violet-600" />
                                                     <span className="text-xs font-bold text-neutral-700">{doc.title}</span>
                                                 </div>
                                                 <span className="text-[9px] font-black text-violet-400 uppercase tracking-tighter">{doc.category}</span>
-                                            </div>
+                                            </button>
                                         ))}
                                     </div>
                                 </div>
@@ -359,7 +400,11 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
 
                             <div className="space-y-3">
                                 {documents.length > 0 ? documents.map(doc => (
-                                    <div key={doc.id} className="p-4 bg-neutral-50 rounded-2xl border border-neutral-100 flex items-center gap-4 hover:bg-white hover:shadow-md transition-all group">
+                                    <div
+                                        key={doc.id}
+                                        onClick={() => handleViewDocument(doc)}
+                                        className={`p-4 bg-neutral-50 rounded-2xl border border-neutral-100 flex items-center gap-4 hover:bg-white hover:shadow-md transition-all group ${doc.url && doc.url !== '#' ? 'cursor-pointer' : 'cursor-default'}`}
+                                    >
                                         <div className="p-3 bg-white rounded-xl shadow-sm group-hover:bg-primary-50 transition-colors">
                                             <FileText className="h-6 w-6 text-primary-600" />
                                         </div>
@@ -375,9 +420,27 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
                                                 Added {new Date(doc.date).toLocaleDateString()} • {doc.fileSize} • By {doc.uploadedBy}
                                             </p>
                                         </div>
-                                        <button className="p-2 text-neutral-300 hover:text-primary-600 transition-colors">
-                                            <Download className="h-5 w-5" />
-                                        </button>
+                                        <div className="flex gap-1">
+                                            {doc.url && doc.url !== '#' && (
+                                                <>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleViewDocument(doc); }}
+                                                        className="p-2 text-neutral-300 hover:text-primary-600 transition-colors"
+                                                        title="View Report"
+                                                    >
+                                                        <Eye className="h-5 w-5" />
+                                                    </button>
+                                                    <a href={doc.url} download={doc.title} onClick={(e) => e.stopPropagation()}>
+                                                        <button className="p-2 text-neutral-300 hover:text-secondary-600 transition-colors" title="Download">
+                                                            <Download className="h-5 w-5" />
+                                                        </button>
+                                                    </a>
+                                                </>
+                                            )}
+                                            {(doc.url === '#' || !doc.url) && (
+                                                <span className="text-[10px] font-bold text-neutral-400 uppercase italic">Archive Only</span>
+                                            )}
+                                        </div>
                                     </div>
                                 )) : (
                                     <div className="py-8 text-center bg-neutral-50 rounded-2xl border-2 border-dashed border-neutral-200">
@@ -430,11 +493,154 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
     );
 };
 
+// Add Child Modal Component
+const AddChildModal = ({ onClose, onAdd }) => {
+    const { realParents, isLoading } = useApp();
+    const [formData, setFormData] = useState({
+        name: '',
+        age: '',
+        gender: 'Male',
+        condition: '',
+        school_name: '',
+        parent_id: ''
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.parent_id) {
+            alert('Please select a parent for this child.');
+            return;
+        }
+        setIsSubmitting(true);
+        try {
+            await onAdd({
+                ...formData,
+                age: parseInt(formData.age)
+            });
+            onClose();
+        } catch (err) {
+            console.error('Failed to add child:', err);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-neutral-100 scale-in-center animate-in zoom-in-95 duration-300">
+                <div className="p-8">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 className="text-2xl font-black text-neutral-800 tracking-tight">Add New Child</h2>
+                            <p className="text-neutral-500 text-xs font-bold uppercase tracking-widest mt-1">Onboarding Clinical Profile</p>
+                        </div>
+                        <button onClick={onClose} className="p-2 hover:bg-neutral-100 rounded-full transition-colors">
+                            <X className="h-6 w-6 text-neutral-400" />
+                        </button>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Child's Full Name</label>
+                            <input
+                                required
+                                type="text"
+                                className="w-full px-4 py-3 bg-neutral-50 border border-neutral-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                                placeholder="Enter name"
+                                value={formData.name}
+                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Age</label>
+                                <input
+                                    required
+                                    type="number"
+                                    min="1"
+                                    max="17"
+                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                                    placeholder="Age"
+                                    value={formData.age}
+                                    onChange={e => setFormData({ ...formData, age: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Gender</label>
+                                <select
+                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                                    value={formData.gender}
+                                    onChange={e => setFormData({ ...formData, gender: e.target.value })}
+                                >
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Primary Diagnosis / Condition</label>
+                            <input
+                                required
+                                type="text"
+                                className="w-full px-4 py-3 bg-neutral-50 border border-neutral-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                                placeholder="e.g. Autism Spectrum Disorder"
+                                value={formData.condition}
+                                onChange={e => setFormData({ ...formData, condition: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Assigned Parent</label>
+                            <select
+                                required
+                                className="w-full px-4 py-3 bg-neutral-50 border border-neutral-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                                value={formData.parent_id}
+                                onChange={e => setFormData({ ...formData, parent_id: e.target.value })}
+                            >
+                                <option value="">Select a parent</option>
+                                {(Array.isArray(realParents) ? realParents : []).map(p => (
+                                    <option key={p.id} value={p.id}>{p.name} ({p.email})</option>
+                                ))}
+                            </select>
+                            {realParents.length === 0 && !isLoading && (
+                                <p className="text-[9px] text-orange-600 font-bold">⚠️ No parents found in database. Create a parent first.</p>
+                            )}
+                        </div>
+
+                        <div className="pt-4 flex gap-3">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="flex-1 h-12 rounded-xl font-bold"
+                                onClick={onClose}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="flex-1 h-12 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-black uppercase tracking-widest shadow-lg shadow-primary-200"
+                            >
+                                {isSubmitting ? 'Adding...' : 'Add Child'}
+                            </Button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // Main My Children Component
 const MyChildren = () => {
-    const { currentUser, kids, getChildSessions, getLatestSkillScores } = useApp();
+    const { currentUser, kids, getChildSessions, getLatestSkillScores, addChild, realParents } = useApp();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedChild, setSelectedChild] = useState(null);
+    const [showAddModal, setShowAddModal] = useState(false);
 
     // Get therapist's children
     const therapistId = currentUser?.id || 't1';
@@ -470,7 +676,7 @@ const MyChildren = () => {
                     <h2 className="text-2xl font-bold text-neutral-800">My Children</h2>
                     <p className="text-neutral-500">Manage your caseload of {myChildren.length} children</p>
                 </div>
-                <Button>
+                <Button onClick={() => setShowAddModal(true)}>
                     <Users className="h-4 w-4 mr-2" />
                     Add New Child
                 </Button>
@@ -586,6 +792,13 @@ const MyChildren = () => {
                     sessions={selectedChildData.sessions}
                     skillScores={selectedChildData.skillScores}
                     onClose={() => setSelectedChild(null)}
+                />
+            )}
+            {/* Add Child Modal */}
+            {showAddModal && (
+                <AddChildModal
+                    onClose={() => setShowAddModal(false)}
+                    onAdd={addChild}
                 />
             )}
         </div>

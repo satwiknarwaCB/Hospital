@@ -62,7 +62,7 @@ export const USERS = [
         name: 'Director Anjali Sharma',
         email: 'anjali.sharma@neurobridge.com',
         role: 'admin',
-        avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=200',
+        avatar: '/logo.svg',
         joinedAt: '2023-01-01'
     }
 ];
@@ -1193,7 +1193,7 @@ export const DOCUMENTS = [
         uploadedBy: 'Dr. Rajesh Kumar',
         fileSize: '1.2 MB',
         status: 'verified',
-        url: '#'
+        url: 'https://images.unsplash.com/photo-1576091160550-217359f4ecf8?auto=format&fit=crop&q=80&w=800'
     },
     {
         id: 'doc2',
@@ -1206,7 +1206,7 @@ export const DOCUMENTS = [
         uploadedBy: 'Dr. Sarah Smith',
         fileSize: '2.4 MB',
         status: 'verified',
-        url: '#'
+        url: 'https://images.unsplash.com/photo-1581056344415-3abb400d729a?auto=format&fit=crop&q=80&w=800'
     },
     {
         id: 'doc3',
@@ -1219,6 +1219,6 @@ export const DOCUMENTS = [
         uploadedBy: 'Dr. Anita Desai',
         fileSize: '0.8 MB',
         status: 'verified',
-        url: '#'
+        url: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800'
     }
 ];

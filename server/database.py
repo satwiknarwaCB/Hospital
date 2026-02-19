@@ -86,6 +86,12 @@ class DatabaseManager:
         """Get community messages collection"""
         return self.get_database()["community_messages"]
 
+    @property
+    def direct_messages(self):
+        """Get direct (private) messages collection"""
+        return self.get_database()["direct_messages"]
+
+
 
 # Create global database manager instance
 db_manager = DatabaseManager()

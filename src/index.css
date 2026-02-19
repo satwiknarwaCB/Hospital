@@ -3,13 +3,16 @@
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+@import './responsive.css';
 
 @layer base {
-  html, body {
+
+  html,
+  body {
     overflow-x: hidden;
     max-width: 100vw;
   }
-  
+
   body {
     font-family: theme('fontFamily.sans');
     color: theme('colors.neutral.800');

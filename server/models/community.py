@@ -1,7 +1,7 @@
 """
 Community data models for request/response validation
 """
-from typing import Optional, List
+from typing import Optional, List, Dict
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
 
@@ -61,6 +61,7 @@ class CommunityMessageInDB(BaseModel):
     content: str
     attachments: List[str] = Field(default_factory=list)
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    reactions: Dict[str, List[str]] = Field(default_factory=dict) # emoji -> list of user_ids
     is_deleted: bool = False
     
     class Config:
@@ -77,6 +78,7 @@ class CommunityMessageResponse(BaseModel):
     content: str
     attachments: List[str] = []
     timestamp: datetime
+    reactions: Dict[str, List[str]] = {} # emoji -> list of user_ids
     
     class Config:
         json_encoders = {

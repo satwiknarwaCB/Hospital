@@ -20,6 +20,7 @@ class ParentInDB(BaseModel):
     hashed_password: str
     phone: Optional[str] = None
     address: Optional[str] = None
+    avatar: Optional[str] = None
     children_ids: List[str] = Field(default_factory=list, description="IDs of children")
     child_id: Optional[str] = Field(None, description="Primary child ID for portal")
     relationship: Optional[str] = None  # e.g., "Mother", "Father"
@@ -31,6 +32,7 @@ class ParentInDB(BaseModel):
         populate_by_name = True
 
 
+
 class ParentResponse(BaseModel):
     """Parent response model (without password)"""
     id: str
@@ -38,6 +40,7 @@ class ParentResponse(BaseModel):
     email: str
     phone: Optional[str] = None
     address: Optional[str] = None
+    avatar: Optional[str] = None
     children_ids: List[str] = []
     childId: Optional[str] = None
     relationship: Optional[str] = None
@@ -81,8 +84,20 @@ class ParentCreate(BaseModel):
         return v
 
 
+class ParentUpdate(BaseModel):
+    """Parent update model"""
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    avatar: Optional[str] = None
+    relationship: Optional[str] = None
+    document: Optional[str] = None
+    documentName: Optional[str] = None
+
+
 class TokenResponse(BaseModel):
     """JWT token response model"""
     access_token: str
     token_type: str = "bearer"
     parent: ParentResponse
+

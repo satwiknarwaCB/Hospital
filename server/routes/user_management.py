@@ -5,7 +5,7 @@ from models.doctor import DoctorCreate, DoctorResponse
 from models.parent import ParentCreate, ParentResponse
 from utils.auth import hash_password
 from models.admin import AdminResponse
-from middleware.auth_middleware import get_current_admin
+from middleware.auth_middleware import get_current_admin, get_current_user
 from datetime import datetime, timezone
 import uuid
 from utils.email import send_invitation_email
@@ -230,7 +230,7 @@ from models.child import ChildCreate, ChildResponse
 # ... (existing code)
 
 @router.get("/children", response_model=List[ChildResponse])
-async def list_children(current_admin: AdminResponse = Depends(get_current_admin)):
+async def list_children(current_user: dict = Depends(get_current_user)):
     """
     List all children with full details
     """
@@ -245,6 +245,14 @@ async def list_children(current_admin: AdminResponse = Depends(get_current_admin
             school_name=c.get("school_name"),
             parent_id=c.get("parent_id", ""),
             therapistId=c.get("therapistId"),
+            photoUrl=c.get("photoUrl"),
+            program=c.get("program", []),
+            currentMood=c.get("currentMood"),
+            moodContext=c.get("moodContext"),
+            streak=c.get("streak", 0),
+            schoolReadinessScore=c.get("schoolReadinessScore", 0),
+            status=c.get("status", "active"),
+            documents=c.get("documents", []),
             created_at=c.get("created_at", datetime.now(timezone.utc))
         ) for c in children
     ]
@@ -252,7 +260,7 @@ async def list_children(current_admin: AdminResponse = Depends(get_current_admin
 @router.post("/child", response_model=ChildResponse, status_code=status.HTTP_201_CREATED)
 async def create_child(
     child: ChildCreate,
-    current_admin: AdminResponse = Depends(get_current_admin)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Create a new child record and link to parent
@@ -331,11 +339,23 @@ async def delete_child(
 async def assign_child_to_therapist(
     child_id: str,
     therapist_id: str,
-    current_admin: AdminResponse = Depends(get_current_admin)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Assign a child to a therapist. Use 'none' to unassign.
     """
+    # Authorization: Admin can do anything. Therapist can only assign to themselves.
+    if current_user["role"] != "admin":
+        if current_user["role"] != "therapist":
+             raise HTTPException(status_code=403, detail="Not authorized")
+        if therapist_id.lower() != "none" and current_user["id"] != therapist_id:
+             raise HTTPException(status_code=403, detail="Can only assign to yourself")
+        if therapist_id.lower() == "none" and current_user["role"] == "therapist":
+             # Optional: Allow therapist to unassign themselves?
+             # For now, let's assume they can only UNASSIGN themselves if they are currently assigned?
+             # But the frontend logic for 'addChild' calls this with 'currentUser.id', so it's an assignment.
+             pass
+
     # Use "none" as a special value to unassign
     update_val = therapist_id if therapist_id.lower() != "none" else None
     
@@ -351,7 +371,7 @@ async def assign_child_to_therapist(
 
 
 @router.get("/therapists", response_model=List[DoctorResponse])
-async def list_therapists(current_admin: AdminResponse = Depends(get_current_admin)):
+async def list_therapists(current_user: dict = Depends(get_current_user)):
     """
     List all therapist accounts
     """
@@ -373,7 +393,7 @@ async def list_therapists(current_admin: AdminResponse = Depends(get_current_adm
     ]
 
 @router.get("/parents", response_model=List[ParentResponse])
-async def list_parents(current_admin: AdminResponse = Depends(get_current_admin)):
+async def list_parents(current_user: dict = Depends(get_current_user)):
     """
     List all parent accounts
     """
@@ -385,6 +405,7 @@ async def list_parents(current_admin: AdminResponse = Depends(get_current_admin)
             email=p["email"],
             phone=p.get("phone"),
             address=p.get("address"),
+            avatar=p.get("avatar"),
             children_ids=p.get("children_ids", []),
             childId=p.get("child_id") or (p.get("children_ids")[0] if p.get("children_ids") else None),
             relationship=p.get("relationship"),

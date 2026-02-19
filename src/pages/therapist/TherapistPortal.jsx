@@ -4,7 +4,7 @@
 // ============================================================
 
 import React from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, Outlet } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import {
     LayoutDashboard,
@@ -34,7 +34,7 @@ import BaselineArchive from './BaselineArchive';
 // ============================================================
 // Therapist Layout Wrapper with Logout
 // ============================================================
-const TherapistLayoutWrapper = ({ children }) => {
+const TherapistLayoutWrapper = () => {
     const { logout } = useAuth();
     const navigate = useNavigate();
 
@@ -64,7 +64,7 @@ const TherapistLayoutWrapper = ({ children }) => {
             roleColor="bg-secondary-600"
             onLogout={handleLogout}
         >
-            {children}
+            <Outlet />
         </DashboardLayout>
     );
 };
@@ -115,10 +115,10 @@ const TherapistDashboard = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
                 <div>
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-2xl font-bold text-neutral-800">Welcome back, {currentUser?.name?.split(' ')[0] || 'Doctor'}! 👋</h2>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="text-xl sm:text-2xl font-bold text-neutral-800">Welcome back, {currentUser?.name?.split(' ')[0] || 'Doctor'}! 👋</h2>
                         <div className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full border border-green-200 shadow-sm animate-pulse-slow">
                             <Lock className="h-3 w-3" />
                             <span className="text-[10px] font-bold uppercase tracking-widest">Secure Bridge Active</span>
@@ -126,7 +126,7 @@ const TherapistDashboard = () => {
                     </div>
                     <p className="text-neutral-500">Here's your therapy overview for today.</p>
                 </div>
-                <Button onClick={() => navigate('/therapist/schedule', { state: { activeTab: 'logs' } })}>+ Log New Session</Button>
+                <Button className="w-full sm:w-auto shrink-0" onClick={() => navigate('/therapist/schedule', { state: { activeTab: 'logs' } })}>+ Log New Session</Button>
             </div>
 
             {/* Stats Row */}
@@ -185,7 +185,7 @@ const TherapistDashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-violet-500 to-purple-600 text-white" onClick={() => navigate('/therapist/clinical-brain')}>
                     <CardContent className="p-6 flex items-center gap-4">
                         <Brain className="h-10 w-10 text-violet-200" />
@@ -239,24 +239,24 @@ const TherapistDashboard = () => {
                         {todaySessions.length > 0 ? todaySessions.slice(0, 5).map(session => {
                             const child = kids.find(c => c.id === session.childId);
                             return (
-                                <div key={session.id} className="flex items-center p-4 bg-neutral-50 rounded-xl hover:shadow-md transition-shadow cursor-pointer">
-                                    <div className="h-12 w-12 rounded-full bg-neutral-200 flex items-center justify-center text-lg font-bold text-neutral-600 mr-4">
+                                <div key={session.id} className="flex flex-wrap sm:flex-nowrap items-center gap-3 p-4 bg-neutral-50 rounded-xl hover:shadow-md transition-shadow cursor-pointer">
+                                    <div className="h-12 w-12 rounded-full bg-neutral-200 flex items-center justify-center text-lg font-bold text-neutral-600 shrink-0">
                                         {new Date(session.date).getHours()}:{new Date(session.date).getMinutes().toString().padStart(2, '0')}
                                     </div>
                                     <img
                                         src={child?.photoUrl}
                                         alt={child?.name}
-                                        className="w-10 h-10 rounded-full mr-3"
+                                        className="w-10 h-10 rounded-full shrink-0"
                                     />
-                                    <div className="flex-1">
-                                        <h4 className="font-semibold text-neutral-900">{child?.name || 'Unknown'}</h4>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-semibold text-neutral-900 truncate">{child?.name || 'Unknown'}</h4>
                                         <p className="text-sm text-neutral-500">{session.type} • {session.duration} mins</p>
                                     </div>
-                                    <div>
+                                    <div className="w-full sm:w-auto mt-2 sm:mt-0">
                                         {session.status === 'completed' ? (
-                                            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Completed</span>
+                                            <span className="block sm:inline-block text-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Completed</span>
                                         ) : (
-                                            <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); navigate('/therapist/schedule', { state: { activeTab: 'logs' } }); }}>
+                                            <Button size="sm" variant="secondary" className="w-full sm:w-auto" onClick={(e) => { e.stopPropagation(); navigate('/therapist/schedule', { state: { activeTab: 'logs' } }); }}>
                                                 Start Session
                                             </Button>
                                         )}

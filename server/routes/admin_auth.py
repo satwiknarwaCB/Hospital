@@ -16,8 +16,9 @@ async def login(credentials: AdminLogin):
     """
     Admin login endpoint
     """
-    # Find admin by email
-    admin_data = db_manager.admins.find_one({"email": credentials.email})
+    # Find admin by email (case-insensitive)
+    import re
+    admin_data = db_manager.admins.find_one({"email": {"$regex": f"^{re.escape(credentials.email)}$", "$options": "i"}})
     
     if not admin_data:
         raise HTTPException(
@@ -49,8 +50,8 @@ async def login(credentials: AdminLogin):
     # Prepare admin response
     admin_response = AdminResponse(
         id=str(admin_data["_id"]),
-        name=str(admin_data["name"]),
-        email=str(admin_data["email"]),
+        name=str(admin_data.get("name", "Admin")),
+        email=str(admin_data.get("email", "")),
         role="admin",
         is_active=bool(admin_data.get("is_active", True))
     )

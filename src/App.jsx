@@ -96,9 +96,6 @@ function AppContent() {
                 }
             />
 
-            {/* Admin Portal */}
-            <Route path="/admin/*" element={<AdminPortal />} />
-
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

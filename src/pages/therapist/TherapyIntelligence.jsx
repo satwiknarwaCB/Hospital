@@ -104,7 +104,7 @@ const ActivityEffectivenessChart = ({ activities = [] }) => {
         <div className="space-y-3">
             {safeActivities.map((activity, idx) => (
                 <div key={idx} className="flex items-center gap-3">
-                    <span className="w-32 text-sm text-neutral-600 truncate">{activity.activity || 'Unknown'}</span>
+                    <span className="w-20 sm:w-32 text-xs sm:text-sm text-neutral-600 truncate shrink-0">{activity.activity || 'Unknown'}</span>
                     <div className="flex-1 h-6 bg-neutral-100 rounded-full overflow-hidden relative">
                         <div
                             className={`h-full rounded-full transition-all ${activity.avgEngagement >= 80 ? 'bg-green-500' :

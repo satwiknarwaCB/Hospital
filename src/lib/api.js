@@ -4,9 +4,10 @@
  */
 import axios from 'axios';
 
-// API base URL - update this to match your backend
-// API base URL - Using 127.0.0.1 for maximum stability
-const API_BASE_URL = 'http://127.0.0.1:8000';
+// API base URL - Using environment variable with fallback for stability
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
+
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -29,12 +30,15 @@ apiClient.interceptors.request.use(
         } else if (config.url.includes('/api/doctor')) {
             token = localStorage.getItem('doctor_token');
         } else if (config.url.includes('/api/admin')) {
-            token = localStorage.getItem('admin_token');
-        } else {
-            // Fallback: try all
-            token = localStorage.getItem('parent_token') ||
+            // Admin routes can now be accessed by doctors/therapists/parents for specific shared tasks (like reading users/children)
+            token = localStorage.getItem('admin_token') ||
                 localStorage.getItem('doctor_token') ||
-                localStorage.getItem('admin_token');
+                localStorage.getItem('parent_token');
+        } else {
+            // Fallback: try all in order of priority
+            token = localStorage.getItem('doctor_token') ||
+                localStorage.getItem('admin_token') ||
+                localStorage.getItem('parent_token');
         }
 
         if (token) {
@@ -55,25 +59,31 @@ apiClient.interceptors.response.use(
             // Token expired or invalid - clear storage and redirect to login
             const currentPath = window.location.pathname;
 
-            // Determine which role based on current path
             if (currentPath.includes('/parent')) {
                 localStorage.removeItem('parent_token');
                 localStorage.removeItem('parent_data');
-                if (currentPath !== '/parent/login') {
+                if (!currentPath.includes('/login')) {
                     window.location.href = '/parent/login';
                 }
-            } else if (currentPath.includes('/doctor')) {
+            } else if (currentPath.includes('/doctor') || currentPath.includes('/therapist')) {
                 localStorage.removeItem('doctor_token');
                 localStorage.removeItem('doctor_data');
-                if (currentPath !== '/doctor/login') {
-                    window.location.href = '/doctor/login';
+                if (!currentPath.includes('/login')) {
+                    window.location.href = currentPath.includes('/therapist') ? '/therapist/login' : '/doctor/login';
+                }
+            } else if (currentPath.includes('/admin')) {
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_data');
+                if (!currentPath.includes('/login')) {
+                    window.location.href = '/admin/login';
                 }
             } else {
-                // Clear both just in case
                 localStorage.removeItem('doctor_token');
                 localStorage.removeItem('doctor_data');
                 localStorage.removeItem('parent_token');
                 localStorage.removeItem('parent_data');
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_data');
             }
         }
         return Promise.reject(error);
@@ -122,6 +132,16 @@ export const doctorAuthAPI = {
         const response = await apiClient.get('/api/doctor/me');
         return response.data;
     },
+
+    /**
+     * Update doctor/therapist profile
+     * @param {Object} profileData - Updated profile data (name, phone, address, avatar)
+     * @returns {Promise} - Updated doctor profile
+     */
+    updateProfile: async (profileData) => {
+        const response = await apiClient.put('/api/doctor/profile', profileData);
+        return response.data;
+    },
 };
 
 // Parent Authentication API
@@ -164,6 +184,16 @@ export const parentAuthAPI = {
      */
     getMe: async () => {
         const response = await apiClient.get('/api/parent/me');
+        return response.data;
+    },
+
+    /**
+     * Update parent profile
+     * @param {Object} profileData - Updated profile data (name, phone, address, avatar)
+     * @returns {Promise} - Updated parent profile
+     */
+    updateProfile: async (profileData) => {
+        const response = await apiClient.put('/api/parent/profile', profileData);
         return response.data;
     },
 };
@@ -322,6 +352,23 @@ export const communityAPI = {
     },
 
     /**
+     * Add/remove reaction to community message
+     * @param {string} communityId - Community ID
+     * @param {string} messageId - Message ID
+     * @param {string} emoji - Emoji to react with
+     */
+    reactToMessage: async (communityId, messageId, emoji) => {
+        try {
+            const response = await apiClient.patch(`/api/communities/${communityId}/messages/${messageId}/react`, null, {
+                params: { emoji }
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
      * Get community members
      * @param {string} communityId - Community ID
      * @returns {Promise} - List of members
@@ -357,6 +404,22 @@ export const communityAPI = {
     leave: async (communityId) => {
         try {
             const response = await apiClient.delete(`/api/communities/${communityId}/leave`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Delete a community message (soft-delete on server)
+     * Only the original sender can delete their message.
+     * @param {string} communityId - Community ID
+     * @param {string} messageId - Message ID
+     * @returns {Promise} - Deletion status
+     */
+    deleteMessage: async (communityId, messageId) => {
+        try {
+            const response = await apiClient.delete(`/api/communities/${communityId}/messages/${messageId}`);
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;
@@ -415,6 +478,55 @@ export const messagesAPI = {
     getUnreadCount: async () => {
         try {
             const response = await apiClient.get('/api/messages/unread/count');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Delete a message only for the current user (other party still sees it)
+     * @param {string} messageId - Message ID
+     * @returns {Promise} - Deletion status
+     */
+    deleteForMe: async (messageId) => {
+        try {
+            const response = await apiClient.delete(`/api/messages/${messageId}`, {
+                params: { mode: 'for_me' }
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Delete a message for both sender and recipient (sender only)
+     * @param {string} messageId - Message ID
+     * @returns {Promise} - Deletion status
+     */
+    deleteForEveryone: async (messageId) => {
+        try {
+            const response = await apiClient.delete(`/api/messages/${messageId}`, {
+                params: { mode: 'for_everyone' }
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Toggle an emoji reaction on a private message
+     * @param {string} messageId - Message ID
+     * @param {string} emoji - Emoji character
+     * @returns {Promise} - Updated reactions object { reactions: {...} }
+     */
+    reactToMessage: async (messageId, emoji) => {
+        try {
+            const response = await apiClient.patch(`/api/messages/${messageId}/react`, null, {
+                params: { emoji }
+            });
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;
@@ -622,6 +734,14 @@ export const publicAPI = {
      */
     activateAccount: async (data) => {
         const response = await apiClient.post('/api/public/activate', data);
+        return response.data;
+    },
+
+    /**
+     * Public signup for parents
+     */
+    signup: async (data) => {
+        const response = await apiClient.post('/api/public/signup', data);
         return response.data;
     }
 };

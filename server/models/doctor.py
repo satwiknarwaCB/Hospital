@@ -45,6 +45,8 @@ class DoctorResponse(BaseModel):
     created_at: Optional[datetime] = None
     role: str = "therapist"
     invitation_link: Optional[str] = None
+    avatar: Optional[str] = None
+    address: Optional[str] = None
     
     class Config:
         json_encoders = {
@@ -80,6 +82,14 @@ class DoctorCreate(BaseModel):
         if not any(c.isdigit() for c in v):
             raise ValueError('Password must contain at least one digit')
         return v
+
+
+class DoctorUpdate(BaseModel):
+    """Doctor/Therapist profile update request model"""
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    avatar: Optional[str] = None
 
 
 class TokenResponse(BaseModel):

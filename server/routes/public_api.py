@@ -1,6 +1,9 @@
 from fastapi import APIRouter
 from database import db_manager
 from typing import List
+from datetime import datetime, timezone
+from models.parent import ParentCreate, ParentResponse
+import uuid
 
 router = APIRouter(prefix="/api/public", tags=["Public"])
 
@@ -74,3 +77,65 @@ async def activate_account(data: ActivationRequest):
     )
     
     return {"message": "Account activated successfully. You can now login."}
+
+@router.post("/signup", response_model=ParentResponse, status_code=status.HTTP_201_CREATED)
+async def signup(parent: ParentCreate):
+    """
+    Public signup for parents
+    """
+    print(f"[PUBLIC-SIGNUP] New registration attempt: {parent.email}")
+    
+    # Check if user already exists
+    if db_manager.parents.find_one({"email": parent.email}):
+        print(f"[PUBLIC-SIGNUP FAIL] Email already exists: {parent.email}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Account with this email already exists"
+        )
+    
+    # Ensure password is provided for public signup
+    if not parent.password:
+         raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password is required for registration"
+        )
+
+    # Generate unique ID
+    parent_id = str(uuid.uuid4())
+    
+    # Hash password
+    hashed_password = hash_password(parent.password)
+    
+    # Prepare parent data
+    parent_data = {
+        "_id": parent_id,
+        "name": str(parent.name),
+        "email": str(parent.email),
+        "hashed_password": hashed_password,
+        "phone": str(parent.phone) if parent.phone else None,
+        "address": str(parent.address) if parent.address else None,
+        "children_ids": [], # New account has no children yet
+        "relationship": str(parent.relationship) if parent.relationship else None,
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
+        "is_active": True,
+        "activation_token": None
+    }
+    
+    # Save to database
+    db_manager.parents.insert_one(parent_data)
+    print(f"[PUBLIC-SIGNUP SUCCESS] Created parent: {parent.email} (ID: {parent_id})")
+    
+    return ParentResponse(
+        id=parent_id,
+        name=parent_data["name"],
+        email=parent_data["email"],
+        phone=parent_data["phone"],
+        address=parent_data["address"],
+        children_ids=[],
+        childId=None,
+        relationship=parent_data["relationship"],
+        is_active=True,
+        created_at=parent_data["created_at"],
+        role="parent"
+    )

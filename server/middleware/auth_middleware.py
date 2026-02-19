@@ -81,7 +81,9 @@ async def get_current_doctor(
         phone=doctor_data.get("phone"),
         license_number=doctor_data.get("license_number"),
         is_active=doctor_data.get("is_active", True),
-        role="therapist"
+        role="therapist",
+        avatar=doctor_data.get("avatar"),
+        address=doctor_data.get("address"),
     )
 
 
@@ -163,14 +165,17 @@ async def get_current_parent(
     
     # Return parent response (without password)
     return ParentResponse(
-        id=parent_data["_id"],
-        name=parent_data["name"],
-        email=parent_data["email"],
+        id=str(parent_data["_id"]),
+        name=parent_data.get("name", "Unknown"),
+        email=parent_data.get("email", ""),
         phone=parent_data.get("phone"),
+        address=parent_data.get("address"),
+        avatar=parent_data.get("avatar"),
         children_ids=parent_data.get("children_ids", []),
-        childId=parent_data.get("child_id") or (parent_data.get("children_ids")[0] if parent_data.get("children_ids") else None),
+        childId=str(parent_data.get("child_id") or (parent_data.get("children_ids")[0] if parent_data.get("children_ids") else "")),
         relationship=parent_data.get("relationship"),
-        is_active=parent_data.get("is_active", True)
+        is_active=parent_data.get("is_active", True),
+        created_at=parent_data.get("created_at")
     )
 
 

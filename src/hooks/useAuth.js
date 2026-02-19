@@ -3,7 +3,8 @@
  * Manages doctor and parent authentication state and operations
  */
 import { useState, useEffect } from 'react';
-import { doctorAuthAPI, parentAuthAPI, adminAuthAPI } from '../lib/api';
+import { doctorAuthAPI, parentAuthAPI, adminAuthAPI, publicAPI, API_BASE_URL } from '../lib/api';
+
 
 export const useAuth = () => {
     const [doctor, setDoctor] = useState(null);
@@ -107,10 +108,17 @@ export const useAuth = () => {
             try {
                 response = await attemptLogin(detectedRole);
             } catch (err) {
-                // If auto-detected and failed, try the other role (parent <-> doctor)
-                if (!role && (detectedRole === 'doctor' || detectedRole === 'parent')) {
+                // Determine if we should try fallback
+                // Only fallback if:
+                // 1. It's an auto-detected role (no explicit role passed)
+                // 2. The error is NOT a network error (server is up)
+                // 3. The error is 401 (Unauthorized) or 404 (Not Found)
+                const isNetworkError = err.message === 'Network Error' || !err.response;
+                const isAuthError = err.response?.status === 401 || err.response?.status === 404;
+
+                if (!role && !isNetworkError && isAuthError && (detectedRole === 'doctor' || detectedRole === 'parent')) {
                     const fallbackRole = detectedRole === 'doctor' ? 'parent' : 'doctor';
-                    console.log(`⚠️ Login as ${detectedRole} failed. Trying fallback role: ${fallbackRole}`);
+                    console.log(`⚠️ Login as ${detectedRole} failed (Auth). Trying fallback role: ${fallbackRole}`);
                     try {
                         response = await attemptLogin(fallbackRole);
                         detectedRole = fallbackRole; // Update role if fallback succeeded
@@ -118,6 +126,10 @@ export const useAuth = () => {
                         throw err; // Throw original error if fallback also fails
                     }
                 } else {
+                    // Log more helpful message for network errors
+                    if (isNetworkError) {
+                        console.error(`❌ Connection refused to ${API_BASE_URL}. Is the backend server running?`);
+                    }
                     throw err;
                 }
             }
@@ -132,6 +144,7 @@ export const useAuth = () => {
                 // Clear others
                 localStorage.removeItem('doctor_token'); localStorage.removeItem('doctor_data'); setDoctor(null);
                 localStorage.removeItem('admin_token'); localStorage.removeItem('admin_data'); setAdmin(null);
+                window.dispatchEvent(new Event('auth-change'));
                 return response.parent;
             } else if (detectedRole === 'admin') {
                 localStorage.setItem('admin_token', response.access_token);
@@ -140,6 +153,7 @@ export const useAuth = () => {
                 // Clear others
                 localStorage.removeItem('doctor_token'); localStorage.removeItem('doctor_data'); setDoctor(null);
                 localStorage.removeItem('parent_token'); localStorage.removeItem('parent_data'); setParent(null);
+                window.dispatchEvent(new Event('auth-change'));
                 return response.admin;
             } else {
                 localStorage.setItem('doctor_token', response.access_token);
@@ -148,6 +162,7 @@ export const useAuth = () => {
                 // Clear others
                 localStorage.removeItem('parent_token'); localStorage.removeItem('parent_data'); setParent(null);
                 localStorage.removeItem('admin_token'); localStorage.removeItem('admin_data'); setAdmin(null);
+                window.dispatchEvent(new Event('auth-change'));
                 return response.doctor;
             }
         } catch (err) {
@@ -279,6 +294,37 @@ export const useAuth = () => {
         }
     };
 
+    /**
+     * Signup for parents
+     * @param {Object} data - Parent registration data
+     * @returns {Promise<Object>} - Created parent data
+     */
+    const signup = async (data) => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await publicAPI.signup(data);
+            setLoading(false);
+            return response;
+        } catch (err) {
+            console.error('❌ Signup error:', err);
+            let errorMessage = 'Signup failed. Please try again.';
+            if (err.response?.data?.detail) {
+                if (Array.isArray(err.response.data.detail)) {
+                    // Handle FastAPI validation error list
+                    errorMessage = err.response.data.detail.map(d => d.msg).join(', ');
+                } else {
+                    errorMessage = err.response.data.detail;
+                }
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            setError(errorMessage);
+            setLoading(false);
+            throw new Error(errorMessage);
+        }
+    };
+
     return {
         doctor,
         parent,
@@ -287,6 +333,7 @@ export const useAuth = () => {
         loading,
         error,
         login,
+        signup,
         logout,
         getToken,
         isAuthenticated,

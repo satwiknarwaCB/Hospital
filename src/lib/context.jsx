@@ -148,7 +148,38 @@ export const AppProvider = ({ children }) => {
     const refreshChildren = useCallback(async () => {
         try {
             const childrenData = await userManagementAPI.listChildren();
-            setRealChildren(Array.isArray(childrenData) ? childrenData : []);
+            const fetched = Array.isArray(childrenData) ? childrenData : [];
+            setRealChildren(fetched);
+
+            // Merge backend data into kids state to ensure UI picks up real documents/data
+            setKids(prev => {
+                const merged = [...prev];
+                fetched.forEach(child => {
+                    const childId = child.id || child._id;
+                    const index = merged.findIndex(k => k.id === childId);
+                    if (index !== -1) {
+                        // Preserve mock properties but update with real backend data
+                        merged[index] = {
+                            ...merged[index],
+                            ...child,
+                            id: childId,
+                            diagnosis: child.condition || merged[index].diagnosis,
+                            parentId: child.parent_id || merged[index].parentId
+                        };
+                    } else {
+                        // New child from backend
+                        merged.push({
+                            ...child,
+                            id: childId,
+                            diagnosis: child.condition,
+                            parentId: child.parent_id,
+                            photoUrl: child.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${child.name}`,
+                            program: child.program || ["Speech Therapy"]
+                        });
+                    }
+                });
+                return merged;
+            });
         } catch (err) {
             console.warn('Failed to refresh children:', err);
         }
@@ -169,10 +200,14 @@ export const AppProvider = ({ children }) => {
 
     // Initial fetch for users
     useEffect(() => {
-        if (isAuthenticated && currentUser?.role === 'admin') {
+        if (isAuthenticated && currentUser) {
+            // Everyone needs children data for dossiers/dashboards
+            refreshChildren();
+
+            // Admins/Therapists need full user lists; Parents can benefit for message recipients
             refreshUsers();
         }
-    }, [isAuthenticated, currentUser, refreshUsers]);
+    }, [isAuthenticated, currentUser?.role, refreshUsers, refreshChildren]);
     // Sync with localStorage on mount and when authentication changes
     useEffect(() => {
         const syncAuth = () => {
@@ -233,7 +268,7 @@ export const AppProvider = ({ children }) => {
         const normalizedRealTherapists = realTherapists.map(t => ({
             ...t,
             id: t.id || t._id,
-            avatar: t.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${t.name}`,
+            avatar: t.avatar || (t.avatarUrl) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${t.name}`,
             role: 'therapist'
         }));
 
@@ -244,12 +279,23 @@ export const AppProvider = ({ children }) => {
             role: 'parent'
         }));
 
-        const filteredMock = users.filter(mu =>
-            !normalizedRealTherapists.find(rt => rt.email.toLowerCase() === mu.email.toLowerCase()) &&
-            !normalizedRealParents.find(rp => rp.email.toLowerCase() === mu.email.toLowerCase())
-        );
+        // Merge Mock Users with Real Data (keyed by email)
+        const mergedMock = users.map(mu => {
+            const realT = normalizedRealTherapists.find(rt => rt.email?.toLowerCase() === mu.email?.toLowerCase());
+            if (realT) return { ...mu, ...realT };
+            const realP = normalizedRealParents.find(rp => rp.email?.toLowerCase() === mu.email?.toLowerCase());
+            if (realP) return { ...mu, ...realP };
+            return mu;
+        });
 
-        return [...normalizedRealTherapists, ...normalizedRealParents, ...filteredMock];
+        // Add brand new real users that aren't in mock
+        const knownEmails = new Set(users.map(u => u.email?.toLowerCase()));
+        const novelReal = [
+            ...normalizedRealTherapists.filter(rt => rt.email && !knownEmails.has(rt.email.toLowerCase())),
+            ...normalizedRealParents.filter(rp => rp.email && !knownEmails.has(rp.email.toLowerCase()))
+        ];
+
+        return [...mergedMock, ...novelReal];
     }, [users, realTherapists, realParents]);
 
     // Sync kids with realChildren
@@ -263,8 +309,17 @@ export const AppProvider = ({ children }) => {
         }));
 
         setKids(prev => {
-            const mockChildren = CHILDREN.filter(mc => !normalizedRealChildren.find(rc => rc.id === mc.id));
-            return [...normalizedRealChildren, ...mockChildren];
+            const merged = [...prev];
+            normalizedRealChildren.forEach(rc => {
+                const index = merged.findIndex(k => k.id === rc.id);
+                if (index !== -1) {
+                    // Merge: preference to real data, but keep mock data for missing fields
+                    merged[index] = { ...merged[index], ...rc };
+                } else {
+                    merged.push(rc);
+                }
+            });
+            return merged;
         });
     }, [realChildren]);
 
@@ -576,9 +631,12 @@ export const AppProvider = ({ children }) => {
         };
 
         syncProgressFromCloud();
-        const interval = setInterval(syncProgressFromCloud, 120000); // Poll every 2 mins
+        const interval = setInterval(() => {
+            syncProgressFromCloud();
+            refreshChildren(); // Refresh caseload to pick up new documents or changes
+        }, 120000); // Poll every 2 mins
         return () => clearInterval(interval);
-    }, [isAuthenticated, currentUser, kids]);
+    }, [isAuthenticated, currentUser, kids, refreshChildren]);
 
     // Global Message & Community Polling for Notifications
     useEffect(() => {
@@ -829,6 +887,58 @@ export const AppProvider = ({ children }) => {
         });
     }, [currentUser, kids, refreshChildren]);
 
+    const addChild = useCallback(async (childData) => {
+        try {
+            console.log('📝 Creating new child:', childData);
+            const response = await userManagementAPI.createChild(childData);
+            console.log('✅ Child created:', response);
+
+            const newKid = {
+                id: response.id || response._id,
+                name: response.name,
+                age: response.age,
+                gender: response.gender,
+                diagnosis: response.condition,
+                photoUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${response.name}`,
+                program: ["Speech Therapy"],
+                streak: 0,
+                parentId: response.parent_id,
+                therapistId: currentUser?.id
+            };
+
+            setKids(prev => [newKid, ...prev]);
+
+            if (currentUser?.role === 'therapist') {
+                await userManagementAPI.assignTherapist(newKid.id, currentUser.id);
+            }
+
+            addAuditLog({
+                action: 'CHILD_CREATED',
+                userId: currentUser?.id,
+                userName: currentUser?.name,
+                details: `Added new child: ${newKid.name}`
+            });
+
+            return newKid;
+        } catch (err) {
+            console.error('❌ Failed to add child:', err);
+            const localKid = {
+                id: `c${Date.now()}`,
+                name: childData.name,
+                age: childData.age,
+                gender: childData.gender,
+                diagnosis: childData.condition,
+                photoUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${childData.name}`,
+                program: ["Speech Therapy"],
+                streak: 0,
+                parentId: childData.parent_id,
+                therapistId: currentUser?.id
+            };
+            setKids(prev => [localKid, ...prev]);
+            return localKid;
+        }
+    }, [currentUser]);
+
     // ============ Skill Score Actions ============
     const getChildSkillScores = useCallback((childId, limit = null) => {
         const scores = skillScores
@@ -1075,6 +1185,44 @@ export const AppProvider = ({ children }) => {
         setMessages(prev => prev.map(m =>
             m.id === messageId || m._id === messageId ? { ...m, read: true } : m
         ));
+    }, []);
+
+    const deleteMessageForMe = useCallback(async (messageId, currentUserId) => {
+        // Optimistic: hide this message from local state for this user only
+        setMessages(prev => prev.filter(m => m.id !== messageId && m._id !== messageId));
+        try {
+            await messagesAPI.deleteForMe(messageId);
+        } catch (err) {
+            console.warn('Failed to delete message for me on backend:', err);
+        }
+    }, []);
+
+    const deleteMessageForEveryone = useCallback(async (messageId) => {
+        // Optimistic: replace content with "deleted" placeholder
+        setMessages(prev => prev.map(m =>
+            (m.id === messageId || m._id === messageId)
+                ? { ...m, content: '🚫 This message was deleted', is_deleted_for_everyone: true }
+                : m
+        ));
+        try {
+            await messagesAPI.deleteForEveryone(messageId);
+        } catch (err) {
+            console.warn('Failed to delete message for everyone on backend:', err);
+        }
+    }, []);
+
+    const reactToPrivateMessage = useCallback(async (messageId, emoji) => {
+        try {
+            const result = await messagesAPI.reactToMessage(messageId, emoji);
+            // Update local reactions with the server response
+            setMessages(prev => prev.map(m =>
+                (m.id === messageId || m._id === messageId)
+                    ? { ...m, reactions: result.reactions || {} }
+                    : m
+            ));
+        } catch (err) {
+            console.warn('Failed to react to private message:', err);
+        }
     }, []);
 
     // ============ Audit Log Actions ============
@@ -1371,6 +1519,8 @@ export const AppProvider = ({ children }) => {
         cdcMetrics,
         adminStats,
         refreshAdminStats,
+        realParents,
+        refreshUsers,
         currentUser,
         isAuthenticated,
         notifications,
@@ -1396,6 +1546,7 @@ export const AppProvider = ({ children }) => {
         getChildrenByParent,
         updateChildMood,
         assignChildToTherapist,
+        addChild,
 
         // Skill Score Actions
         getChildSkillScores,
@@ -1423,6 +1574,9 @@ export const AppProvider = ({ children }) => {
         getUnreadCount,
         sendMessage,
         markMessageRead,
+        deleteMessageForMe,
+        deleteMessageForEveryone,
+        reactToPrivateMessage,
 
         // Audit Actions
         addAuditLog,
@@ -1451,7 +1605,31 @@ export const AppProvider = ({ children }) => {
 
         // Document Actions
         childDocuments,
-        getChildDocuments: (childId) => childDocuments.filter(d => d.childId === childId).sort((a, b) => new Date(b.date) - new Date(a.date)),
+        getChildDocuments: (childId) => {
+            // Get documents from general documents state (local)
+            const localDocs = childDocuments.filter(d => d.childId === childId);
+
+            // Get documents stored directly on the child object (from backend)
+            const childObj = kids.find(k => k.id === childId);
+            const backendDocs = (childObj?.documents || []).map(doc => ({
+                ...doc,
+                title: doc.title || doc.name,
+                id: doc.id || doc._id || `backend-${Math.random()}`,
+                date: doc.date || (doc.uploaded_at ? new Date(doc.uploaded_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]),
+                uploadedBy: doc.uploadedBy || doc.uploaded_by || 'Parent',
+                url: doc.url || doc.content || '#'
+            }));
+
+            // Merge and sort
+            const merged = [...localDocs];
+            backendDocs.forEach(bd => {
+                if (!merged.some(md => md.id === bd.id || (md.title === bd.title && md.date === bd.date))) {
+                    merged.push(bd);
+                }
+            });
+
+            return merged.sort((a, b) => new Date(b.date) - new Date(a.date));
+        },
         addDocument: (doc) => {
             const newDoc = { ...doc, id: `doc-${Date.now()}`, date: new Date().toISOString().split('T')[0] };
             setChildDocuments(prev => [newDoc, ...prev]);
@@ -1475,11 +1653,12 @@ export const AppProvider = ({ children }) => {
         getActivityAdherence20Days, completeQuickTestGame, getLatestQuickTestResult,
         shareQuickTestResult,
         quickTestResults, quickTestProgress,
-        getChildMessages, getUnreadCount, sendMessage, markMessageRead, addAuditLog,
+        getChildMessages, getUnreadCount, sendMessage, markMessageRead,
+        deleteMessageForMe, deleteMessageForEveryone, reactToPrivateMessage, addAuditLog,
         addNotification, clearNotifications, getEngagementTrend, getTherapistStats,
         skillProgress, getChildProgress, updateSkillProgress,
         skillGoals, getChildGoals, updateSkillGoal, addSkillGoal, deleteSkillGoal, deleteSkillProgress,
-        childDocuments
+        childDocuments, addChild, realParents
     ]);
 
     return (
