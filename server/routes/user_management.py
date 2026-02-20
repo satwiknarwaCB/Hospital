@@ -8,6 +8,7 @@ from models.admin import AdminResponse
 from middleware.auth_middleware import get_current_admin, get_current_user
 from datetime import datetime, timezone
 import uuid
+from bson import ObjectId
 from utils.email import send_invitation_email
 from fastapi import BackgroundTasks
 from config import settings
@@ -266,8 +267,11 @@ async def create_child(
     Create a new child record and link to parent
     """
     
-    # Check if parent exists
+    # Check if parent exists - handle both string ID and ObjectId
     parent = db_manager.parents.find_one({"_id": child.parent_id})
+    if not parent and ObjectId.is_valid(child.parent_id):
+        parent = db_manager.parents.find_one({"_id": ObjectId(child.parent_id)})
+        
     if not parent:
         raise HTTPException(status_code=404, detail="Parent not found")
 
@@ -292,10 +296,16 @@ async def create_child(
     db_manager.children.insert_one(child_data)
     
     # Update parent's children_ids
-    db_manager.parents.update_one(
-        {"_id": child.parent_id},
+    parent_filter = {"_id": child.parent_id}
+    result = db_manager.parents.update_one(
+        parent_filter,
         {"$push": {"children_ids": child_id}}
     )
+    if result.matched_count == 0 and ObjectId.is_valid(child.parent_id):
+        db_manager.parents.update_one(
+            {"_id": ObjectId(child.parent_id)},
+            {"$push": {"children_ids": child_id}}
+        )
     
     return ChildResponse(
         id=child_id,
@@ -317,7 +327,12 @@ async def delete_child(
     """
     Delete a child record
     """
-    child = db_manager.children.find_one({"_id": child_id})
+    child_filter = {"_id": child_id}
+    child = db_manager.children.find_one(child_filter)
+    if not child and ObjectId.is_valid(child_id):
+        child_filter = {"_id": ObjectId(child_id)}
+        child = db_manager.children.find_one(child_filter)
+
     if not child:
         raise HTTPException(status_code=404, detail="Child not found")
         
@@ -331,7 +346,7 @@ async def delete_child(
         )
         
     # Delete child
-    result = db_manager.children.delete_one({"_id": child_id})
+    db_manager.children.delete_one(child_filter)
     
     return None
 
@@ -359,10 +374,18 @@ async def assign_child_to_therapist(
     # Use "none" as a special value to unassign
     update_val = therapist_id if therapist_id.lower() != "none" else None
     
+    child_filter = {"_id": child_id}
     result = db_manager.children.update_one(
-        {"_id": child_id},
+        child_filter,
         {"$set": {"therapistId": update_val, "updated_at": datetime.now(timezone.utc)}}
     )
+    
+    if result.matched_count == 0 and ObjectId.is_valid(child_id):
+        child_filter = {"_id": ObjectId(child_id)}
+        result = db_manager.children.update_one(
+            child_filter,
+            {"$set": {"therapistId": update_val, "updated_at": datetime.now(timezone.utc)}}
+        )
     
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Child not found")
@@ -388,7 +411,9 @@ async def list_therapists(current_user: dict = Depends(get_current_user)):
             license_number=d.get("license_number"),
             is_active=d.get("is_active", True),
             created_at=d.get("created_at"),
-            role="therapist"
+            role="therapist",
+            avatar=d.get("avatar"),
+            address=d.get("address")
         ) for d in doctors
     ]
 

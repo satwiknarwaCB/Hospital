@@ -256,7 +256,8 @@ async def get_community_messages(
     # Get messages with pagination
     messages_cursor = db_manager.community_messages.find({
         "community_id": community_id,
-        "is_deleted": False
+        "is_deleted": False,
+        "deleted_for": {"$ne": current_user["id"]}
     }).sort("timestamp", -1).skip(offset).limit(limit)
     
     messages = []
@@ -333,6 +334,7 @@ async def send_community_message(
         "attachments": message_data.attachments or [],
         "timestamp": datetime.now(timezone.utc),
         "reactions": {},
+        "deleted_for": [],
         "is_deleted": False
     }
     
@@ -447,7 +449,8 @@ async def get_community_members(
                 name=parent["name"],
                 email=parent["email"],
                 joined_at=parent.get("created_at", datetime.now(timezone.utc)),
-                role="parent"
+                role="parent",
+                avatar=parent.get("avatar")
             ))
     
     return members
@@ -457,12 +460,13 @@ async def get_community_members(
 async def delete_community_message(
     community_id: str,
     message_id: str,
+    mode: str = Query("for_me", description="Deletion mode: 'for_me' or 'for_everyone'"),
     current_user = Depends(get_current_community_user)
 ):
     """
-    Soft-delete a community message.
-    Only the original sender can delete their own message.
-    Message is marked is_deleted=True and excluded from future fetches.
+    Delete a community message.
+    - 'for_me': Hides message for current user only (Parents & Therapists)
+    - 'for_everyone': Soft-deletes message for all (Therapists only)
     """
     message = db_manager.community_messages.find_one({
         "_id": message_id,
@@ -472,13 +476,29 @@ async def delete_community_message(
     if not message:
         raise HTTPException(status_code=404, detail="Message not found")
 
-    if str(message.get("sender_id")) != str(current_user.get("id")):
-        raise HTTPException(status_code=403, detail="You can only delete your own messages")
+    if mode == "for_everyone":
+        # Only therapists can delete for everyone, OR sender can delete their own message within a time limit (optional)
+        # Requirement: "only therapists ... should be able to delete the messages" (implying global delete)
+        if current_user["role"] != "therapist":
+             raise HTTPException(
+                status_code=403, 
+                detail="Only therapists can delete messages for everyone."
+            )
+        
+        db_manager.community_messages.update_one(
+            {"_id": message_id},
+            {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}}
+        )
+        return {"status": "deleted_for_everyone", "message_id": message_id}
 
-    db_manager.community_messages.update_one(
-        {"_id": message_id},
-        {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}}
-    )
-
-    return {"status": "deleted", "message_id": message_id}
+    elif mode == "for_me":
+        # Anyone can delete for themselves
+        db_manager.community_messages.update_one(
+            {"_id": message_id},
+            {"$addToSet": {"deleted_for": current_user["id"]}}
+        )
+        return {"status": "deleted_for_me", "message_id": message_id}
+    
+    else:
+        raise HTTPException(status_code=400, detail="Invalid deletion mode")
 

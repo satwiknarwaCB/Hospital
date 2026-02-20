@@ -30,6 +30,7 @@ import RoadmapEditor from './RoadmapEditor';
 import TherapistMessages from './TherapistMessages';
 import TherapistProgressTracking from './TherapistProgressTracking';
 import BaselineArchive from './BaselineArchive';
+import SessionLog from './SessionLog';
 
 // ============================================================
 // Therapist Layout Wrapper with Logout
@@ -80,11 +81,12 @@ const TherapistDashboard = () => {
         sessions,
         getTherapistStats,
         getLatestSkillScores,
+        getTodaysSessions,
         privateUnreadCount,
         communityUnreadCount
     } = useApp();
 
-    const therapistId = currentUser?.id || 't1'; // Assuming 't1' is Dr. Rajesh Kumar for mock data
+    const therapistId = currentUser?.id;
 
     // DEFENSIVE DATA
     const safeKids = Array.isArray(kids) ? kids : [];
@@ -98,12 +100,8 @@ const TherapistDashboard = () => {
     const stats = typeof getTherapistStats === 'function' ? getTherapistStats(therapistId) : { totalChildren: 0, pendingReports: 0, weeklyHours: 0 };
     const totalUnread = (privateUnreadCount || 0) + (communityUnreadCount || 0);
 
-    // Get today's sessions (matching mock data date)
-    const today = new Date().toISOString().split('T')[0];
-    const todaySessions = safeSessions.filter(s =>
-        s.therapistId === therapistId &&
-        (s.date?.startsWith(today) || s.date?.startsWith('2025-12-23'))
-    );
+    // Get today's sessions dynamically
+    const todaySessions = typeof getTodaysSessions === 'function' ? getTodaysSessions(therapistId) : [];
     const completedSessions = todaySessions.filter(s => s.status === 'completed');
 
     // Get children needing attention
@@ -256,7 +254,7 @@ const TherapistDashboard = () => {
                                         {session.status === 'completed' ? (
                                             <span className="block sm:inline-block text-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Completed</span>
                                         ) : (
-                                            <Button size="sm" variant="secondary" className="w-full sm:w-auto" onClick={(e) => { e.stopPropagation(); navigate('/therapist/schedule', { state: { activeTab: 'logs' } }); }}>
+                                            <Button size="sm" variant="secondary" className="w-full sm:w-auto" onClick={(e) => { e.stopPropagation(); navigate('/therapist/log', { state: { childId: session.childId, sessionId: session.id, sessionType: session.type } }); }}>
                                                 Start Session
                                             </Button>
                                         )}
@@ -317,6 +315,7 @@ const TherapistPortal = () => {
                 <Route path="dossier" element={<BaselineArchive />} />
                 <Route path="connect/*" element={<TherapistMessages />} />
                 <Route path="growth-tracking" element={<TherapistProgressTracking />} />
+                <Route path="log" element={<SessionLog />} />
                 <Route path="*" element={<Navigate to="command-center" replace />} />
             </Route>
         </Routes>

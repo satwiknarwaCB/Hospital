@@ -18,10 +18,23 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { communityAPI } from '../lib/api';
+import { useApp } from '../lib/context';
 
 // Message Bubble Component
 const CommunityMessageBubble = ({ message, currentUserId, currentUserRole, members = [], onReact, onDelete }) => {
-    const isOwn = message.sender_id === currentUserId;
+    const { currentUser, users } = useApp();
+
+    // Identify all IDs associated with the current user
+    const myIds = React.useMemo(() => {
+        const ids = [currentUserId];
+        if (currentUser?.id) ids.push(currentUser.id);
+        const me = users?.find(u => u.email?.toLowerCase() === currentUser?.email?.toLowerCase());
+        if (me?.id) ids.push(me.id);
+        if (me?.mockId) ids.push(me.mockId);
+        return [...new Set(ids)];
+    }, [currentUserId, currentUser, users]);
+
+    const isOwn = myIds.includes(message.sender_id);
     const isSystem = message.sender_role === 'system';
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [activeReactionPopover, setActiveReactionPopover] = useState(null); // emoji string or null
@@ -56,28 +69,64 @@ const CommunityMessageBubble = ({ message, currentUserId, currentUserRole, membe
         );
     }
 
+    // Check delete permissions
+    const isTherapist = currentUserRole?.toLowerCase() === 'therapist';
+    // Anyone can delete a message "for me" (except system messages)
+    const canDelete = !isSystem;
+
+    const [showDeleteMenu, setShowDeleteMenu] = useState(false);
+    const deleteMenuRef = useRef(null);
+
+    // Close delete menu when clicking outside
+    useEffect(() => {
+        if (!showDeleteMenu) return;
+        const handleClickOutside = (e) => {
+            if (deleteMenuRef.current && !deleteMenuRef.current.contains(e.target)) {
+                setShowDeleteMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showDeleteMenu]);
+
     return (
         <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-6 group`}>
-            <div className={`max-w-[75%] ${isOwn ? 'order-2' : 'order-1'}`}>
+            <div className={`max-w-[75%] ${isOwn ? 'order-2' : 'order-1'} relative`}>
                 {/* Sender Info - Always visible in community */}
                 <div className={`flex items-center gap-2 mb-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
                     {!isOwn && (
-                        <div className="h-6 w-6 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-                            <User className="h-3 w-3 text-primary-600" />
+                        <div className="h-6 w-6 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            {(() => {
+                                const sender = members.find(m => m.id === message.sender_id) || (Array.isArray(users) ? users : []).find(u => u.id === message.sender_id || u.mockId === message.sender_id);
+                                return sender?.avatar ? (
+                                    <img src={sender.avatar} alt={message.sender_name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <User className="h-3 w-3 text-primary-600" />
+                                );
+                            })()}
                         </div>
                     )}
                     <span className="text-xs font-medium text-neutral-600">
                         {message.sender_name} {message.sender_role === 'therapist' ? <span className="text-[10px] bg-secondary-100 text-secondary-700 px-1.5 py-0.5 rounded-full font-bold ml-1">Therapist</span> : '(Parent)'}
                     </span>
                     {isOwn && (
-                        <div className="h-6 w-6 rounded-full bg-secondary-100 flex items-center justify-center flex-shrink-0">
-                            <User className="h-3 w-3 text-secondary-600" />
+                        <div className="h-6 w-6 rounded-full bg-secondary-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            {currentUser?.avatar ? (
+                                <img src={currentUser.avatar} alt={message.sender_name} className="w-full h-full object-cover" />
+                            ) : (() => {
+                                const sender = members.find(m => m.id === message.sender_id) || (Array.isArray(users) ? users : []).find(u => u.id === message.sender_id || u.mockId === message.sender_id);
+                                return sender?.avatar ? (
+                                    <img src={sender.avatar} alt={message.sender_name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <User className="h-3 w-3 text-secondary-600" />
+                                );
+                            })()}
                         </div>
                     )}
                 </div>
 
                 {/* Message Content */}
-                <div className="relative group">
+                <div className="relative group/bubble">
                     <div className={`rounded-2xl px-4 py-3 ${isOwn
                         ? 'bg-secondary-600 text-white rounded-br-md shadow-md'
                         : 'bg-white text-neutral-800 rounded-bl-md shadow-sm border border-neutral-100'
@@ -87,19 +136,63 @@ const CommunityMessageBubble = ({ message, currentUserId, currentUserRole, membe
                         </p>
                     </div>
 
-                    {/* Quick Reactions Overlay - Always visible for quick interaction */}
+                    {/* Quick Reactions Overlay */}
                     {!isSystem && (
-                        <div className={`absolute top-0 ${isOwn ? '-left-10' : '-right-10'} opacity-100 transition-opacity`}>
+                        <div className={`absolute top-0 ${isOwn ? '-left-10' : '-right-10'} opacity-100 transition-opacity flex flex-col gap-2`}>
                             <button
                                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                                 className={`p-1.5 bg-white rounded-full shadow-lg border animate-in zoom-in-50 duration-300 ${showEmojiPicker ? 'border-secondary-500 ring-2 ring-secondary-100 scale-110' : 'border-neutral-200 hover:bg-neutral-50 hover:scale-110'}`}
                                 title="Add Reaction"
                             >
-                                <Smile className="h-5 w-5 text-secondary-500 font-bold" />
+                                <Smile className="h-4 w-4 text-secondary-500 font-bold" />
                             </button>
 
+                            {/* Delete Button */}
+                            {canDelete && onDelete && (
+                                <div className="relative" ref={deleteMenuRef}>
+                                    <button
+                                        onClick={() => setShowDeleteMenu(!showDeleteMenu)}
+                                        className={`p-1.5 bg-white rounded-full shadow-lg border animate-in zoom-in-50 duration-300 ${showDeleteMenu ? 'border-red-500 ring-2 ring-red-100 scale-110' : 'border-neutral-200 hover:bg-red-50 hover:border-red-200 text-neutral-400 hover:text-red-500'}`}
+                                        title="Delete message"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+
+                                    {/* Delete Options Menu */}
+                                    {showDeleteMenu && (
+                                        <div className={`absolute z-10 top-0 ${isOwn ? 'right-full mr-2' : 'left-full ml-2'} w-40 bg-white shadow-xl border border-neutral-100 rounded-xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col`}>
+                                            <div className="px-3 py-2 bg-neutral-50 border-b border-neutral-100">
+                                                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Delete Message</p>
+                                            </div>
+
+                                            <button
+                                                onClick={() => {
+                                                    onDelete(message.id, 'for_me');
+                                                    setShowDeleteMenu(false);
+                                                }}
+                                                className="px-3 py-2.5 text-left text-xs font-medium text-neutral-700 hover:bg-neutral-50 transition-colors border-b border-neutral-50"
+                                            >
+                                                Delete for me
+                                            </button>
+
+                                            {isTherapist && (
+                                                <button
+                                                    onClick={() => {
+                                                        onDelete(message.id, 'for_everyone');
+                                                        setShowDeleteMenu(false);
+                                                    }}
+                                                    className="px-3 py-2.5 text-left text-xs font-bold text-red-600 hover:bg-red-50 transition-colors"
+                                                >
+                                                    Delete for everyone
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             {showEmojiPicker && (
-                                <div className={`absolute z-10 top-0 ${isOwn ? 'right-full mr-2' : 'left-full ml-2'} bg-white shadow-xl border border-neutral-100 rounded-full py-1 px-2 flex gap-1 animate-in zoom-in-95 duration-200`}>
+                                <div className={`absolute z-10 top-0 ${isOwn ? 'right-full mr-12' : 'left-full ml-2'} bg-white shadow-xl border border-neutral-100 rounded-full py-1 px-2 flex gap-1 animate-in zoom-in-95 duration-200`}>
                                     {commonEmojis.map(emoji => (
                                         <button
                                             key={emoji}
@@ -116,16 +209,6 @@ const CommunityMessageBubble = ({ message, currentUserId, currentUserRole, membe
                             )}
                         </div>
                     )}
-                    {/* Delete button - own messages only, hover to reveal */}
-                    {isOwn && !isSystem && onDelete && (
-                        <button
-                            onClick={() => onDelete(message.id)}
-                            className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full bg-red-100 text-red-500 hover:bg-red-200"
-                            title="Delete message"
-                        >
-                            <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                    )}
                 </div>
 
                 {/* Reactions Display */}
@@ -134,14 +217,14 @@ const CommunityMessageBubble = ({ message, currentUserId, currentUserRole, membe
                         <div className={`flex flex-wrap gap-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
                             {Object.entries(message.reactions).map(([emoji, userIds]) => {
                                 const hasReacted = userIds.includes(currentUserId);
-                                const isTherapist = currentUserRole?.toLowerCase() === 'therapist';
-                                const parentReactors = isTherapist
+                                const isTherapistRole = currentUserRole?.toLowerCase() === 'therapist';
+                                const parentReactors = isTherapistRole
                                     ? userIds
                                         .map(uid => members.find(m => m.id === uid))
                                         .filter(m => m?.role === 'parent')
                                     : [];
                                 const parentNames = parentReactors.map(m => m.name);
-                                const tooltipText = isTherapist
+                                const tooltipText = isTherapistRole
                                     ? parentNames.length > 0
                                         ? `${userIds.length} total · Parents: ${parentNames.join(', ')}`
                                         : `${userIds.length} total · No parents reacted`
@@ -151,7 +234,7 @@ const CommunityMessageBubble = ({ message, currentUserId, currentUserRole, membe
                                     <div key={emoji} className="relative">
                                         <button
                                             onClick={() => {
-                                                if (isTherapist) {
+                                                if (isTherapistRole) {
                                                     // Therapist: toggle popover instead of reacting directly
                                                     setActiveReactionPopover(isPopoverOpen ? null : emoji);
                                                 } else {
@@ -159,21 +242,21 @@ const CommunityMessageBubble = ({ message, currentUserId, currentUserRole, membe
                                                     onReact(message.id, emoji);
                                                 }
                                             }}
-                                            title={isTherapist ? '' : tooltipText}
+                                            title={isTherapistRole ? '' : tooltipText}
                                             className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-all ${hasReacted
                                                 ? 'bg-secondary-100 text-secondary-700 border border-secondary-200'
                                                 : 'bg-white text-neutral-600 border border-neutral-100 hover:bg-neutral-50'
-                                                } ${isTherapist ? 'cursor-pointer hover:ring-2 hover:ring-primary-200' : ''}`}
+                                                } ${isTherapistRole ? 'cursor-pointer hover:ring-2 hover:ring-primary-200' : ''}`}
                                         >
                                             <span>{emoji}</span>
                                             <span>{userIds.length}</span>
-                                            {isTherapist && parentNames.length > 0 && (
+                                            {isTherapistRole && parentNames.length > 0 && (
                                                 <span className="text-[10px] text-primary-500 font-bold ml-0.5">({parentNames.length}P)</span>
                                             )}
                                         </button>
 
                                         {/* Therapist Reaction Popover */}
-                                        {isTherapist && isPopoverOpen && (
+                                        {isTherapistRole && isPopoverOpen && (
                                             <div
                                                 ref={popoverRef}
                                                 className={`absolute z-50 bottom-full mb-2 ${isOwn ? 'right-0' : 'left-0'} w-56 bg-white rounded-2xl shadow-2xl border border-neutral-100 overflow-hidden animate-in zoom-in-95 fade-in duration-150`}
@@ -427,13 +510,15 @@ const CommunityChat = ({ communityId, currentUserId, currentUserName, currentUse
         }
     };
 
-    const handleDelete = async (messageId) => {
-        // Optimistic removal from local state
+    const handleDelete = async (messageId, mode = 'for_me') => {
+        // Optimistic removal from local state IF deleting for everyone or if it's my own view
         setMessages(prev => prev.filter(m => m.id !== messageId));
         try {
-            await communityAPI.deleteMessage(communityId, messageId);
+            await communityAPI.deleteMessage(communityId, messageId, mode);
         } catch (err) {
             console.error('Failed to delete community message:', err);
+            // Revert on error? Skipping for now for simplicity, but could reload
+            loadCommunityData();
         }
     };
 
@@ -512,8 +597,12 @@ const CommunityChat = ({ communityId, currentUserId, currentUserName, currentUse
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                             {members.map(member => (
                                 <div key={member.id} className="flex items-center gap-2 p-2 rounded-lg bg-neutral-50 border border-neutral-100">
-                                    <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-                                        <User className="h-4 w-4 text-primary-600" />
+                                    <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                        {member.avatar ? (
+                                            <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <User className="h-4 w-4 text-primary-600" />
+                                        )}
                                     </div>
                                     <div className="min-w-0">
                                         <p className="text-xs font-medium text-neutral-800 truncate">{member.name}</p>

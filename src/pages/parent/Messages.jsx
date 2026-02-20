@@ -81,22 +81,39 @@ const MessageBubble = ({ message, isOwn, currentUserId, onDeleteForMe, onDeleteF
         <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-3 group`}>
             <div className={`max-w-[78%] ${isOwn ? 'order-2' : 'order-1'}`}>
 
-                {/* Sender tag for received messages */}
-                {!isOwn && (
-                    <div className="flex items-center gap-1.5 mb-1 ml-1">
-                        <div className="h-5 w-5 rounded-full bg-primary-100 flex items-center justify-center">
-                            {message.senderRole === 'system'
-                                ? <Sparkles className="h-3 w-3 text-primary-600" />
-                                : <User className="h-3 w-3 text-primary-600" />}
-                        </div>
-                        <span className="text-[11px] font-semibold text-neutral-500">
-                            {message.senderName}
-                            {message.senderRole === 'therapist' && (
-                                <span className="ml-1 text-[10px] bg-secondary-100 text-secondary-700 px-1.5 py-0.5 rounded-full">Therapist</span>
-                            )}
-                        </span>
-                    </div>
-                )}
+                {/* Sender tag */}
+                <div className={`flex items-center gap-1.5 mb-1 ${isOwn ? 'justify-end mr-1' : 'ml-1'}`}>
+                    {isOwn ? (
+                        <>
+                            <span className="text-[11px] font-semibold text-neutral-500">You</span>
+                            <div className="h-5 w-5 rounded-full bg-primary-100 flex items-center justify-center overflow-hidden">
+                                {message.senderAvatar ? (
+                                    <img src={message.senderAvatar} alt="Me" className="w-full h-full object-cover" />
+                                ) : (
+                                    <User className="h-3 w-3 text-primary-600" />
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="h-5 w-5 rounded-full bg-primary-100 flex items-center justify-center overflow-hidden">
+                                {message.senderRole === 'system' ? (
+                                    <Sparkles className="h-3 w-3 text-primary-600" />
+                                ) : message.senderAvatar ? (
+                                    <img src={message.senderAvatar} alt={message.senderName} className="w-full h-full object-cover" />
+                                ) : (
+                                    <User className="h-3 w-3 text-primary-600" />
+                                )}
+                            </div>
+                            <span className="text-[11px] font-semibold text-neutral-500">
+                                {message.senderName}
+                                {message.senderRole === 'therapist' && (
+                                    <span className="ml-1 text-[10px] bg-secondary-100 text-secondary-700 px-1.5 py-0.5 rounded-full">Therapist</span>
+                                )}
+                            </span>
+                        </>
+                    )}
+                </div>
 
                 {/* Bubble + context menu wrapper */}
                 <div className="relative" ref={bubbleRef}>
@@ -237,10 +254,10 @@ const MessageBubble = ({ message, isOwn, currentUserId, onDeleteForMe, onDeleteF
 };
 
 // ─── ThreadItem ───────────────────────────────────────────────────────────────
-const ThreadItem = ({ thread, isActive, onClick, currentUserId }) => {
+const ThreadItem = ({ thread, isActive, onClick, myIds = [] }) => {
     const latestMessage = thread.messages[thread.messages.length - 1];
-    const isOwn = latestMessage.senderId === currentUserId;
-    const unreadCount = thread.messages.filter(m => m.recipientId === currentUserId && !m.read).length;
+    const isOwn = myIds.includes(latestMessage.senderId);
+    const unreadCount = thread.messages.filter(m => myIds.includes(m.recipientId) && !m.read).length;
 
     return (
         <div
@@ -250,10 +267,14 @@ const ThreadItem = ({ thread, isActive, onClick, currentUserId }) => {
             onClick={onClick}
         >
             <div className="flex items-start gap-3">
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${thread.type === 'weekly-summary' ? 'bg-violet-100' : 'bg-primary-100'}`}>
-                    {thread.type === 'weekly-summary'
-                        ? <Sparkles className="h-5 w-5 text-violet-600" />
-                        : <User className="h-5 w-5 text-primary-600" />}
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ${thread.type === 'weekly-summary' ? 'bg-violet-100' : 'bg-primary-100'}`}>
+                    {thread.type === 'weekly-summary' ? (
+                        <Sparkles className="h-5 w-5 text-violet-600" />
+                    ) : thread.participantAvatar ? (
+                        <img src={thread.participantAvatar} alt={thread.participantName} className="w-full h-full object-cover" />
+                    ) : (
+                        <User className="h-5 w-5 text-primary-600" />
+                    )}
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
@@ -307,6 +328,15 @@ const Messages = () => {
     const childId = child?.id || 'c1';
     const userId = currentUser?.id || 'p1';
 
+    // Identify all IDs associated with the current user (real and mock)
+    const myIds = useMemo(() => {
+        const ids = [userId];
+        const me = users?.find(u => u.email?.toLowerCase() === currentUser?.email?.toLowerCase());
+        if (me?.id) ids.push(me.id);
+        if (me?.mockId) ids.push(me.mockId);
+        return [...new Set(ids)];
+    }, [userId, users, currentUser]);
+
     const [loadingCommunity, setLoadingCommunity] = useState(false);
 
     // Track community unread count
@@ -341,20 +371,41 @@ const Messages = () => {
         const threadMap = {};
 
         allMessages
-            .filter(m => m.childId === childId && (m.senderId === userId || m.recipientId === userId))
+            .filter(m => m.childId === childId && (myIds.includes(m.senderId) || myIds.includes(m.recipientId)))
             .forEach(message => {
                 const groupKey = message.childId || 'c1';
                 if (!threadMap[groupKey]) {
-                    const otherUserId = message.senderId === userId ? message.recipientId : message.senderId;
-                    const otherUser = users?.find(u => u.id === otherUserId);
+                    const isMessageFromMe = myIds.includes(message.senderId);
+                    const otherUserId = isMessageFromMe ? message.recipientId : message.senderId;
+
+                    // Priority Lookup: 
+                    // 1. Try to find the user in the merged global list (includes mock & real data)
+                    // 2. If it's a therapist and we're in the parent portal, cross-check with the child's assigned therapist
+                    let otherUser = users?.find(u => u.id === otherUserId || u.mockId === otherUserId);
+
+                    // Fallback search by name if ID search fails (common for mock data consistency)
+                    if (!otherUser && message.senderName && !isMessageFromMe) {
+                        otherUser = users?.find(u => u.name?.toLowerCase() === message.senderName.toLowerCase());
+                    }
+
+                    // Special resolution for assigned therapists to ensure their real portal photo is used
+                    const assignedTherapistId = child?.therapistId || child?.therapist_id;
+                    const isAssignedTherapist = otherUserId === assignedTherapistId ||
+                        (assignedTherapistId && otherUser && (otherUser.id === assignedTherapistId || otherUser.mockId === assignedTherapistId));
+
+                    const participantAvatar = otherUser?.avatar ||
+                        (assignedTherapistId ? users?.find(u => u.id === assignedTherapistId || u.mockId === assignedTherapistId)?.avatar : null) ||
+                        message.senderAvatar ||
+                        (message.type === 'weekly-summary' ? null : `https://api.dicebear.com/7.x/avataaars/svg?seed=${message.senderName || 'User'}`);
 
                     threadMap[groupKey] = {
                         id: groupKey,
                         messages: [],
                         type: message.type,
                         participantName: otherUser ? otherUser.name :
-                            (message.type === 'weekly-summary' ? 'NeuroBridge AI' : 'Dr. Rajesh Kumar'),
-                        participantRole: otherUser ? otherUser.role : (message.senderId === userId ? message.recipientRole : message.senderRole)
+                            (message.type === 'weekly-summary' ? 'NeuroBridge AI' : (message.senderName || 'Dr. Rajesh Kumar')),
+                        participantAvatar,
+                        participantRole: otherUser ? otherUser.role : (isMessageFromMe ? message.recipientRole : message.senderRole)
                     };
                 }
                 threadMap[groupKey].messages.push(message);
@@ -391,7 +442,7 @@ const Messages = () => {
     useEffect(() => {
         if (currentThread) {
             currentThread.messages.forEach(m => {
-                if (m.recipientId === userId && !m.read) {
+                if (myIds.includes(m.recipientId) && !m.read) {
                     markMessageRead(m.id);
                 }
             });
@@ -502,7 +553,7 @@ const Messages = () => {
                                         thread={thread}
                                         isActive={activeThread === thread.id}
                                         onClick={() => setActiveThread(thread.id)}
-                                        currentUserId={userId}
+                                        myIds={myIds}
                                     />
                                 ))
                             ) : (
@@ -526,10 +577,14 @@ const Messages = () => {
                                     >
                                         <ArrowLeft className="h-5 w-5" />
                                     </button>
-                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentThread.type === 'weekly-summary' ? 'bg-violet-100' : 'bg-primary-100'}`}>
-                                        {currentThread.type === 'weekly-summary'
-                                            ? <Sparkles className="h-5 w-5 text-violet-600" />
-                                            : <User className="h-5 w-5 text-primary-600" />}
+                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center overflow-hidden ${currentThread.type === 'weekly-summary' ? 'bg-violet-100' : 'bg-primary-100'}`}>
+                                        {currentThread.type === 'weekly-summary' ? (
+                                            <Sparkles className="h-5 w-5 text-violet-600" />
+                                        ) : currentThread.participantAvatar ? (
+                                            <img src={currentThread.participantAvatar} alt={currentThread.participantName} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <User className="h-5 w-5 text-primary-600" />
+                                        )}
                                     </div>
                                     <div>
                                         <p className="font-medium text-neutral-800">{currentThread.participantName}</p>
@@ -552,17 +607,38 @@ const Messages = () => {
 
                                 {/* Messages */}
                                 <div className="flex-1 overflow-y-auto p-4 space-y-1">
-                                    {currentThread.messages.map(message => (
-                                        <MessageBubble
-                                            key={message.id}
-                                            message={message}
-                                            isOwn={message.senderId === userId}
-                                            currentUserId={userId}
-                                            onDeleteForMe={deleteMessageForMe}
-                                            onDeleteForEveryone={deleteMessageForEveryone}
-                                            onReact={reactToPrivateMessage}
-                                        />
-                                    ))}
+                                    {currentThread.messages.map(message => {
+                                        const isOwn = myIds.includes(message.senderId);
+
+                                        // Robust Sender Lookup
+                                        let sender = isOwn ? currentUser : users?.find(u => u.id === message.senderId || u.mockId === message.senderId);
+
+                                        // Fallback by name if ID lookup fails
+                                        if (!sender && !isOwn && message.senderName) {
+                                            sender = users?.find(u => u.name?.toLowerCase() === message.senderName.toLowerCase());
+                                        }
+
+                                        const messageWithAvatar = {
+                                            ...message,
+                                            senderAvatar: sender?.avatar ||
+                                                ((message.senderId === (child?.therapistId || child?.therapist_id) ||
+                                                    (sender && (sender.id === (child?.therapistId || child?.therapist_id) || sender.mockId === (child?.therapistId || child?.therapist_id))))
+                                                    ? users?.find(u => u.id === (child?.therapistId || child?.therapist_id) || u.mockId === (child?.therapistId || child?.therapist_id))?.avatar : null) ||
+                                                message.senderAvatar ||
+                                                `https://api.dicebear.com/7.x/avataaars/svg?seed=${message.senderName || 'User'}`
+                                        };
+                                        return (
+                                            <MessageBubble
+                                                key={messageWithAvatar.id}
+                                                message={messageWithAvatar}
+                                                isOwn={isOwn}
+                                                currentUserId={userId}
+                                                onDeleteForMe={deleteMessageForMe}
+                                                onDeleteForEveryone={deleteMessageForEveryone}
+                                                onReact={reactToPrivateMessage}
+                                            />
+                                        );
+                                    })}
                                     <div ref={messagesEndRef} />
                                 </div>
 

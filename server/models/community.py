@@ -62,6 +62,7 @@ class CommunityMessageInDB(BaseModel):
     attachments: List[str] = Field(default_factory=list)
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     reactions: Dict[str, List[str]] = Field(default_factory=dict) # emoji -> list of user_ids
+    deleted_for: List[str] = Field(default_factory=list) # users who deleted this message for themselves
     is_deleted: bool = False
     
     class Config:
@@ -93,6 +94,7 @@ class CommunityMemberResponse(BaseModel):
     email: str
     joined_at: datetime
     role: str = "parent"
+    avatar: Optional[str] = None
     
     class Config:
         json_encoders = {

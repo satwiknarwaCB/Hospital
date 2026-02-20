@@ -363,10 +363,8 @@ const ScheduleManagement = () => {
     const safeKids = Array.isArray(kids) ? kids : [];
     const safeSessions = Array.isArray(sessions) ? sessions : [];
 
-    // RELAXED FILTER: Show all kids if none are specifically assigned to avoid empty states
-    const myChildren = safeKids.filter(k => k.therapistId === therapistId).length > 0
-        ? safeKids.filter(k => k.therapistId === therapistId)
-        : safeKids;
+    // SHOW ALL CHILDREN: Allow all therapists to see all children for scheduling
+    const myChildren = safeKids;
 
     const mySessions = safeSessions.filter(s => s.therapistId === therapistId);
 

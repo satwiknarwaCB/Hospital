@@ -327,7 +327,7 @@ const RoadmapGoalCard = ({ goal, onEdit, onToggleLock, onCompleteMilestone }) =>
 
 // Main Roadmap Editor Component
 const RoadmapEditor = () => {
-    const { currentUser, kids, getChildRoadmap, updateRoadmapProgress, completeMilestone, quickTestResults } = useApp();
+    const { currentUser, kids, getChildRoadmap, updateRoadmapProgress, completeMilestone, addRoadmapGoal, quickTestResults } = useApp();
     const [showSharedAssessment, setShowSharedAssessment] = useState(false);
     const [selectedChildId, setSelectedChildId] = useState(null);
     const [showGoalForm, setShowGoalForm] = useState(false);
@@ -353,8 +353,16 @@ const RoadmapEditor = () => {
         : null;
 
     const handleSaveGoal = (goalData) => {
-        // In production, this would save to the database
-        console.log('Saving goal:', goalData);
+        if (editingGoal) {
+            updateRoadmapProgress(editingGoal.id, goalData);
+        } else {
+            addRoadmapGoal({
+                ...goalData,
+                childId: selectedChildId,
+                status: 'in-progress',
+                progress: 0
+            });
+        }
         setShowGoalForm(false);
         setEditingGoal(null);
     };

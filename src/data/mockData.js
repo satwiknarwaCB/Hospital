@@ -348,61 +348,79 @@ export const ROADMAP = [
         id: 'r6',
         childId: 'c2',
         domain: 'Communication',
-        title: 'Uses 2-word phrases consistently',
-        description: 'Child will use 2-word phrases (noun + verb or adjective + noun) in 80% of opportunities.',
-        targetDate: '2026-02-01',
+        title: 'Uses 3-word sentences',
+        description: 'Child will use 3-word sentences to express needs in 60% of opportunities.',
+        targetDate: '2026-04-15',
         status: 'in-progress',
-        progress: 65,
-        confidence: 85,
+        progress: 35,
+        confidence: 75,
         milestones: [
-            { id: 'm19', title: 'Combines noun + verb', completed: true, date: '2025-11-15' },
-            { id: 'm20', title: 'Uses 10 different combinations', completed: true, date: '2025-12-10' },
-            { id: 'm21', title: 'Generalizes to home', completed: false, date: null },
-            { id: 'm22', title: '80% accuracy in clinic', completed: false, date: null }
+            { id: 'm19', title: 'Uses noun + verb + object', completed: true, date: '2025-12-05' },
+            { id: 'm20', title: 'Requests toys using sentences', completed: false, date: null },
+            { id: 'm21', title: 'Requests food using sentences', completed: false, date: null },
+            { id: 'm22', title: 'Independent use across settings', completed: false, date: null }
         ],
-        therapistNotes: 'Diya is beginning to use 2-word phrases more consistently. Continue modeling at home.',
-        aiPrediction: 'Based on current trajectory, goal likely to be achieved by mid-January.',
+        therapistNotes: 'Diya is starting to expand her sentence structure. We are focusing on "I want [item]".',
+        aiPrediction: 'Steady progress observed. Likely to meet milestones by March.',
         priority: 'high'
     },
     {
         id: 'r7',
         childId: 'c2',
         domain: 'Social Interaction',
-        title: 'Initiates greetings with peers',
-        targetDate: '2026-03-15',
-        description: 'Child will independently greet familiar peers in 70% of opportunities.',
+        title: 'Turn-taking during play',
+        targetDate: '2026-03-01',
+        description: 'Child will take turns with a peer for 5 consecutive turns with minimal prompting.',
         status: 'in-progress',
-        progress: 40,
-        confidence: 70,
+        progress: 50,
+        confidence: 80,
         milestones: [
-            { id: 'm23', title: 'Waves when prompted', completed: true, date: '2025-11-01' },
-            { id: 'm24', title: 'Says "Hi" with model', completed: true, date: '2025-12-15' },
-            { id: 'm25', title: 'Independent greetings to adults', completed: false, date: null },
-            { id: 'm26', title: 'Independent greetings to peers', completed: false, date: null }
+            { id: 'm23', title: 'Waits for 5 seconds for turn', completed: true, date: '2025-11-20' },
+            { id: 'm24', title: 'Takes turn with therapist', completed: true, date: '2025-12-15' },
+            { id: 'm25', title: 'Takes turn with one peer', completed: false, date: null },
+            { id: 'm26', title: 'Maintains 5 turns in a row', completed: false, date: null }
         ],
-        therapistNotes: 'Recent breakthrough with independent greetings to therapists!',
-        aiPrediction: 'Based on current progress, this goal is likely to be achieved with additional focus.',
-        priority: 'high'
+        therapistNotes: 'Excellent engagement during board games! Still needs help generalizing to peers.',
+        aiPrediction: 'High probability of completion by target date.',
+        priority: 'medium'
     },
     {
         id: 'r8',
         childId: 'c2',
-        domain: 'Emotional Regulation',
-        title: 'Uses calm-down strategies',
-        targetDate: '2026-04-01',
-        description: 'Child will use taught calm-down strategies when dysregulated with minimal prompting.',
-        status: 'in-progress',
-        progress: 30,
-        confidence: 60,
+        domain: 'Motor Skills',
+        title: 'Stacks 8 blocks independently',
+        targetDate: '2026-01-30',
+        description: 'Child will stack a tower of 8 blocks without it falling in 4 out of 5 trials.',
+        status: 'completed',
+        progress: 100,
+        confidence: 100,
         milestones: [
-            { id: 'm27', title: 'Identifies emotions', completed: true, date: '2025-12-01' },
-            { id: 'm28', title: 'Uses breathing with full prompt', completed: false, date: null },
-            { id: 'm29', title: 'Requests break appropriately', completed: false, date: null },
-            { id: 'm30', title: 'Self-regulates with minimal support', completed: false, date: null }
+            { id: 'm27', title: 'Stacks 4 blocks', completed: true, date: '2025-10-15' },
+            { id: 'm28', title: 'Stacks 6 blocks', completed: true, date: '2025-11-10' },
+            { id: 'm29', title: 'Stacks 8 blocks consistently', completed: true, date: '2025-12-20' }
         ],
-        therapistNotes: 'We are introducing calm-down strategies and helping Diya use them with support.',
-        aiPrediction: 'Based on current progress, this goal is likely to be achieved with additional focus.',
-        priority: 'medium'
+        therapistNotes: 'Goal achieved! Diya shows great fine motor control and patience.',
+        completedDate: '2025-12-20',
+        priority: 'low'
+    },
+    {
+        id: 'r9',
+        childId: 'c2',
+        domain: 'Attention & Focus',
+        title: 'Attends to task for 5 minutes',
+        targetDate: '2026-05-01',
+        description: 'Child will sustain attention on a non-preferred task for 5 minutes with no more than 1 prompt.',
+        status: 'in-progress',
+        progress: 20,
+        confidence: 50,
+        milestones: [
+            { id: 'm30', title: 'Attends for 1 minute', completed: true, date: '2025-12-18' },
+            { id: 'm31', title: 'Attends for 2 minutes', completed: false, date: null },
+            { id: 'm32', title: 'Attends for 3 minutes', completed: false, date: null },
+            { id: 'm33', title: 'Attends for 5 minutes', completed: false, date: null }
+        ],
+        therapistNotes: 'Beginning to work on increasing focus duration using high-interest rewards.',
+        priority: 'high'
     }
 ];
 
@@ -1220,5 +1238,30 @@ export const DOCUMENTS = [
         fileSize: '0.8 MB',
         status: 'verified',
         url: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800'
+    }
+];
+// ============ PERIODIC CLINICAL REVIEWS ============
+export const PERIODIC_REVIEWS = [
+    {
+        id: 'rev1',
+        childId: 'c1',
+        type: 'Speech Therapy',
+        title: 'Fortnightly Progress Review',
+        date: '2026-02-01',
+        period: 'Jan 15 - Jan 31',
+        summary: 'Aarav has shown remarkable consistency in receptive language this fortnight. He is now independently using picture cards to express needs in 4/5 attempts. Engagement levels have stabilized at 75% across all speech activities.',
+        milestone: 'Mastered 2-step instructional sequences',
+        isNew: true
+    },
+    {
+        id: 'rev2',
+        childId: 'c1',
+        type: 'Occupational Therapy',
+        title: 'Monthly Goal Review',
+        date: '2026-01-28',
+        period: 'Jan 1 - Jan 28',
+        summary: 'Fine motor coordination is improving significantly. Transitioning from large buttons to medium-sized fasteners next month. Attention to task has improved from 10m to 15m average.',
+        milestone: 'Independent buttoning of coat fasteners',
+        isNew: false
     }
 ];

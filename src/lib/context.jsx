@@ -17,7 +17,8 @@ import {
     CDC_METRICS,
     SKILL_PROGRESS,
     SKILL_GOALS,
-    DOCUMENTS
+    DOCUMENTS,
+    PERIODIC_REVIEWS
 } from '../data/mockData';
 import { sessionAPI, communityAPI, messagesAPI, progressAPI, userManagementAPI } from './api';
 import { cryptoUtils } from './crypto';
@@ -31,12 +32,16 @@ export const AppProvider = ({ children }) => {
     const [kids, setKids] = useState(CHILDREN);
     const [sessions, setSessions] = useState(SESSIONS);
     const [skillScores, setSkillScores] = useState(SKILL_SCORES);
-    const [roadmap, setRoadmap] = useState(ROADMAP);
+    const [roadmap, setRoadmap] = useState(() => {
+        const saved = localStorage.getItem('neurobridge_roadmap');
+        return saved ? JSON.parse(saved) : ROADMAP;
+    });
     const [homeActivities, setHomeActivities] = useState(HOME_ACTIVITIES);
     const [messages, setMessages] = useState(MESSAGES);
     const [consentRecords] = useState(CONSENT_RECORDS);
     const [auditLogs, setAuditLogs] = useState(AUDIT_LOGS);
     const [cdcMetrics] = useState(CDC_METRICS);
+    const [periodicReviews, setPeriodicReviews] = useState(PERIODIC_REVIEWS);
     const [adminStats, setAdminStats] = useState({
         therapist_count: CDC_METRICS.therapistCount,
         parent_count: 2, // Mock baseline
@@ -111,6 +116,10 @@ export const AppProvider = ({ children }) => {
     }, [quickTestProgress]);
 
     useEffect(() => {
+        localStorage.setItem('neurobridge_roadmap', JSON.stringify(roadmap));
+    }, [roadmap]);
+
+    useEffect(() => {
         const handleStorage = (e) => {
             if (e.key === 'neurobridge_skill_progress' && e.newValue) {
                 try {
@@ -131,11 +140,23 @@ export const AppProvider = ({ children }) => {
             }
         };
 
+        const handleRoadmapStorage = (e) => {
+            if (e.key === 'neurobridge_roadmap' && e.newValue) {
+                try {
+                    setRoadmap(JSON.parse(e.newValue));
+                } catch (err) {
+                    console.error('Error syncing roadmap across tabs:', err);
+                }
+            }
+        };
+
         window.addEventListener('storage', handleStorage);
         window.addEventListener('storage', handleGoalsStorage);
+        window.addEventListener('storage', handleRoadmapStorage);
         return () => {
             window.removeEventListener('storage', handleStorage);
             window.removeEventListener('storage', handleGoalsStorage);
+            window.removeEventListener('storage', handleRoadmapStorage);
         };
     }, []);
 
@@ -156,7 +177,8 @@ export const AppProvider = ({ children }) => {
                 const merged = [...prev];
                 fetched.forEach(child => {
                     const childId = child.id || child._id;
-                    const index = merged.findIndex(k => k.id === childId);
+                    // Match by ID OR by name to handle mock-to-real transitions (common for parents viewing their kids)
+                    const index = merged.findIndex(k => k.id === childId || k.name?.toLowerCase() === child.name?.toLowerCase());
                     if (index !== -1) {
                         // Preserve mock properties but update with real backend data
                         merged[index] = {
@@ -164,7 +186,9 @@ export const AppProvider = ({ children }) => {
                             ...child,
                             id: childId,
                             diagnosis: child.condition || merged[index].diagnosis,
-                            parentId: child.parent_id || merged[index].parentId
+                            parentId: child.parent_id || merged[index].parentId,
+                            therapistId: child.therapist_id || child.therapistId || merged[index].therapistId,
+                            unreadMessages: child.unread_messages ?? merged[index].unreadMessages
                         };
                     } else {
                         // New child from backend
@@ -173,6 +197,7 @@ export const AppProvider = ({ children }) => {
                             id: childId,
                             diagnosis: child.condition,
                             parentId: child.parent_id,
+                            therapistId: child.therapist_id || child.therapistId,
                             photoUrl: child.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${child.name}`,
                             program: child.program || ["Speech Therapy"]
                         });
@@ -208,6 +233,17 @@ export const AppProvider = ({ children }) => {
             refreshUsers();
         }
     }, [isAuthenticated, currentUser?.role, refreshUsers, refreshChildren]);
+
+    // Helper to normalize user object with proper avatar field resolution
+    const normalizeUserProfile = useCallback((u) => {
+        if (!u) return null;
+        return {
+            ...u,
+            id: u.id || u._id,
+            avatar: u.avatar || u.avatarUrl || u.photoUrl || u.profile_photo || u.profilePhoto || u.image || u.photo || u.avatar_url || u.profile_image || u.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name || 'User'}`,
+        };
+    }, []);
+
     // Sync with localStorage on mount and when authentication changes
     useEffect(() => {
         const syncAuth = () => {
@@ -219,7 +255,7 @@ export const AppProvider = ({ children }) => {
                 try {
                     const parent = JSON.parse(parentData);
                     const mockUser = users.find(u => u.email?.toLowerCase() === parent.email?.toLowerCase());
-                    const user = { ...mockUser, ...parent };
+                    const user = normalizeUserProfile({ ...mockUser, ...parent });
                     if (!user.role) user.role = 'parent';
                     setCurrentUser(user);
                     setIsAuthenticated(true);
@@ -230,7 +266,7 @@ export const AppProvider = ({ children }) => {
                 try {
                     const doctor = JSON.parse(doctorData);
                     const mockUser = users.find(u => u.email?.toLowerCase() === doctor.email?.toLowerCase());
-                    const user = { ...mockUser, ...doctor };
+                    const user = normalizeUserProfile({ ...mockUser, ...doctor });
                     if (!user.role) user.role = 'therapist';
                     setCurrentUser(user);
                     setIsAuthenticated(true);
@@ -241,7 +277,7 @@ export const AppProvider = ({ children }) => {
                 try {
                     const admin = JSON.parse(adminData);
                     const mockUser = users.find(u => u.email?.toLowerCase() === admin.email?.toLowerCase());
-                    const user = { ...mockUser, ...admin };
+                    const user = normalizeUserProfile({ ...mockUser, ...admin });
                     if (!user.role) user.role = 'admin';
                     setCurrentUser(user);
                     setIsAuthenticated(true);
@@ -268,23 +304,28 @@ export const AppProvider = ({ children }) => {
         const normalizedRealTherapists = realTherapists.map(t => ({
             ...t,
             id: t.id || t._id,
-            avatar: t.avatar || (t.avatarUrl) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${t.name}`,
+            avatar: t.avatar || t.avatarUrl || t.photoUrl || t.profile_photo || t.profilePhoto || t.image || t.photo || t.avatar_url || t.profile_image || t.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${t.name}`,
             role: 'therapist'
         }));
 
         const normalizedRealParents = realParents.map(p => ({
             ...p,
             id: p.id || p._id,
-            avatar: p.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.name}`,
+            avatar: p.avatar || p.avatarUrl || p.photoUrl || p.profile_photo || p.profilePhoto || p.image || p.photo || p.avatar_url || p.profile_image || p.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.name}`,
             role: 'parent'
         }));
 
         // Merge Mock Users with Real Data (keyed by email)
         const mergedMock = users.map(mu => {
-            const realT = normalizedRealTherapists.find(rt => rt.email?.toLowerCase() === mu.email?.toLowerCase());
-            if (realT) return { ...mu, ...realT };
-            const realP = normalizedRealParents.find(rp => rp.email?.toLowerCase() === mu.email?.toLowerCase());
-            if (realP) return { ...mu, ...realP };
+            // Priority 1: Match by Email
+            let realU = [...normalizedRealTherapists, ...normalizedRealParents].find(ru => ru.email?.toLowerCase() === mu.email?.toLowerCase());
+
+            // Priority 2: Match by Name if it's a specific mock user and email didn't hit
+            if (!realU) {
+                realU = [...normalizedRealTherapists, ...normalizedRealParents].find(ru => ru.name?.toLowerCase() === mu.name?.toLowerCase());
+            }
+
+            if (realU) return { ...mu, ...realU, mockId: mu.id };
             return mu;
         });
 
@@ -295,8 +336,17 @@ export const AppProvider = ({ children }) => {
             ...normalizedRealParents.filter(rp => rp.email && !knownEmails.has(rp.email.toLowerCase()))
         ];
 
-        return [...mergedMock, ...novelReal];
-    }, [users, realTherapists, realParents]);
+        let finalUsers = [...mergedMock, ...novelReal];
+
+        // Ensure currentUser is the source of truth for its own data in the list
+        if (currentUser?.email) {
+            finalUsers = finalUsers.map(u =>
+                u.email?.toLowerCase() === currentUser.email?.toLowerCase() ? { ...u, ...currentUser } : u
+            );
+        }
+
+        return finalUsers;
+    }, [users, realTherapists, realParents, currentUser]);
 
     // Sync kids with realChildren
     useEffect(() => {
@@ -460,6 +510,56 @@ export const AppProvider = ({ children }) => {
 
         syncSessionsFromCloud();
     }, [isAuthenticated, currentUser]);
+
+    // Production-Level Periodic Review Synchronization
+    useEffect(() => {
+        const syncReviewsFromCloud = async () => {
+            if (!isAuthenticated || !currentUser) return;
+
+            try {
+                if (currentUser.role === 'parent' && currentUser.childId) {
+                    const cloudReviews = await progressAPI.getReviewsByChild(currentUser.childId);
+                    if (cloudReviews.length > 0) {
+                        setPeriodicReviews(prev => {
+                            const reviewMap = new Map();
+                            // Seed with cloud reviews
+                            cloudReviews.forEach(r => reviewMap.set(r.id || r._id, { ...r, id: r.id || r._id }));
+                            // Add local reviews if unique
+                            prev.forEach(r => {
+                                const rId = r.id || r._id;
+                                if (!reviewMap.has(rId)) {
+                                    const isDup = Array.from(reviewMap.values()).some(ext =>
+                                        ext.childId === r.childId && ext.date === r.date && ext.summary === r.summary
+                                    );
+                                    if (!isDup) reviewMap.set(rId, r);
+                                }
+                            });
+                            return Array.from(reviewMap.values());
+                        });
+                    }
+                } else if (currentUser.role === 'therapist') {
+                    const therapistKids = kids.filter(k => k.therapistId === currentUser.id);
+                    for (const kid of therapistKids) {
+                        const cloudReviews = await progressAPI.getReviewsByChild(kid.id);
+                        if (cloudReviews.length > 0) {
+                            setPeriodicReviews(prev => {
+                                const reviewMap = new Map();
+                                // Keep reviews for other kids
+                                prev.filter(r => r.childId !== kid.id).forEach(r => reviewMap.set(r.id || r._id, r));
+                                // Load cloud reviews for this kid
+                                cloudReviews.forEach(r => reviewMap.set(r.id || r._id, { ...r, id: r.id || r._id }));
+                                return Array.from(reviewMap.values());
+                            });
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('❌ Cloud Review Sync Failed:', err);
+            }
+        };
+
+        syncReviewsFromCloud();
+    }, [isAuthenticated, currentUser, kids]);
 
     // Production-Level Progress Synchronization
     useEffect(() => {
@@ -644,8 +744,12 @@ export const AppProvider = ({ children }) => {
 
         const pollUnreadCounts = async () => {
             try {
-                // 1. Unread count for private messages is derived from synchronized messages state
-                // This is handled automatically by the syncMessagesFromCloud effect above
+                // 1. Explicitly fetch private messages unread count from backend
+                // This ensures the badge is accurate even if message sync is lagging
+                const unreadResponse = await messagesAPI.getUnreadCount();
+                if (unreadResponse && typeof unreadResponse.count === 'number') {
+                    setPrivateUnreadCount(unreadResponse.count);
+                }
 
                 // 2. Poll Community Messages separately
                 const community = await communityAPI.getDefault();
@@ -681,18 +785,19 @@ export const AppProvider = ({ children }) => {
         };
 
         pollUnreadCounts();
-        const interval = setInterval(pollUnreadCounts, 60000); // 60s poll
+        const interval = setInterval(pollUnreadCounts, 15000); // 15s poll for better responsiveness
         return () => clearInterval(interval);
     }, [isAuthenticated, currentUser]);
 
-    // Update private unread count whenever messages change
+    // Update private unread count whenever messages change (Local sync)
     useEffect(() => {
         if (!currentUser) return;
         const count = messages.filter(m =>
             (m.recipientId === currentUser.id || m.recipient_id === currentUser.id) &&
             !m.read
         ).length;
-        setPrivateUnreadCount(count);
+        // Only update if it's different to avoid loops if both effects disagree
+        setPrivateUnreadCount(prev => (prev === count ? prev : count));
     }, [messages, currentUser]);
 
     // Track newly received messages to show notifications
@@ -737,6 +842,17 @@ export const AppProvider = ({ children }) => {
     }, [messages, isAuthenticated, currentUser]);
     const [notifications, setNotifications] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    // ============ Audit Log Actions ============
+    const addAuditLog = useCallback((log) => {
+        const newLog = {
+            ...log,
+            id: `audit${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            ipAddress: '192.168.1.100' // Mock IP
+        };
+        setAuditLogs(prev => [newLog, ...prev]);
+    }, []);
 
     // ============ Auth Actions ============
     const login = useCallback((role, id) => {
@@ -794,7 +910,7 @@ export const AppProvider = ({ children }) => {
         return getChildSessions(childId).slice(0, limit);
     }, [getChildSessions]);
 
-    const addSession = useCallback((newSession) => {
+    const addSession = useCallback((newSession, replaceId = null) => {
         // Ensure all required fields are present
         const sessionWithId = {
             ...newSession,
@@ -805,9 +921,10 @@ export const AppProvider = ({ children }) => {
         };
 
         setSessions(prev => {
-            const exists = prev.some(s => s.id === sessionWithId.id || (s.date === sessionWithId.date && s.childId === sessionWithId.childId));
+            const current = replaceId ? prev.filter(s => s.id !== replaceId) : prev;
+            const exists = current.some(s => s.id === sessionWithId.id || (s.date === sessionWithId.date && s.childId === sessionWithId.childId));
             if (exists) return prev;
-            return [sessionWithId, ...prev];
+            return [sessionWithId, ...current];
         });
 
         // Log audit event
@@ -1005,10 +1122,52 @@ export const AppProvider = ({ children }) => {
         }));
     }, []);
 
+    const addRoadmapGoal = useCallback((goalData) => {
+        const newGoal = {
+            ...goalData,
+            id: goalData.id || `r${Date.now()}`,
+            progress: goalData.progress || 0,
+            status: goalData.status || 'in-progress',
+            confidence: goalData.confidence || 70,
+            milestones: goalData.milestones || []
+        };
+
+        setRoadmap(prev => [...prev, newGoal]);
+
+        addAuditLog({
+            action: 'ROADMAP_GOAL_ADDED',
+            userId: currentUser?.id,
+            userName: currentUser?.name,
+            targetType: 'roadmap',
+            targetId: newGoal.id,
+            details: `Added new roadmap goal: ${newGoal.title}`
+        });
+
+        return newGoal;
+    }, [currentUser, addAuditLog]);
+
     // ============ Home Activity Actions ============
     const getChildHomeActivities = useCallback((childId) => {
         return homeActivities.filter(a => a.childId === childId);
     }, [homeActivities]);
+
+    const getPeriodicReviews = useCallback((childId) => {
+        return periodicReviews.filter(r => r.childId === childId);
+    }, [periodicReviews]);
+
+    const addPeriodicReview = useCallback(async (reviewData) => {
+        try {
+            const saved = await progressAPI.createReview(reviewData);
+            setPeriodicReviews(prev => [...prev, { ...saved, id: saved.id || saved._id }]);
+            return saved;
+        } catch (err) {
+            console.error('Failed to save review:', err);
+            // Fallback
+            const local = { ...reviewData, id: `rev-${Date.now()}` };
+            setPeriodicReviews(prev => [...prev, local]);
+            return local;
+        }
+    }, [progressAPI]);
 
     const logActivityCompletion = useCallback((activityId, completed, notes = '') => {
         setHomeActivities(prev => prev.map(a => {
@@ -1226,15 +1385,7 @@ export const AppProvider = ({ children }) => {
     }, []);
 
     // ============ Audit Log Actions ============
-    const addAuditLog = useCallback((log) => {
-        const newLog = {
-            ...log,
-            id: `audit${Date.now()}`,
-            timestamp: new Date().toISOString(),
-            ipAddress: '192.168.1.100' // Mock IP
-        };
-        setAuditLogs(prev => [newLog, ...prev]);
-    }, []);
+
 
     // ============ Notification Actions ============
     const removeNotification = useCallback((id) => {
@@ -1373,7 +1524,8 @@ export const AppProvider = ({ children }) => {
             const savedGoal = await progressAPI.createGoal(newGoal);
             console.log('✅ Goal created:', savedGoal);
 
-            setSkillGoals(prev => [...prev, savedGoal]);
+            const goalWithId = { ...savedGoal, id: savedGoal.id || savedGoal._id || `goal-${Date.now()}` };
+            setSkillGoals(prev => [...prev, goalWithId]);
 
             // Also ensure a corresponding progress record exists
             try {
@@ -1514,6 +1666,7 @@ export const AppProvider = ({ children }) => {
         roadmap,
         homeActivities,
         messages,
+        periodicReviews,
         consentRecords,
         auditLogs,
         cdcMetrics,
@@ -1557,6 +1710,9 @@ export const AppProvider = ({ children }) => {
         getChildRoadmap,
         updateRoadmapProgress,
         completeMilestone,
+        addRoadmapGoal,
+        getPeriodicReviews,
+        addPeriodicReview,
 
         // Home Activity Actions
         getChildHomeActivities,
@@ -1657,6 +1813,8 @@ export const AppProvider = ({ children }) => {
         deleteMessageForMe, deleteMessageForEveryone, reactToPrivateMessage, addAuditLog,
         addNotification, clearNotifications, getEngagementTrend, getTherapistStats,
         skillProgress, getChildProgress, updateSkillProgress,
+        periodicReviews, addPeriodicReview,
+        roadmap, addRoadmapGoal,
         skillGoals, getChildGoals, updateSkillGoal, addSkillGoal, deleteSkillGoal, deleteSkillProgress,
         childDocuments, addChild, realParents
     ]);

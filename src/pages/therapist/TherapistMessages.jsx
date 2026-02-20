@@ -76,19 +76,37 @@ const MessageBubble = ({ message, isOwn, currentUserId, onDeleteForMe, onDeleteF
         <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-3 group`}>
             <div className={`max-w-[78%] ${isOwn ? 'order-2' : 'order-1'}`}>
 
-                {!isOwn && (
-                    <div className="flex items-center gap-1.5 mb-1 ml-1">
-                        <div className="h-5 w-5 rounded-full bg-primary-100 flex items-center justify-center">
-                            <User className="h-3 w-3 text-primary-600" />
-                        </div>
-                        <span className="text-[11px] font-semibold text-neutral-500">
-                            {message.senderName}
-                            {message.senderRole === 'parent' && (
-                                <span className="ml-1 text-[10px] bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded-full">Parent</span>
-                            )}
-                        </span>
-                    </div>
-                )}
+                {/* Sender tag */}
+                <div className={`flex items-center gap-1.5 mb-1 ${isOwn ? 'justify-end mr-1' : 'ml-1'}`}>
+                    {isOwn ? (
+                        <>
+                            <span className="text-[11px] font-semibold text-neutral-500">You</span>
+                            <div className="h-5 w-5 rounded-full bg-primary-100 flex items-center justify-center overflow-hidden">
+                                {message.senderAvatar ? (
+                                    <img src={message.senderAvatar} alt="Me" className="w-full h-full object-cover" />
+                                ) : (
+                                    <User className="h-3 w-3 text-primary-600" />
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="h-5 w-5 rounded-full bg-primary-100 flex items-center justify-center overflow-hidden">
+                                {message.senderAvatar ? (
+                                    <img src={message.senderAvatar} alt={message.senderName} className="w-full h-full object-cover" />
+                                ) : (
+                                    <User className="h-3 w-3 text-primary-600" />
+                                )}
+                            </div>
+                            <span className="text-[11px] font-semibold text-neutral-500">
+                                {message.senderName}
+                                {message.senderRole === 'parent' && (
+                                    <span className="ml-1 text-[10px] bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded-full">Parent</span>
+                                )}
+                            </span>
+                        </>
+                    )}
+                </div>
 
                 <div className="relative" ref={bubbleRef}>
                     <div
@@ -219,10 +237,10 @@ const MessageBubble = ({ message, isOwn, currentUserId, onDeleteForMe, onDeleteF
 };
 
 // Parent Thread Item
-const ParentThreadItem = ({ thread, isActive, onClick, currentUserId }) => {
+const ParentThreadItem = ({ thread, isActive, onClick, myIds = [] }) => {
     const latestMessage = thread.messages[thread.messages.length - 1];
-    const isOwn = latestMessage.senderId === currentUserId;
-    const unreadCount = thread.messages.filter(m => m.recipientId === currentUserId && !m.read).length;
+    const isOwn = myIds.includes(latestMessage.senderId);
+    const unreadCount = thread.messages.filter(m => myIds.includes(m.recipientId) && !m.read).length;
 
     return (
         <div
@@ -233,12 +251,16 @@ const ParentThreadItem = ({ thread, isActive, onClick, currentUserId }) => {
             onClick={onClick}
         >
             <div className="flex items-start gap-3">
-                {/* Child Avatar */}
-                <img
-                    src={thread.childPhoto}
-                    alt={thread.childName}
-                    className="h-10 w-10 rounded-full object-cover"
-                />
+                {/* Participant Avatar */}
+                <div className="h-10 w-10 rounded-full flex items-center justify-center overflow-hidden bg-primary-50">
+                    {thread.parentAvatar ? (
+                        <img src={thread.parentAvatar} alt={thread.parentName} className="w-full h-full object-cover" />
+                    ) : thread.childPhoto ? (
+                        <img src={thread.childPhoto} alt={thread.childName} className="w-full h-full object-cover" />
+                    ) : (
+                        <User className="h-5 w-5 text-primary-400" />
+                    )}
+                </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
@@ -292,6 +314,14 @@ const TherapistMessages = () => {
     const [loadingCommunity, setLoadingCommunity] = useState(false);
     const messagesEndRef = useRef(null);
     const therapistId = currentUser?.id || 't1';
+    // Identify all IDs associated with the current user (real and mock)
+    const myIds = useMemo(() => {
+        const ids = [therapistId];
+        const me = users?.find(u => u.email?.toLowerCase() === currentUser?.email?.toLowerCase());
+        if (me?.id) ids.push(me.id);
+        if (me?.mockId) ids.push(me.mockId);
+        return [...new Set(ids)];
+    }, [therapistId, users, currentUser]);
 
     // Track community unread count
     useEffect(() => {
@@ -299,7 +329,7 @@ const TherapistMessages = () => {
             setCommunityUnreadCount(0);
             localStorage.setItem(`last_seen_community_${defaultCommunity.id}`, Date.now().toString());
         }
-    }, [activeTab, defaultCommunity]);
+    }, [activeTab, defaultCommunity, setCommunityUnreadCount]);
 
     // Load default community
     useEffect(() => {
@@ -336,13 +366,13 @@ const TherapistMessages = () => {
             .filter(m =>
                 m &&
                 // Allow messages if I am a participant, regardless of patient list strictness
-                (m.senderId === therapistId || m.recipientId === therapistId || m.recipient_id === therapistId) &&
+                (myIds.includes(m.senderId) || myIds.includes(m.recipientId) || myIds.includes(m.recipient_id)) &&
                 m.type !== 'weekly-summary'
             )
             .forEach(message => {
                 // Fix: Group by childId instead of threadId to prevent "double double" chat lists
-                const groupKey = message.childId || 'c1';
-                if (!threadMap[groupKey]) {
+                const groupKey = message.childId;
+                if (groupKey && !threadMap[groupKey]) {
                     const child = safeKids.find(k => k && k.id === groupKey);
                     const parent = (Array.isArray(users) ? users : []).find(u => u && (u.id === (child?.parentId || message.senderId)));
 
@@ -351,12 +381,13 @@ const TherapistMessages = () => {
                         messages: [],
                         childId: groupKey,
                         childName: child?.name || 'Assigned Child',
-                        childPhoto: child?.photoUrl || 'https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&q=80&w=200',
+                        childPhoto: child?.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${child?.name || 'Child'}`,
                         parentId: parent?.id || message.senderId,
-                        parentName: parent?.name || (message.senderRole === 'parent' ? message.senderName : 'Family Member')
+                        parentName: parent?.name || (message.senderRole === 'parent' ? message.senderName : 'Family Member'),
+                        parentAvatar: parent?.avatar || (message.senderRole === 'parent' ? message.senderAvatar : null)
                     };
                 }
-                threadMap[groupKey].messages.push(message);
+                if (groupKey) threadMap[groupKey].messages.push(message);
             });
 
         // Sort messages within each thread by timestamp
@@ -403,7 +434,7 @@ const TherapistMessages = () => {
     useEffect(() => {
         if (currentThread) {
             currentThread.messages.forEach(m => {
-                if (m.recipientId === therapistId && !m.read) {
+                if (myIds.includes(m.recipientId) && !m.read) {
                     markMessageRead(m.id);
                 }
             });
@@ -513,7 +544,7 @@ const TherapistMessages = () => {
                                         thread={thread}
                                         isActive={activeThread === thread.id}
                                         onClick={() => setActiveThread(thread.id)}
-                                        currentUserId={therapistId}
+                                        myIds={myIds}
                                     />
                                 ))
                             ) : (
@@ -537,11 +568,13 @@ const TherapistMessages = () => {
                                     >
                                         <ArrowLeft className="h-5 w-5" />
                                     </button>
-                                    <img
-                                        src={currentThread.childPhoto}
-                                        alt={currentThread.childName}
-                                        className="h-10 w-10 rounded-full object-cover"
-                                    />
+                                    <div className="h-10 w-10 rounded-full border border-neutral-100 overflow-hidden bg-primary-50">
+                                        {currentThread.parentAvatar ? (
+                                            <img src={currentThread.parentAvatar} alt={currentThread.parentName} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <img src={currentThread.childPhoto} alt={currentThread.childName} className="w-full h-full object-cover" />
+                                        )}
+                                    </div>
                                     <div>
                                         <p className="font-medium text-neutral-800">{currentThread.parentName} (Parent)</p>
                                         <p className="text-xs text-neutral-500">
@@ -552,17 +585,35 @@ const TherapistMessages = () => {
 
                                 {/* Messages */}
                                 <div className="flex-1 overflow-y-auto p-4 space-y-1">
-                                    {currentThread.messages.map(message => (
-                                        <MessageBubble
-                                            key={message.id}
-                                            message={message}
-                                            isOwn={message.senderId === therapistId}
-                                            currentUserId={therapistId}
-                                            onDeleteForMe={deleteMessageForMe}
-                                            onDeleteForEveryone={deleteMessageForEveryone}
-                                            onReact={reactToPrivateMessage}
-                                        />
-                                    ))}
+                                    {currentThread.messages.map(message => {
+                                        const isOwn = myIds.includes(message.senderId);
+
+                                        // Robust Sender Lookup
+                                        let sender = isOwn ? currentUser : users?.find(u => u.id === message.senderId || u.mockId === message.senderId);
+
+                                        // Fallback by name if ID lookup fails
+                                        if (!sender && !isOwn && message.senderName) {
+                                            sender = users?.find(u => u.name?.toLowerCase() === message.senderName.toLowerCase());
+                                        }
+
+                                        const messageWithAvatar = {
+                                            ...message,
+                                            senderAvatar: sender?.avatar ||
+                                                message.senderAvatar ||
+                                                `https://api.dicebear.com/7.x/avataaars/svg?seed=${message.senderName || 'User'}`
+                                        };
+                                        return (
+                                            <MessageBubble
+                                                key={messageWithAvatar.id}
+                                                message={messageWithAvatar}
+                                                isOwn={isOwn}
+                                                currentUserId={therapistId}
+                                                onDeleteForMe={deleteMessageForMe}
+                                                onDeleteForEveryone={deleteMessageForEveryone}
+                                                onReact={reactToPrivateMessage}
+                                            />
+                                        );
+                                    })}
                                     <div ref={messagesEndRef} />
                                 </div>
 

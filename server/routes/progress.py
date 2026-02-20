@@ -6,7 +6,8 @@ from bson import ObjectId
 from database import db_manager
 from models.progress import (
     SkillGoalCreate, SkillGoalUpdate, SkillGoalResponse,
-    SkillProgressCreate, SkillProgressUpdate, SkillProgressResponse
+    SkillProgressCreate, SkillProgressUpdate, SkillProgressResponse,
+    PeriodicReviewCreate, PeriodicReviewResponse
 )
 from middleware.auth_middleware import get_current_user
 
@@ -163,3 +164,33 @@ async def delete_progress(progress_id: str, current_user: dict = Depends(get_cur
         raise HTTPException(status_code=404, detail="Progress record not found")
         
     return {"message": "Progress record deleted successfully"}
+
+# =======================
+# Periodic Clinical Reviews
+# =======================
+
+@router.post("/reviews", response_model=PeriodicReviewResponse)
+async def create_review(review: PeriodicReviewCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new clinical review summary"""
+    db = db_manager.get_database()
+    review_data = review.dict()
+    review_data["created_at"] = datetime.now(timezone.utc)
+    review_data["updated_at"] = datetime.now(timezone.utc)
+    
+    new_rev = db.periodic_reviews.insert_one(review_data)
+    created_rev = db.periodic_reviews.find_one({"_id": new_rev.inserted_id})
+    
+    if created_rev:
+        created_rev["_id"] = str(created_rev["_id"])
+    
+    return created_rev
+
+@router.get("/reviews/child/{child_id}", response_model=List[PeriodicReviewResponse])
+async def get_child_reviews(child_id: str, current_user: dict = Depends(get_current_user)):
+    """Get all clinical reviews for a child"""
+    db = db_manager.get_database()
+    reviews = list(db.periodic_reviews.find({"childId": child_id}).sort("date", -1).limit(50))
+    # Convert _id to string for all reviews
+    for r in reviews:
+        r["_id"] = str(r["_id"])
+    return reviews

@@ -417,9 +417,10 @@ export const communityAPI = {
      * @param {string} messageId - Message ID
      * @returns {Promise} - Deletion status
      */
-    deleteMessage: async (communityId, messageId) => {
+    deleteMessage: async (communityId, messageId, mode) => {
         try {
-            const response = await apiClient.delete(`/api/communities/${communityId}/messages/${messageId}`);
+            const config = mode ? { params: { mode } } : undefined;
+            const response = await apiClient.delete(`/api/communities/${communityId}/messages/${messageId}`, config);
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;
@@ -609,6 +610,25 @@ export const progressAPI = {
     deleteProgress: async (progressId) => {
         try {
             const response = await apiClient.delete(`/api/progress/actual/${progressId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    // === Periodic Reviews ===
+    getReviewsByChild: async (childId) => {
+        try {
+            const response = await apiClient.get(`/api/progress/reviews/child/${childId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    createReview: async (reviewData) => {
+        try {
+            const response = await apiClient.post('/api/progress/reviews', reviewData);
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;

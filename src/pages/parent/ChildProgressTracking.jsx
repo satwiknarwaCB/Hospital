@@ -291,7 +291,7 @@ const DailyProgressView = ({ records, onUpdate, role }) => {
 // ============================================================
 // Weekly View Component
 // ============================================================
-const WeeklyProgressView = ({ records }) => {
+const WeeklyProgressView = ({ records, childName, summary }) => {
     // Analytics for the week
     const improvedCount = records.filter(r => r.history?.length > 1 && r.history[0].progress > r.history[1].progress).length;
     const avgProgress = Math.round(records.reduce((a, b) => a + b.progress, 0) / (records.length || 1));
@@ -380,7 +380,7 @@ const WeeklyProgressView = ({ records }) => {
                 </CardHeader>
                 <CardContent>
                     <p className="text-sm text-neutral-600 leading-relaxed italic">
-                        "Aarav has shown remarkable progress in his adaptive skills this week. We have successfully achieved one-step instructions and eye contact goals. Focus for next week will shift towards two-step instructions and eating with more independence. Home practice for buttoning is recommended."
+                        "{summary || `${childName} is showing consistent progress in their therapy sessions. We are continuing to focus on functional communication and engagement goals. Home reinforcement is recommended.`}"
                     </p>
                 </CardContent>
             </Card>
@@ -476,7 +476,7 @@ const MonthlyProgressView = ({ records }) => {
 // Main Layout & Tab Handler
 // ============================================================
 const ChildProgressTracking = ({ forceChildId = null, role = 'parent' }) => {
-    const { currentUser, kids, getChildProgress, updateSkillProgress } = useApp();
+    const { currentUser, kids, getChildProgress, updateSkillProgress, getPeriodicReviews } = useApp();
     const [activeTab, setActiveTab] = useState('weekly'); // weekly, monthly
     const [selectedSkillForUpdate, setSelectedSkillForUpdate] = useState(null);
 
@@ -484,6 +484,11 @@ const ChildProgressTracking = ({ forceChildId = null, role = 'parent' }) => {
     const records = getChildProgress(child?.id || 'c1')
         .filter(r => !r.isGoalOnly && !r.skillId?.startsWith('custom-'))
         .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    const reviews = typeof getPeriodicReviews === 'function' ? getPeriodicReviews(child?.id) : [];
+    const latestReview = Array.isArray(reviews) && reviews.length > 0
+        ? [...reviews].sort((a, b) => new Date(b.date) - new Date(a.date))[0]
+        : null;
 
     if (!child) return null;
 
@@ -512,7 +517,7 @@ const ChildProgressTracking = ({ forceChildId = null, role = 'parent' }) => {
 
             {/* View Transitions */}
             <div className="animate-in fade-in slide-in-from-bottom-3 duration-700">
-                {activeTab === 'weekly' && <WeeklyProgressView records={records} />}
+                {activeTab === 'weekly' && <WeeklyProgressView records={records} childName={child?.name} summary={latestReview?.summary} />}
                 {activeTab === 'monthly' && <MonthlyProgressView records={records} />}
             </div>
 

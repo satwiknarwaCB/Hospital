@@ -85,3 +85,29 @@ class SkillProgressResponse(SkillProgressBase):
             datetime: lambda v: v.isoformat() if v.tzinfo else v.isoformat() + "Z",
             ObjectId: str
         }
+
+class PeriodicReviewBase(BaseModel):
+    """Base model for Periodic Clinical Reviews"""
+    childId: str = Field(..., description="ID of the child")
+    type: str = Field("General", description="Type of review (e.g. Speech Therapy)")
+    title: str = Field(..., description="Title of the review")
+    date: str = Field(..., description="Date of the review (YYYY-MM-DD)")
+    period: str = Field(..., description="Period covered by the review")
+    summary: str = Field(..., description="The clinical summary text")
+    milestone: Optional[str] = Field(None, description="Key milestone reached")
+    isNew: bool = Field(True, description="Whether the review is unread")
+
+class PeriodicReviewCreate(PeriodicReviewBase):
+    pass
+
+class PeriodicReviewResponse(PeriodicReviewBase):
+    id: str = Field(..., alias="_id")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    class Config:
+        populate_by_name = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat() if v.tzinfo else v.isoformat() + "Z",
+            ObjectId: str
+        }

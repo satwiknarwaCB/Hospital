@@ -125,7 +125,7 @@ const SessionLog = () => {
         addSession({
           ...sessionData,
           id: savedSession.id || savedSession._id
-        });
+        }, location.state?.sessionId);
       }
 
       alert(`🎉 Successfully published ${typesToSave.length} clinical records to MongoDB!`);

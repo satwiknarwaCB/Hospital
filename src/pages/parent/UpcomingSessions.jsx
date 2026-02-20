@@ -4,6 +4,7 @@
 // ============================================================
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Calendar,
     Clock,
@@ -87,6 +88,7 @@ const DetailModal = ({ session, child, users, onClose }) => {
 };
 
 const UpcomingSessions = () => {
+    const navigate = useNavigate();
     const { currentUser, kids, users, getChildSessions, addNotification, sendMessage } = useApp();
     const [selectedSession, setSelectedSession] = useState(null);
 
@@ -208,7 +210,7 @@ const UpcomingSessions = () => {
                             <p className="text-neutral-500 max-w-xs mt-2">
                                 Your therapist hasn't scheduled any upcoming sessions yet.
                             </p>
-                            <Button variant="outline" className="mt-6">
+                            <Button variant="outline" className="mt-6" onClick={() => navigate('/parent/messages')}>
                                 Contact Therapist
                             </Button>
                         </CardContent>

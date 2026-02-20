@@ -235,7 +235,8 @@ const ParentDashboard = () => {
         getUnreadCount,
         getChildMessages,
         sendMessage,
-        addNotification
+        addNotification,
+        getPeriodicReviews
     } = useApp();
     const navigate = useNavigate();
     const [selectedSession, setSelectedSession] = useState(null);
@@ -381,29 +382,8 @@ const ParentDashboard = () => {
     const overallProgressDisplay = overallProgress;
     const improvingCount = improvingAreas;
 
-    // Periodic (15-day/Monthly) Clinical Reviews
-    const periodicReviews = [
-        {
-            id: 'rev1',
-            type: 'Speech Therapy',
-            title: 'Fortnightly Progress Review',
-            date: 'Feb 1, 2026',
-            period: 'Jan 15 - Jan 31',
-            summary: `${child.name} has shown remarkable consistency in receptive language this fortnight. He is now independently using picture cards to express needs in 4/5 attempts. Engagement levels have stabilized at 75% across all speech activities.`,
-            milestone: 'Mastered 2-step instructional sequences',
-            isNew: true
-        },
-        {
-            id: 'rev2',
-            type: 'Occupational Therapy',
-            title: 'Monthly Clinical Insight',
-            date: 'Jan 28, 2026',
-            period: 'Jan 1 - Jan 28',
-            summary: "This month's focus on sensory regulation has been highly productive. We observed a 40% decrease in transition-related anxiety. Fine motor coordination for pincer grasp is reaching age-appropriate milestones. We will continue focusing on auditory desensitization next month.",
-            milestone: 'Independent sensory regulation in noisy environments',
-            isNew: false
-        }
-    ];
+    // Periodic (15-day/Monthly) Clinical Reviews - FETCHED FROM CONTEXT
+    const periodicReviews = getPeriodicReviews(child.id);
 
     return (
         <div className="space-y-8 pb-safe-nav animate-slide-up">
@@ -532,7 +512,7 @@ const ParentDashboard = () => {
                                                     size="sm"
                                                     className="flex-1 md:flex-none h-11 px-6 rounded-xl font-bold bg-neutral-900 hover:bg-black text-white"
                                                     onClick={() => {
-                                                        const therapistId = session.therapistId || 't1';
+                                                        const therapistId = session.therapistId;
                                                         const therapistUser = users.find(u => u.id === therapistId);
 
                                                         sendMessage({
