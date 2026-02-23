@@ -265,125 +265,6 @@ const AdminDashboard = () => {
                     </div>
                 </CardContent>
             </Card>
-
-            {/* Compliance & Risk Alerts */}
-            <Card className="border-none shadow-sm ring-1 ring-neutral-200 rounded-[2rem]">
-                <CardHeader>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <CardTitle className="text-xl font-black text-neutral-800 uppercase tracking-tight">Compliance & Risk Alerts</CardTitle>
-                        <span className={`w-fit px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${cdcMetrics.complianceScore >= 95 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-                            }`}>
-                            Compliance: {cdcMetrics.complianceScore}%
-                        </span>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    {/* Mobile View (Card Stack) */}
-                    <div className="md:hidden space-y-4">
-                        {cdcMetrics.dropoutRisk.map((risk, idx) => (
-                            <div key={idx} className="bg-white border border-neutral-100 rounded-xl p-4 shadow-sm">
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="flex items-center gap-2 font-black text-orange-600 text-sm">
-                                        <AlertTriangle className="h-4 w-4" />
-                                        Dropout Risk
-                                    </div>
-                                    <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${risk.riskLevel === 'high' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
-                                        }`}>
-                                        {risk.riskLevel}
-                                    </span>
-                                </div>
-                                <div className="space-y-2 mb-4">
-                                    <div className="flex justify-between">
-                                        <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Patient</span>
-                                        <span className="text-xs font-bold text-neutral-700">{risk.name}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Clinician</span>
-                                        <span className="text-xs font-bold text-neutral-700">Dr. Rajesh</span>
-                                    </div>
-                                </div>
-                                <Button size="sm" variant="outline" className="w-full text-xs font-black uppercase tracking-widest h-8">
-                                    Review Case
-                                </Button>
-                            </div>
-                        ))}
-                        <div className="bg-white border border-neutral-100 rounded-xl p-4 shadow-sm">
-                            <div className="flex items-start justify-between mb-3">
-                                <div className="flex items-center gap-2 font-black text-red-600 text-sm">
-                                    <ShieldAlert className="h-4 w-4" />
-                                    Low Engagement
-                                </div>
-                                <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-red-50 text-red-600">
-                                    Critical
-                                </span>
-                            </div>
-                            <div className="space-y-2 mb-4">
-                                <div className="flex justify-between">
-                                    <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Patient</span>
-                                    <span className="text-xs font-bold text-neutral-700">Diya Sharma (C2)</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Clinician</span>
-                                    <span className="text-xs font-bold text-neutral-700">Dr. Rajesh</span>
-                                </div>
-                            </div>
-                            <Button size="sm" variant="outline" className="w-full text-xs font-black uppercase tracking-widest h-8">
-                                Review Case
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Desktop View (Table) */}
-                    <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="text-xs text-neutral-500 uppercase bg-neutral-50 border-b">
-                                <tr>
-                                    <th className="px-4 py-3">Alert Type</th>
-                                    <th className="px-4 py-3">Child / ID</th>
-                                    <th className="px-4 py-3">Therapist</th>
-                                    <th className="px-4 py-3">Status</th>
-                                    <th className="px-4 py-3">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-neutral-100">
-                                {cdcMetrics.dropoutRisk.map((risk, idx) => (
-                                    <tr key={idx}>
-                                        <td className="px-4 py-3 font-medium text-orange-600">
-                                            <AlertTriangle className="inline w-4 h-4 mr-1" />
-                                            Dropout Risk
-                                        </td>
-                                        <td className="px-4 py-3">{risk.name}</td>
-                                        <td className="px-4 py-3">Dr. Rajesh</td>
-                                        <td className="px-4 py-3">
-                                            <span className={`px-2 py-0.5 rounded text-xs ${risk.riskLevel === 'high' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
-                                                }`}>
-                                                {risk.riskLevel.charAt(0).toUpperCase() + risk.riskLevel.slice(1)}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <button className="text-primary-600 hover:underline">Review Case</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                                <tr>
-                                    <td className="px-4 py-3 font-medium text-red-600">
-                                        <ShieldAlert className="inline w-4 h-4 mr-1" />
-                                        Low Engagement
-                                    </td>
-                                    <td className="px-4 py-3">Diya Sharma (C2)</td>
-                                    <td className="px-4 py-3">Dr. Rajesh</td>
-                                    <td className="px-4 py-3">
-                                        <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs">Critical</span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <button className="text-primary-600 hover:underline">Review Case</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     );
 };
@@ -748,140 +629,7 @@ const ReportsPage = () => {
     );
 };
 
-// ============================================================
-// Compliance & Audit Page
-// ============================================================
-const CompliancePage = () => {
-    const { auditLogs, consentRecords, cdcMetrics } = useApp();
-    const [activeTab, setActiveTab] = useState('audit');
 
-    return (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-2xl font-bold text-neutral-800">Compliance & Audit</h2>
-                <p className="text-neutral-500">Monitor compliance and view audit logs</p>
-            </div>
-
-            {/* Compliance Overview */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-none shadow-lg shadow-emerald-100 rounded-2xl md:rounded-[2rem]">
-                    <CardContent className="p-4 md:p-6">
-                        <ShieldAlert className="h-6 w-6 text-emerald-100 mb-2" />
-                        <p className="text-2xl md:text-3xl font-black">{cdcMetrics.complianceScore}%</p>
-                        <p className="text-[10px] font-black text-emerald-100 uppercase tracking-widest mt-1">Audit Score</p>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
-                    <CardContent className="p-4 md:p-6">
-                        <CheckCircle2 className="h-6 w-6 text-emerald-500 mb-2" />
-                        <p className="text-2xl md:text-3xl font-black text-neutral-800">{consentRecords.filter(c => c.status === 'active').length}</p>
-                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Active Consents</p>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
-                    <CardContent className="p-4 md:p-6">
-                        <Activity className="h-6 w-6 text-primary-500 mb-2" />
-                        <p className="text-2xl md:text-3xl font-black text-neutral-800">{auditLogs.length}</p>
-                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Audit Logs</p>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
-                    <CardContent className="p-4 md:p-6">
-                        <Calendar className="h-6 w-6 text-amber-500 mb-2" />
-                        <p className="text-2xl md:text-3xl font-black text-neutral-800">0</p>
-                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Pending Review</p>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex gap-2 border-b border-neutral-200">
-                <button
-                    className={`px-4 py-2 font-medium transition-colors ${activeTab === 'audit' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-neutral-500'
-                        }`}
-                    onClick={() => setActiveTab('audit')}
-                >
-                    Audit Logs
-                </button>
-                <button
-                    className={`px-4 py-2 font-medium transition-colors ${activeTab === 'consent' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-neutral-500'
-                        }`}
-                    onClick={() => setActiveTab('consent')}
-                >
-                    Consent Records
-                </button>
-            </div>
-
-            {/* Audit Logs */}
-            {activeTab === 'audit' && (
-                <Card className="rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200 overflow-hidden">
-                    <CardHeader className="bg-neutral-50/50 border-b border-neutral-100">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg font-black text-neutral-800 uppercase tracking-tight">Recent Audit Events</CardTitle>
-                            <Button variant="outline" className="rounded-xl font-black text-xs uppercase h-10 px-4">
-                                <Download className="h-4 w-4 mr-2" />
-                                Export
-                            </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="p-4 md:p-6">
-                        <div className="grid grid-cols-1 gap-3">
-                            {auditLogs.map(log => (
-                                <div key={log.id} className="flex flex-col sm:flex-row sm:items-start gap-4 p-4 bg-neutral-50 rounded-2xl border border-neutral-100 hover:bg-white hover:shadow-lg transition-all">
-                                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 ${log.action.includes('CREATE') ? 'bg-emerald-100 text-emerald-600' :
-                                        log.action.includes('UPDATE') ? 'bg-amber-100 text-amber-600' :
-                                            log.action.includes('LOGIN') ? 'bg-primary-100 text-primary-600' : 'bg-neutral-100 text-neutral-600'
-                                        }`}>
-                                        <Activity className="h-6 w-6" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
-                                            <p className="font-black text-neutral-900 uppercase text-sm tracking-tight">{log.action.replace(/_/g, ' ')}</p>
-                                            <span className="text-[9px] font-black text-neutral-400 uppercase tracking-widest">{new Date(log.timestamp).toLocaleString()}</span>
-                                        </div>
-                                        <p className="text-xs font-medium text-neutral-500 leading-relaxed mb-2">{log.details}</p>
-                                        <div className="flex items-center gap-2">
-                                            <div className="h-5 w-5 rounded-full bg-neutral-200 shrink-0" />
-                                            <p className="text-[10px] font-black text-neutral-900 uppercase tracking-tight">Actor: {log.userName}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* Consent Records */}
-            {activeTab === 'consent' && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Consent Management</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            {consentRecords.map(consent => (
-                                <div key={consent.id} className="flex items-center justify-between p-4 border border-neutral-200 rounded-xl">
-                                    <div>
-                                        <p className="font-medium text-neutral-800">{consent.description}</p>
-                                        <p className="text-sm text-neutral-500">
-                                            Granted: {new Date(consent.grantedAt).toLocaleDateString()} •
-                                            Expires: {new Date(consent.expiresAt).toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${consent.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                        }`}>
-                                        {consent.status.charAt(0).toUpperCase() + consent.status.slice(1)}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-        </div>
-    );
-};
 
 // ============================================================
 // Admin Portal Router
@@ -899,7 +647,6 @@ const AdminPortal = () => {
         { label: 'Operations', path: '/admin/operations', icon: Building2 },
         { label: 'Users', path: '/admin/users', icon: Users },
         { label: 'Reports', path: '/admin/reports', icon: FileBarChart },
-        { label: 'Compliance', path: '/admin/compliance', icon: ShieldAlert },
     ];
 
     return (
@@ -909,7 +656,6 @@ const AdminPortal = () => {
                 <Route path="operations" element={<OperationsPage />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="reports" element={<ReportsPage />} />
-                <Route path="compliance" element={<CompliancePage />} />
                 <Route path="*" element={<Navigate to="overview" replace />} />
             </Route>
         </Routes>
