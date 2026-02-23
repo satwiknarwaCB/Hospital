@@ -189,50 +189,6 @@ const TherapistLogin = () => {
                         </button>
                     </form>
 
-                    {/* Demo Credentials */}
-                    <div className="mt-6 p-4 bg-secondary-50 rounded-xl border border-secondary-100">
-                        <p className="text-xs font-medium text-secondary-700 mb-3">Demo Credentials:</p>
-
-                        {/* Dr. Rajesh Kumar */}
-                        <div className="mb-3 p-3 bg-white rounded-lg border border-secondary-100">
-                            <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm font-semibold text-secondary-800">Dr. Rajesh Kumar</p>
-                                <button
-                                    type="button"
-                                    onClick={() => fillDemoCredentials('dr.rajesh@therapist.com')}
-                                    className="text-xs text-secondary-600 hover:text-secondary-700 font-medium hover:underline"
-                                >
-                                    Quick Fill
-                                </button>
-                            </div>
-                            <p className="text-xs text-secondary-600">
-                                <span className="font-medium">Email:</span> dr.rajesh@therapist.com
-                            </p>
-                            <p className="text-xs text-secondary-600">
-                                <span className="font-medium">Password:</span> Therapist@123
-                            </p>
-                        </div>
-
-                        {/* Dr. Meera Singh */}
-                        <div className="p-3 bg-white rounded-lg border border-secondary-100">
-                            <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm font-semibold text-secondary-800">Dr. Meera Singh</p>
-                                <button
-                                    type="button"
-                                    onClick={() => fillDemoCredentials('dr.meera@therapist.com')}
-                                    className="text-xs text-secondary-600 hover:text-secondary-700 font-medium hover:underline"
-                                >
-                                    Quick Fill
-                                </button>
-                            </div>
-                            <p className="text-xs text-secondary-600">
-                                <span className="font-medium">Email:</span> dr.meera@therapist.com
-                            </p>
-                            <p className="text-xs text-secondary-600">
-                                <span className="font-medium">Password:</span> Therapist@123
-                            </p>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Footer */}

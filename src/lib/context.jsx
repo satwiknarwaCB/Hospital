@@ -27,69 +27,54 @@ const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
     // ============ Core State ============
-    const [users] = useState(USERS);
+    const [users] = useState([]);
     const [realChildren, setRealChildren] = useState([]);
-    const [kids, setKids] = useState(CHILDREN);
-    const [sessions, setSessions] = useState(SESSIONS);
-    const [skillScores, setSkillScores] = useState(SKILL_SCORES);
+    const [kids, setKids] = useState([]);
+    const [sessions, setSessions] = useState([]);
+    const [skillScores, setSkillScores] = useState([]);
     const [roadmap, setRoadmap] = useState(() => {
         const saved = localStorage.getItem('neurobridge_roadmap');
-        return saved ? JSON.parse(saved) : ROADMAP;
+        return saved ? JSON.parse(saved) : [];
     });
-    const [homeActivities, setHomeActivities] = useState(HOME_ACTIVITIES);
-    const [messages, setMessages] = useState(MESSAGES);
-    const [consentRecords] = useState(CONSENT_RECORDS);
-    const [auditLogs, setAuditLogs] = useState(AUDIT_LOGS);
-    const [cdcMetrics] = useState(CDC_METRICS);
-    const [periodicReviews, setPeriodicReviews] = useState(PERIODIC_REVIEWS);
+    const [homeActivities, setHomeActivities] = useState([]);
+    const [messages, setMessages] = useState([]);
+    const [consentRecords] = useState([]);
+    const [auditLogs, setAuditLogs] = useState([]);
+    const [cdcMetrics] = useState({
+        activeChildren: 0,
+        waitlistSize: 0,
+        therapistCount: 0,
+        monthlyRevenue: 0,
+        revenueTarget: 0,
+        totalHours: 0
+    });
+    const [periodicReviews, setPeriodicReviews] = useState([]);
     const [adminStats, setAdminStats] = useState({
-        therapist_count: CDC_METRICS.therapistCount,
-        parent_count: 2, // Mock baseline
-        child_count: CDC_METRICS.activeChildren,
-        active_children: CDC_METRICS.activeChildren,
-        ongoing_therapies: 35, // Mock baseline
-        pending_assignments: 10 // Mock baseline
+        therapist_count: 0,
+        parent_count: 0,
+        child_count: 0,
+        active_children: 0,
+        ongoing_therapies: 0,
+        pending_assignments: 0
     });
     const [skillProgress, setSkillProgress] = useState(() => {
         const saved = localStorage.getItem('neurobridge_skill_progress');
-        return saved ? JSON.parse(saved) : SKILL_PROGRESS;
+        return saved ? JSON.parse(saved) : [];
     });
     const [skillGoals, setSkillGoals] = useState(() => {
         const saved = localStorage.getItem('neurobridge_skill_goals');
-        return saved ? JSON.parse(saved) : SKILL_GOALS;
+        return saved ? JSON.parse(saved) : [];
     });
     const [childDocuments, setChildDocuments] = useState(() => {
         const saved = localStorage.getItem('neurobridge_documents');
-        return saved ? JSON.parse(saved) : DOCUMENTS;
+        return saved ? JSON.parse(saved) : [];
     });
     const [communityUnreadCount, setCommunityUnreadCount] = useState(0);
     const [privateUnreadCount, setPrivateUnreadCount] = useState(0);
     const notifiedMessageIds = useRef(new Set());
     const [quickTestResults, setQuickTestResults] = useState(() => {
         const saved = localStorage.getItem('neurobridge_quick_test_results');
-        let results = saved ? JSON.parse(saved) : [];
-
-        // Ensure all results have the proper structure
-        results = results.filter(r => r && typeof r === 'object' && Array.isArray(r.games));
-
-        // Add a sample result if none exists to ensure "Show Result Game" works for demo
-        if (results.length === 0) {
-            results = [{
-                id: 'demo-result',
-                childId: 'c1',
-                date: new Date(Date.now() - 86400000).toISOString(),
-                games: Array(6).fill(0).map((_, i) => ({
-                    id: `g${i}`,
-                    results: { score: 85 + i },
-                    timestamp: new Date().toISOString()
-                })),
-                summary: {
-                    score: 88,
-                    interpretation: "Aarav is showing great progress in communication and sensory focus. His engagement in joint attention activities has improved by 15%."
-                }
-            }];
-        }
-        return results;
+        return saved ? JSON.parse(saved) : [];
     });
     const [quickTestProgress, setQuickTestProgress] = useState(() => {
         const saved = localStorage.getItem('neurobridge_quick_test_progress');

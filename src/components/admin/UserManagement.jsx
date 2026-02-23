@@ -429,8 +429,8 @@ const UserManagement = () => {
                 address: '', profile_photo: ''
             });
             setIsCreating(false);
-            fetchUsers();
-            refreshAdminStats();
+            await fetchUsers();
+            await refreshAdminStats();
         } catch (error) {
             console.error('Create failed:', error);
 
@@ -452,25 +452,6 @@ const UserManagement = () => {
             setIsLoading(false);
         }
     };
-
-    const quickFill = (user) => {
-        setFormData({
-            ...formData,
-            name: user.name,
-            email: user.email,
-            password: 'User@123'
-        });
-    };
-
-    const exampleTherapists = [
-        { name: 'Dr. Rajesh Kumar', email: 'dr.rajesh@therapist.com' },
-        { name: 'Dr. Meera Singh', email: 'dr.meera@therapist.com' }
-    ];
-
-    const exampleParents = [
-        { name: 'Priya Patel', email: 'priya.patel@parent.com' },
-        { name: 'Arun Sharma', email: 'arun.sharma@parent.com' }
-    ];
 
     const currentUsers = activeTab === 'therapists' ? therapists : activeTab === 'children' ? childrenList : parents;
     const filteredUsers = currentUsers.filter(u =>
@@ -963,23 +944,6 @@ const UserManagement = () => {
                                             />
                                         </div>
                                     )}
-                                </div>
-
-                                {/* Quick fill section */}
-                                <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-100">
-                                    <p className="text-xs font-bold text-neutral-400 tracking-widest mb-3">Quick Fill Examples</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {(activeTab === 'therapists' ? exampleTherapists : exampleParents).map((u, i) => (
-                                            <button
-                                                key={i}
-                                                type="button"
-                                                onClick={() => quickFill(u)}
-                                                className="px-4 py-2 bg-white border border-neutral-200 rounded-lg text-xs font-semibold hover:border-primary-400 hover:text-primary-600 transition-all shadow-sm"
-                                            >
-                                                {u.name}
-                                            </button>
-                                        ))}
-                                    </div>
                                 </div>
 
                                 <div className="flex justify-end gap-3 pt-4 border-t border-neutral-100">

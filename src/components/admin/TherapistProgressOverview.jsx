@@ -300,9 +300,9 @@ const TherapistProgressOverview = () => {
 
     // Hospital Average for Benchmarking
     const hospitalAvg = {
-        delivery: 82,
-        mastery: 74,
-        sessionSuccess: 88
+        delivery: 0,
+        mastery: 0,
+        sessionSuccess: 0
     };
 
     const toggleTherapist = (id) => {
@@ -336,10 +336,10 @@ const TherapistProgressOverview = () => {
 
         const chartData = [
             { name: 'Baseline', planned: 0, achieved: 0, efficiency: 0 },
-            { name: 'W1', planned: 20, achieved: 18, efficiency: 90 },
-            { name: 'W2', planned: 40, achieved: 35, efficiency: 87 },
-            { name: 'W3', planned: 65, achieved: 58, efficiency: 89 },
-            { name: 'W4', planned: 85, achieved: 80, efficiency: 94 },
+            { name: 'W1', planned: 0, achieved: 0, efficiency: 0 },
+            { name: 'W2', planned: 0, achieved: 0, efficiency: 0 },
+            { name: 'W3', planned: 0, achieved: 0, efficiency: 0 },
+            { name: 'W4', planned: 0, achieved: 0, efficiency: 0 },
         ];
 
         // Ensure text mastery (c1, c2, etc.) matches the graph's latest state (W4)
@@ -351,18 +351,17 @@ const TherapistProgressOverview = () => {
     // Advanced Stats for Therapist
     const getTherapistPerformance = (therapistId) => {
         const tKids = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
-        const taught = 85 + Math.random() * 10;
-        const absorption = 72 + Math.random() * 15;
-        const successRate = 92 + Math.random() * 6; // Session success
-        const capacity = Math.min(100, (tKids.length / 10) * 100); // Max capacity 10 kids
+        const taught = 0;
+        const absorption = 0;
+        const successRate = 0;
+        const capacity = Math.min(100, (tKids.length / 10) * 100);
 
-        // Radar data for clinical domains
         const radarData = [
-            { subject: 'Speech', A: 80 + Math.random() * 20, fullMark: 100 },
-            { subject: 'Motor', A: 70 + Math.random() * 30, fullMark: 100 },
-            { subject: 'Sensory', A: 85 + Math.random() * 15, fullMark: 100 },
-            { subject: 'Social', A: 60 + Math.random() * 40, fullMark: 100 },
-            { subject: 'Cognitive', A: 90 + Math.random() * 10, fullMark: 100 },
+            { subject: 'Speech', A: 0, fullMark: 100 },
+            { subject: 'Motor', A: 0, fullMark: 100 },
+            { subject: 'Sensory', A: 0, fullMark: 100 },
+            { subject: 'Social', A: 0, fullMark: 100 },
+            { subject: 'Cognitive', A: 0, fullMark: 100 },
         ];
 
         return {
@@ -373,11 +372,11 @@ const TherapistProgressOverview = () => {
             radarData,
             deliveryData: [
                 { value: taught, color: '#6366f1' },
-                { value: 100 - taught, color: '#f1f5f9' }
+                { value: 100, color: '#f1f5f9' }
             ],
             masteryData: [
                 { value: absorption, color: '#10b981' },
-                { value: 100 - absorption, color: '#f1f5f9' }
+                { value: 100, color: '#f1f5f9' }
             ]
         };
     };

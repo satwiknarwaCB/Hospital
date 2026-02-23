@@ -5,8 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { LogIn, Mail, Lock, AlertCircle, Loader2, ShieldCheck, User, Briefcase, Heart, Activity, CheckCircle2 } from 'lucide-react';
-import { publicAPI } from '../lib/api';
+import { LogIn, Mail, Lock, AlertCircle, Loader2, User, CheckCircle2 } from 'lucide-react';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -31,7 +30,6 @@ const Login = () => {
         address: '',
         relationship: 'Mother'
     });
-    const [demoUsers, setDemoUsers] = useState({ therapists: [], parents: [] });
 
     useEffect(() => {
         if (location.state?.openSignup) {
@@ -39,85 +37,17 @@ const Login = () => {
         }
     }, [location.state]);
 
-    React.useEffect(() => {
-        const fetchDemoUsers = async () => {
-            try {
-                const data = await publicAPI.getDemoUsers();
-                setDemoUsers(data);
-            } catch (error) {
-                console.error('Failed to fetch demo users:', error);
-            }
-        };
-        fetchDemoUsers();
-    }, []);
-
-    // Demo Credentials - Merge static with dynamic users
-    const getDemoAccounts = () => {
-        const staticParents = [
-            { name: 'Priya Patel', email: 'priya.patel@parent.com', password: 'Parent@123' },
-            { name: 'Arun Sharma', email: 'arun.sharma@parent.com', password: 'Parent@123' }
-        ];
-
-        const staticTherapists = [
-            { name: 'Dr. Rajesh Kumar', email: 'dr.rajesh@therapist.com', password: 'Therapist@123' },
-            { name: 'Dr. Meera Singh', email: 'dr.meera@therapist.com', password: 'Therapist@123' }
-        ];
-
-        // Merge dynamic users with static ones
-        const allParents = [
-            ...staticParents,
-            ...demoUsers.parents
-                .filter(p => !staticParents.find(sp => sp.email === p.email))
-                .map(p => ({
-                    ...p,
-                    password: localStorage.getItem(`demo_pwd_${p.email}`) || 'User@123'
-                }))
-        ];
-
-        const allTherapists = [
-            ...staticTherapists,
-            ...demoUsers.therapists
-                .filter(t => !staticTherapists.find(st => st.email === t.email))
-                .map(t => ({
-                    ...t,
-                    password: localStorage.getItem(`demo_pwd_${t.email}`) || 'User@123'
-                }))
-        ];
-
-        return [
-            {
-                role: 'Parent',
-                icon: Heart,
-                color: 'text-pink-500',
-                bg: 'bg-pink-50',
-                users: allParents
-            },
-            {
-                role: 'Therapist',
-                icon: Briefcase,
-                color: 'text-blue-500',
-                bg: 'bg-blue-50',
-                users: allTherapists
-            },
-            {
-                role: 'Admin',
-                icon: ShieldCheck,
-                color: 'text-slate-700',
-                bg: 'bg-slate-100',
-                users: [
-                    { name: 'Director Anjali Sharma', email: 'anjali.sharma@neurobridge.com', password: 'Admin@123' }
-                ]
-            }
-        ];
-    };
-
-    const demoAccounts = getDemoAccounts();
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
         setErrors((prev) => ({ ...prev, [name]: '' }));
         setApiError('');
+    };
+
+    const handleSignupChange = (e) => {
+        const { name, value } = e.target;
+        setSignupData(prev => ({ ...prev, [name]: value }));
+        setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
     const validateForm = () => {
@@ -137,9 +67,6 @@ const Login = () => {
 
         if (!signupData.password) newErrors.password = 'Password is required';
         else if (signupData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
-        else if (!/[A-Z]/.test(signupData.password)) newErrors.password = 'Password must have one uppercase letter';
-        else if (!/[a-z]/.test(signupData.password)) newErrors.password = 'Password must have one lowercase letter';
-        else if (!/[0-9]/.test(signupData.password)) newErrors.password = 'Password must have one digit';
 
         if (signupData.password !== signupData.confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match';
@@ -171,7 +98,6 @@ const Login = () => {
             await signup(signupPayload);
             setSignupSuccess('Account created successfully! You can now sign in.');
             setIsSignup(false);
-            // Pre-fill email for login
             setFormData(prev => ({ ...prev, email: signupData.email }));
         } catch (error) {
             setApiError(error.message || 'Signup failed. Please try again.');
@@ -190,9 +116,6 @@ const Login = () => {
         try {
             const user = await login(formData.email, formData.password);
 
-            // SUCCESS: Save password for Quick Fill (Local Persistence)
-            localStorage.setItem(`demo_pwd_${formData.email}`, formData.password);
-
             // Redirect based on role
             if (user.role === 'parent') {
                 navigate('/parent/today');
@@ -201,14 +124,8 @@ const Login = () => {
             } else if (user.role === 'therapist' || user.role === 'doctor') {
                 navigate('/therapist/command-center');
             } else {
-                // Fallback based on email if role is somehow missing
-                if (formData.email.includes('@parent.com')) {
-                    navigate('/parent/today');
-                } else if (formData.email.includes('@neurobridge.com')) {
-                    navigate('/admin/overview');
-                } else {
-                    navigate('/therapist/command-center');
-                }
+                // Default fallback if role is missing but login succeeded
+                navigate('/');
             }
         } catch (error) {
             setApiError(error.message || 'Login failed. Please check your credentials.');
@@ -217,68 +134,9 @@ const Login = () => {
         }
     };
 
-    const fillDemo = (email, password) => {
-        setFormData({ email, password });
-        setIsSignup(false);
-        setErrors({});
-        setApiError('');
-    };
-
-    const handleSignupChange = (e) => {
-        const { name, value } = e.target;
-        setSignupData(prev => ({ ...prev, [name]: value }));
-        setErrors(prev => ({ ...prev, [name]: '' }));
-    };
-
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-neutral-100">
-
-                {/* Demo Credentials Sidebar */}
-                <div className="w-full md:w-80 bg-slate-50 p-8 border-r border-neutral-100 overflow-y-auto max-h-[400px] md:max-h-none">
-                    <div className="mb-6">
-                        <h3 className="text-lg font-bold text-neutral-800 flex items-center gap-2">
-                            <Activity className="w-5 h-5 text-primary-600" />
-                            Demo Access
-                        </h3>
-                        <p className="text-sm text-neutral-500">Quickly test any role</p>
-                    </div>
-
-                    <div className="space-y-6">
-                        {demoAccounts.map((section) => (
-                            <div key={section.role}>
-                                <div className="flex items-center gap-2 mb-3">
-                                    <section.icon className={`w-4 h-4 ${section.color}`} />
-                                    <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-                                        {section.role} Accounts
-                                    </span>
-                                </div>
-                                <div className="space-y-2">
-                                    {section.users.map((u) => (
-                                        <button
-                                            key={u.email}
-                                            onClick={() => fillDemo(u.email, u.password)}
-                                            className="w-full text-left p-4 rounded-xl bg-white border border-neutral-100 hover:border-primary-300 hover:shadow-md transition-all group relative"
-                                        >
-                                            <div className="flex items-center justify-between mb-1">
-                                                <p className="text-sm font-bold text-neutral-700 group-hover:text-primary-600">{u.name}</p>
-                                                <span className="text-[9px] text-neutral-300 bg-neutral-50 px-1 rounded uppercase">
-                                                    {u.email.includes('@therapist.com') || u.email.includes('@parent.com') || u.email.includes('@neurobridge.com') ? 'System' : 'New'}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-1.5 text-primary-500 font-bold text-[10px]">
-                                                <Activity className="w-3 h-3" />
-                                                Quick Fill Access
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Login Form Section */}
+            <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex border border-neutral-100">
                 <div className="flex-1 p-8 md:p-12">
                     <div className="max-w-md mx-auto">
                         <div className="text-center mb-10">

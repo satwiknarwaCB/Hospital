@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { User, Stethoscope, Building2, ArrowRight, ShieldCheck, Activity, ChevronRight, Play, CheckCircle2, Heart, Award, Users } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { USERS, CHILDREN } from '../data/mockData';
 import { useApp } from '../lib/context';
 
 const Landing = () => {
@@ -90,10 +89,10 @@ const Landing = () => {
                 <div className="container mx-auto px-4 md:px-6 relative z-10">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
                         {[
-                            { label: 'Active Children', val: '2,500+', icon: Users },
-                            { label: 'Licensed Therapists', val: '150+', icon: Stethoscope },
-                            { label: 'Success Sessions', val: '50k+', icon: Activity },
-                            { label: 'Clinical Sites', val: '12', icon: Building2 },
+                            { label: 'Families Supported', val: '0', icon: Users },
+                            { label: 'Licensed Therapists', val: '0', icon: Stethoscope },
+                            { label: 'Success Sessions', val: '0', icon: Activity },
+                            { label: 'Clinical Sites', val: '1', icon: Building2 },
                         ].map((stat, i) => (
                             <div key={i} className="space-y-2">
                                 <div className="mx-auto h-12 w-12 rounded-full bg-white/10 flex items-center justify-center mb-4">

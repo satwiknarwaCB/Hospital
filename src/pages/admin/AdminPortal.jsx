@@ -320,7 +320,7 @@ const OperationsPage = () => {
                         <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center mb-3 mx-auto md:mx-0">
                             <Activity className="h-5 w-5 text-emerald-500" />
                         </div>
-                        <p className="text-2xl md:text-3xl font-black text-neutral-800 leading-none">{cdcMetrics.avgSessionsPerWeek}</p>
+                        <p className="text-2xl md:text-3xl font-black text-neutral-800 leading-none">0</p>
                         <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-2 px-1">Sess / Week</p>
                     </CardContent>
                 </Card>
@@ -338,7 +338,7 @@ const OperationsPage = () => {
                         <div className="h-10 w-10 bg-amber-50 rounded-xl flex items-center justify-center mb-3 mx-auto md:mx-0">
                             <Clock className="h-5 w-5 text-amber-500" />
                         </div>
-                        <p className="text-2xl md:text-3xl font-black text-neutral-800 leading-none">{cdcMetrics.waitlistSize}</p>
+                        <p className="text-2xl md:text-3xl font-black text-neutral-800 leading-none">0</p>
                         <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-2 px-1">Waitlist</p>
                     </CardContent>
                 </Card>
@@ -503,7 +503,7 @@ const OperationsPage = () => {
                         {['Therapy Room A', 'Therapy Room B', 'Sensory Room', 'Group Room'].map((room, idx) => (
                             <div key={idx} className="p-4 border border-neutral-200 rounded-xl text-center">
                                 <p className="font-medium text-neutral-800">{room}</p>
-                                <p className="text-2xl font-bold text-primary-600 mt-2">{70 + Math.random() * 25 | 0}%</p>
+                                <p className="text-2xl font-bold text-primary-600 mt-2">0%</p>
                                 <p className="text-xs text-neutral-500">Today's usage</p>
                             </div>
                         ))}
@@ -520,13 +520,7 @@ const OperationsPage = () => {
 const ReportsPage = () => {
     const [selectedReport, setSelectedReport] = useState(null);
 
-    const reports = [
-        { id: 1, name: 'Monthly Progress Summary', type: 'Clinical', date: '2025-12-01', status: 'ready' },
-        { id: 2, name: 'Therapist Performance Report', type: 'Operations', date: '2025-12-01', status: 'ready' },
-        { id: 3, name: 'Parent Satisfaction Survey', type: 'Satisfaction', date: '2025-11-15', status: 'ready' },
-        { id: 4, name: 'Compliance Audit Report', type: 'Compliance', date: '2025-11-01', status: 'ready' },
-        { id: 5, name: 'Financial Summary Q4', type: 'Financial', date: '2025-12-15', status: 'pending' },
-    ];
+    const reports = [];
 
     return (
         <div className="space-y-6">
@@ -586,7 +580,7 @@ const ReportsPage = () => {
                 </CardHeader>
                 <CardContent className="p-4 md:p-6">
                     <div className="grid grid-cols-1 gap-4">
-                        {reports.map(report => (
+                        {reports.length > 0 ? reports.map(report => (
                             <div
                                 key={report.id}
                                 className="flex flex-col sm:flex-row sm:items-center justify-between p-5 md:p-6 border border-neutral-100 rounded-[1.5rem] hover:bg-neutral-50 transition-all gap-6 shadow-sm hover:shadow-md"
@@ -621,7 +615,12 @@ const ReportsPage = () => {
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="text-center py-12 text-neutral-400">
+                                <FileBarChart className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                                <p className="font-black uppercase tracking-widest text-[10px]">No clinical reports available</p>
+                            </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>

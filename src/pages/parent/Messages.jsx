@@ -403,7 +403,7 @@ const Messages = () => {
                         messages: [],
                         type: message.type,
                         participantName: otherUser ? otherUser.name :
-                            (message.type === 'weekly-summary' ? 'NeuroBridge AI' : (message.senderName || 'Dr. Rajesh Kumar')),
+                            (message.type === 'weekly-summary' ? 'NeuroBridge AI' : (message.senderName || 'Therapist')),
                         participantAvatar,
                         participantRole: otherUser ? otherUser.role : (isMessageFromMe ? message.recipientRole : message.senderRole)
                     };

@@ -200,32 +200,6 @@ const ParentLogin = () => {
                         </button>
                     </form>
 
-                    {/* Demo Credentials */}
-                    <div className="mt-6 p-4 bg-violet-50 rounded-xl border border-violet-100">
-                        <p className="text-xs font-medium text-violet-700 mb-3">Demo Credentials:</p>
-
-                        <div className="space-y-2">
-                            {/* Priya Patel */}
-                            <button
-                                type="button"
-                                onClick={() => fillDemoCredentials('priya.patel@parent.com')}
-                                className="w-full flex items-center justify-between p-3 bg-white rounded-lg border border-violet-100 hover:border-violet-300 transition-colors group"
-                            >
-                                <p className="text-sm font-semibold text-violet-800">Fill Priya Patel (Mother)</p>
-                                <LogIn className="w-4 h-4 text-violet-400 group-hover:text-violet-600" />
-                            </button>
-
-                            {/* Arun Sharma */}
-                            <button
-                                type="button"
-                                onClick={() => fillDemoCredentials('arun.sharma@parent.com')}
-                                className="w-full flex items-center justify-between p-3 bg-white rounded-lg border border-violet-100 hover:border-violet-300 transition-colors group"
-                            >
-                                <p className="text-sm font-semibold text-violet-800">Fill Arun Sharma (Father)</p>
-                                <LogIn className="w-4 h-4 text-violet-400 group-hover:text-violet-600" />
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Footer */}
