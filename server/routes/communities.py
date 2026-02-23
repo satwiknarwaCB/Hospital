@@ -449,8 +449,7 @@ async def get_community_members(
                 name=parent["name"],
                 email=parent["email"],
                 joined_at=parent.get("created_at", datetime.now(timezone.utc)),
-                role="parent",
-                avatar=parent.get("avatar")
+                role="parent"
             ))
     
     return members

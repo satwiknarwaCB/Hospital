@@ -23,8 +23,6 @@ class DoctorInDB(BaseModel):
     assigned_children: int
     phone: Optional[str] = None
     license_number: Optional[str] = None
-    avatar: Optional[str] = None
-    address: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_active: bool = True

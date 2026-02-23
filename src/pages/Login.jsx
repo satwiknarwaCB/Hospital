@@ -70,7 +70,7 @@ const Login = () => {
                 .filter(p => !staticParents.find(sp => sp.email === p.email))
                 .map(p => ({
                     ...p,
-                    password: localStorage.getItem(`demo_pwd_${p.email}`) || 'Parent@123'
+                    password: localStorage.getItem(`demo_pwd_${p.email}`) || 'User@123'
                 }))
         ];
 
@@ -80,7 +80,7 @@ const Login = () => {
                 .filter(t => !staticTherapists.find(st => st.email === t.email))
                 .map(t => ({
                     ...t,
-                    password: localStorage.getItem(`demo_pwd_${t.email}`) || 'Therapist@123'
+                    password: localStorage.getItem(`demo_pwd_${t.email}`) || 'User@123'
                 }))
         ];
 

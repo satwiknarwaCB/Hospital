@@ -47,6 +47,10 @@ async def create_therapist(
     if db_manager.doctors.find_one({"email": therapist.email}):
         raise HTTPException(status_code=400, detail="Therapist with this email already exists")
     
+    # Cross-collection check: prevent same email in parents collection
+    if db_manager.parents.find_one({"email": therapist.email}):
+        raise HTTPException(status_code=400, detail="This email is already registered as a Parent. Please use a different email or add from the Parents tab.")
+    
     doctor_id = str(uuid.uuid4())
     activation_token = str(uuid.uuid4())
     invitation_link = f"{settings.FRONTEND_URL}/activate?token={activation_token}&role=therapist"
@@ -118,6 +122,10 @@ async def create_parent(
     
     if db_manager.parents.find_one({"email": parent.email}):
         raise HTTPException(status_code=400, detail="Parent with this email already exists")
+    
+    # Cross-collection check: prevent same email in doctors/therapist collection
+    if db_manager.doctors.find_one({"email": parent.email}):
+        raise HTTPException(status_code=400, detail="This email is already registered as a Therapist. Please use a different email or add from the Therapists tab.")
     
     parent_id = str(uuid.uuid4())
     activation_token = str(uuid.uuid4())
@@ -411,9 +419,7 @@ async def list_therapists(current_user: dict = Depends(get_current_user)):
             license_number=d.get("license_number"),
             is_active=d.get("is_active", True),
             created_at=d.get("created_at"),
-            role="therapist",
-            avatar=d.get("avatar"),
-            address=d.get("address")
+            role="therapist"
         ) for d in doctors
     ]
 
