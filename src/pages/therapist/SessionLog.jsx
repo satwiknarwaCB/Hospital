@@ -9,13 +9,18 @@ import { THERAPY_TYPES } from '../../data/mockData';
 import { sessionAPI } from '../../lib/api';
 
 const SessionLog = () => {
-  const { kids, addSession, getChildDocuments } = useApp();
+  const { kids, addSession, getChildDocuments, currentUser } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const childIdFromState = location.state?.childId;
 
+  // Filter kids assigned to this therapist or all if admin
+  const myKids = kids.filter(k =>
+    (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(currentUser?.id || 't1')
+  );
+
   const [selectedChild, setSelectedChild] = useState(
-    childIdFromState || (kids && kids[0] ? kids[0].id : '')
+    childIdFromState || (myKids && myKids[0] ? myKids[0].id : '')
   );
 
   const baselineDocs = getChildDocuments(selectedChild);
@@ -183,11 +188,16 @@ const SessionLog = () => {
                   value={selectedChild}
                   onChange={(e) => setSelectedChild(e.target.value)}
                 >
+<<<<<<< HEAD
                   <option value="" disabled className="text-neutral-400" style={{ color: '#a3a3a3' }}>Select a child</option>
                   {(Array.isArray(kids) ? kids : []).map(c => (
                     <option key={c.id} value={c.id} className="text-neutral-900" style={{ color: '#171717' }}>
                       {c.name} - {c.diagnosis}
                     </option>
+=======
+                  {myKids.map(c => (
+                    <option key={c.id} value={c.id}>{c.name} - {c.diagnosis}</option>
+>>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
                   ))}
                 </select>
               </div>

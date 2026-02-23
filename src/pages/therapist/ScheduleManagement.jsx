@@ -358,6 +358,7 @@ const ScheduleManagement = () => {
 
     // Get therapist's data
     const therapistId = currentUser?.id || 't1';
+<<<<<<< HEAD
 
     // DEFENSIVE CORE DATA
     const safeKids = Array.isArray(kids) ? kids : [];
@@ -367,6 +368,10 @@ const ScheduleManagement = () => {
     const myChildren = safeKids;
 
     const mySessions = safeSessions.filter(s => s.therapistId === therapistId);
+=======
+    const myChildren = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
+    const mySessions = sessions.filter(s => s.therapistId === therapistId);
+>>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
 
     // Calendar navigation
     const navigateCalendar = (direction) => {

@@ -93,9 +93,15 @@ const TherapistDashboard = () => {
     const safeSessions = Array.isArray(sessions) ? sessions : [];
 
     // RELAXED FILTER: Show all kids if none are specifically assigned to avoid empty states
+<<<<<<< HEAD
     const myChildren = safeKids.filter(k => k.therapistId === therapistId).length > 0
         ? safeKids.filter(k => k.therapistId === therapistId)
         : safeKids;
+=======
+    const myChildren = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId)).length > 0
+        ? kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId))
+        : kids;
+>>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
 
     const stats = typeof getTherapistStats === 'function' ? getTherapistStats(therapistId) : { totalChildren: 0, pendingReports: 0, weeklyHours: 0 };
     const totalUnread = (privateUnreadCount || 0) + (communityUnreadCount || 0);

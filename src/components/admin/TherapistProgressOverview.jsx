@@ -181,7 +181,7 @@ const TherapistProgressOverview = () => {
             const doc = new jsPDF();
             const timestamp = new Date().toLocaleString();
             const perf = getTherapistPerformance(therapist.id);
-            const therapistKids = kids.filter(k => k.therapistId === therapist.id);
+            const therapistKids = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapist.id));
 
             // Branding
             doc.setFillColor(17, 24, 39); // Neutral 900
@@ -350,7 +350,7 @@ const TherapistProgressOverview = () => {
 
     // Advanced Stats for Therapist
     const getTherapistPerformance = (therapistId) => {
-        const tKids = kids.filter(k => k.therapistId === therapistId);
+        const tKids = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
         const taught = 85 + Math.random() * 10;
         const absorption = 72 + Math.random() * 15;
         const successRate = 92 + Math.random() * 6; // Session success
@@ -457,7 +457,7 @@ const TherapistProgressOverview = () => {
                     {therapists.map(therapist => {
                         const isExpanded = expandedTherapists.has(therapist.id);
                         const perf = getTherapistPerformance(therapist.id);
-                        const therapistKids = kids.filter(k => k.therapistId === therapist.id);
+                        const therapistKids = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapist.id));
                         const highRiskCount = therapistKids.filter(k => getChildDetailData(k.id).isAtRisk).length;
 
                         return (

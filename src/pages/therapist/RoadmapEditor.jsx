@@ -335,7 +335,7 @@ const RoadmapEditor = () => {
 
     // Get therapist's patients
     const therapistId = currentUser?.id || 't1';
-    const myChildren = kids.filter(k => k.therapistId === therapistId);
+    const myChildren = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
 
     // Set default selected child
     React.useEffect(() => {
