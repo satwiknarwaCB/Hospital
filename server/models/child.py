@@ -20,8 +20,8 @@ class ChildResponse(BaseModel):
     condition: str
     school_name: Optional[str] = None
     parent_id: str
-<<<<<<< HEAD
-    therapistId: Optional[str] = None
+    therapistId: Optional[str] = None  # Primary therapist (for backward compatibility)
+    therapistIds: List[str] = []  # List of all assigned therapists
     photoUrl: Optional[str] = None
     program: List[str] = []
     currentMood: Optional[str] = None
@@ -29,15 +29,11 @@ class ChildResponse(BaseModel):
     streak: int = 0
     schoolReadinessScore: int = 0
     status: str = "active"
-    documents: List[dict] = []
-=======
-    therapistId: Optional[str] = None  # Primary therapist (for backward compatibility)
-    therapistIds: List[str] = []  # List of all assigned therapists
     is_active: bool = True
+    documents: List[dict] = []
     therapy_start_date: Optional[str] = None
     therapy_type: Optional[str] = None
     therapy_start_dates: Optional[dict] = None
->>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
     created_at: datetime
     
     class Config:

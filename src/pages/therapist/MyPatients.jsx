@@ -644,13 +644,8 @@ const MyChildren = () => {
 
     // Get therapist's children
     const therapistId = currentUser?.id || 't1';
-<<<<<<< HEAD
     const safeKids = Array.isArray(kids) ? kids : [];
-
-    const myChildren = safeKids.filter(k => k && k.therapistId === therapistId);
-=======
-    const myChildren = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
->>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
+    const myChildren = safeKids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
 
     // Filter children
     const filteredChildren = myChildren.filter(child => {

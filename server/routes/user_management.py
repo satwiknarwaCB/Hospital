@@ -8,11 +8,8 @@ from models.admin import AdminResponse
 from middleware.auth_middleware import get_current_admin, get_current_user
 from datetime import datetime, timezone
 import uuid
-<<<<<<< HEAD
 from bson import ObjectId
-=======
 import re
->>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
 from utils.email import send_invitation_email
 from fastapi import BackgroundTasks
 from config import settings
@@ -88,15 +85,11 @@ async def create_therapist(
     if db_manager.doctors.find_one({"email": therapist.email}):
         raise HTTPException(status_code=400, detail="Therapist with this email already exists")
     
-<<<<<<< HEAD
     # Cross-collection check: prevent same email in parents collection
     if db_manager.parents.find_one({"email": therapist.email}):
         raise HTTPException(status_code=400, detail="This email is already registered as a Parent. Please use a different email or add from the Parents tab.")
     
-    doctor_id = str(uuid.uuid4())
-=======
     doctor_id = get_next_id(db_manager.doctors, "TH")
->>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
     activation_token = str(uuid.uuid4())
     invitation_link = f"{settings.FRONTEND_URL}/activate?token={activation_token}&role=therapist"
     
@@ -172,15 +165,11 @@ async def create_parent(
     if db_manager.parents.find_one({"email": parent.email}):
         raise HTTPException(status_code=400, detail="Parent with this email already exists")
     
-<<<<<<< HEAD
     # Cross-collection check: prevent same email in doctors/therapist collection
     if db_manager.doctors.find_one({"email": parent.email}):
         raise HTTPException(status_code=400, detail="This email is already registered as a Therapist. Please use a different email or add from the Therapists tab.")
     
-    parent_id = str(uuid.uuid4())
-=======
     parent_id = get_next_id(db_manager.parents, "PA")
->>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
     activation_token = str(uuid.uuid4())
     invitation_link = f"{settings.FRONTEND_URL}/activate?token={activation_token}&role=parent"
     
@@ -408,10 +397,6 @@ async def reset_password(
 
 from models.child import ChildCreate, ChildResponse
 
-# ... (other imports remain)
-
-# ... (existing code)
-
 @router.get("/children", response_model=List[ChildResponse])
 async def list_children(current_user: dict = Depends(get_current_user)):
     """
@@ -425,7 +410,7 @@ async def list_children(current_user: dict = Depends(get_current_user)):
         # Reconcile therapistId and therapistIds
         t_id = c.get("therapistId")
         t_ids = c.get("therapistIds", [])
-        if t_ids is None: t_ids = []
+        if not isinstance(t_ids, list): t_ids = []
         
         # Backward compatibility: ensure primary is in the list
         if t_id and t_id not in t_ids:
@@ -439,8 +424,8 @@ async def list_children(current_user: dict = Depends(get_current_user)):
             condition=c.get("condition", "None"),
             school_name=c.get("school_name"),
             parent_id=c.get("parent_id", ""),
-<<<<<<< HEAD
-            therapistId=c.get("therapistId"),
+            therapistId=t_id,
+            therapistIds=t_ids,
             photoUrl=c.get("photoUrl"),
             program=c.get("program", []),
             currentMood=c.get("currentMood"),
@@ -449,14 +434,10 @@ async def list_children(current_user: dict = Depends(get_current_user)):
             schoolReadinessScore=c.get("schoolReadinessScore", 0),
             status=c.get("status", "active"),
             documents=c.get("documents", []),
-=======
-            therapistId=t_id,
-            therapistIds=t_ids,
             is_active=c.get("is_active", True),
             therapy_start_date=c.get("therapy_start_date") or c.get("enrollmentDate") or (c.get("created_at").isoformat() if hasattr(c.get("created_at"), 'isoformat') else str(c.get("created_at")) if c.get("created_at") else None),
             therapy_type=c.get("therapy_type") or (c.get("program")[0] if c.get("program") and isinstance(c.get("program"), list) else "Speech Therapy"),
             therapy_start_dates=c.get("therapy_start_dates", {}),
->>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
             created_at=c.get("created_at", datetime.now(timezone.utc))
         ))
     
@@ -601,37 +582,31 @@ async def assign_child_to_therapist(
     Assign a child to a therapist (adds to therapistIds list)
     Supports multiple therapists per child
     """
-<<<<<<< HEAD
     # Authorization: Admin can do anything. Therapist can only assign to themselves.
     if current_user["role"] != "admin":
         if current_user["role"] != "therapist":
              raise HTTPException(status_code=403, detail="Not authorized")
         if therapist_id.lower() != "none" and current_user["id"] != therapist_id:
              raise HTTPException(status_code=403, detail="Can only assign to yourself")
-        if therapist_id.lower() == "none" and current_user["role"] == "therapist":
-             # Optional: Allow therapist to unassign themselves?
-             # For now, let's assume they can only UNASSIGN themselves if they are currently assigned?
-             # But the frontend logic for 'addChild' calls this with 'currentUser.id', so it's an assignment.
-             pass
 
+    print(f"[ASSIGN] Assigning {child_id} to {therapist_id}")
+    
     # Use "none" as a special value to unassign
     update_val = therapist_id if therapist_id.lower() != "none" else None
     
-    child_filter = {"_id": child_id}
-    result = db_manager.children.update_one(
-        child_filter,
-        {"$set": {"therapistId": update_val, "updated_at": datetime.now(timezone.utc)}}
-=======
-    print(f"[ASSIGN] Assigning {child_id} to {therapist_id}")
-    
     # 1. Get current state to ensure we don't lose the existing primary therapist
     child = db_manager.children.find_one({"_id": child_id})
+    if not child and ObjectId.is_valid(child_id):
+        child = db_manager.children.find_one({"_id": ObjectId(child_id)})
+        
     if not child:
         print(f"[ASSIGN] ERROR: Child {child_id} not found")
         raise HTTPException(status_code=404, detail="Child not found")
         
     current_primary = child.get("therapistId")
     current_ids = child.get("therapistIds", [])
+    if not isinstance(current_ids, list):
+        current_ids = []
     
     # Ensure current primary is in the list
     if current_primary and current_primary not in current_ids:
@@ -642,18 +617,18 @@ async def assign_child_to_therapist(
     if not isinstance(current_start_dates, dict):
         current_start_dates = {}
 
-    if therapist_id not in current_ids:
-        current_ids.append(therapist_id)
+    if update_val and update_val not in current_ids:
+        current_ids.append(update_val)
         # Set start date for THIS therapist assignment
-        current_start_dates[therapist_id] = datetime.now(timezone.utc).isoformat()
+        current_start_dates[update_val] = datetime.now(timezone.utc).isoformat()
         
     # 2. Update with the full list and set the new one as primary
-    result = db_manager.children.update_one(
-        {"_id": child_id},
+    db_manager.children.update_one(
+        {"_id": child["_id"]},
         {
             "$set": {
                 "therapistIds": current_ids,
-                "therapistId": therapist_id, # Set newest as primary
+                "therapistId": update_val if update_val else current_primary,
                 "therapy_start_dates": current_start_dates,
                 "updated_at": datetime.now(timezone.utc)
             }
@@ -672,34 +647,30 @@ async def unassign_child_from_therapist(
     """
     Unassign a child from a specific therapist (removes from therapistIds list)
     """
-    # Remove from therapistIds list
+    # 1. Find the child
+    child = db_manager.children.find_one({"_id": child_id})
+    if not child and ObjectId.is_valid(child_id):
+        child = db_manager.children.find_one({"_id": ObjectId(child_id)})
+        
+    if not child:
+        raise HTTPException(status_code=404, detail="Child not found")
+
+    # 2. Remove from therapistIds list
     result = db_manager.children.update_one(
-        {"_id": child_id},
+        {"_id": child["_id"]},
         {
             "$pull": {"therapistIds": therapist_id},
             "$set": {"updated_at": datetime.now(timezone.utc)}
         }
->>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
     )
     
-    if result.matched_count == 0 and ObjectId.is_valid(child_id):
-        child_filter = {"_id": ObjectId(child_id)}
-        result = db_manager.children.update_one(
-            child_filter,
-            {"$set": {"therapistId": update_val, "updated_at": datetime.now(timezone.utc)}}
-        )
-    
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Child not found")
-    
-    # If the removed therapist was the primary, update to another one or None
-    child = db_manager.children.find_one({"_id": child_id})
-    if child and child.get("therapistId") == therapist_id:
-        remaining_therapists = child.get("therapistIds", [])
+    # 3. If the removed therapist was the primary, update to another one or None
+    if child.get("therapistId") == therapist_id:
+        remaining_therapists = [tid for tid in child.get("therapistIds", []) if tid != therapist_id]
         new_primary = remaining_therapists[0] if remaining_therapists else None
         
         db_manager.children.update_one(
-            {"_id": child_id},
+            {"_id": child["_id"]},
             {"$set": {"therapistId": new_primary}}
         )
         

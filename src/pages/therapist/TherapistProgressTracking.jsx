@@ -24,17 +24,11 @@ const TherapistProgressTracking = () => {
     const [activeView, setActiveView] = useState('clinical'); // 'clinical' or 'actual'
 
     // Filter kids assigned to this therapist or all if admin (demo logic)
-<<<<<<< HEAD
     const therapistId = currentUser?.id || 't1';
     const safeKids = Array.isArray(kids) ? kids : [];
     const therapistKids = safeKids.filter(k =>
-        k && (k.therapistId === therapistId) &&
+        (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId) &&
         (k.name || '').toLowerCase().includes(searchQuery.toLowerCase())
-=======
-    const therapistKids = kids.filter(k =>
-        (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(currentUser?.id || 't1') &&
-        k.name.toLowerCase().includes(searchQuery.toLowerCase())
->>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
     );
 
     const selectedChild = safeKids.find(k => k && k.id === selectedChildId);

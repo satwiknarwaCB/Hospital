@@ -188,16 +188,11 @@ const SessionLog = () => {
                   value={selectedChild}
                   onChange={(e) => setSelectedChild(e.target.value)}
                 >
-<<<<<<< HEAD
                   <option value="" disabled className="text-neutral-400" style={{ color: '#a3a3a3' }}>Select a child</option>
-                  {(Array.isArray(kids) ? kids : []).map(c => (
+                  {myKids.map(c => (
                     <option key={c.id} value={c.id} className="text-neutral-900" style={{ color: '#171717' }}>
                       {c.name} - {c.diagnosis}
                     </option>
-=======
-                  {myKids.map(c => (
-                    <option key={c.id} value={c.id}>{c.name} - {c.diagnosis}</option>
->>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
                   ))}
                 </select>
               </div>

@@ -101,10 +101,7 @@ async def login(credentials: ParentLogin):
         relationship=str(parent_data.get("relationship")) if parent_data.get("relationship") else None,
         is_active=bool(parent_data.get("is_active", True)),
         created_at=parent_data.get("created_at"),
-<<<<<<< HEAD
-=======
         last_login=login_time,
->>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
         role="parent"
     )
     

@@ -182,7 +182,6 @@ export const AppProvider = ({ children }) => {
     const refreshChildren = useCallback(async () => {
         try {
             const childrenData = await userManagementAPI.listChildren();
-<<<<<<< HEAD
             const fetched = Array.isArray(childrenData) ? childrenData : [];
             setRealChildren(fetched);
 
@@ -219,13 +218,6 @@ export const AppProvider = ({ children }) => {
                 });
                 return merged;
             });
-=======
-            console.log(`[AppProvider] Refreshed ${childrenData?.length} children from API`);
-            if (childrenData?.length > 0) {
-                console.log(`[AppProvider] Sample child therapistIds:`, childrenData[0].therapistIds);
-            }
-            setRealChildren(Array.isArray(childrenData) ? childrenData : []);
->>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
         } catch (err) {
             console.warn('Failed to refresh children:', err);
         }
@@ -380,7 +372,6 @@ export const AppProvider = ({ children }) => {
         }));
 
         setKids(prev => {
-<<<<<<< HEAD
             const merged = [...prev];
             normalizedRealChildren.forEach(rc => {
                 const index = merged.findIndex(k => k.id === rc.id);
@@ -392,15 +383,6 @@ export const AppProvider = ({ children }) => {
                 }
             });
             return merged;
-=======
-            const mockChildren = CHILDREN.filter(mc =>
-                !normalizedRealChildren.find(rc =>
-                    rc.id === mc.id ||
-                    (rc.name && mc.name && rc.name.trim().toLowerCase() === mc.name.trim().toLowerCase())
-                )
-            );
-            return [...normalizedRealChildren, ...mockChildren];
->>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
         });
     }, [realChildren]);
 
@@ -874,16 +856,7 @@ export const AppProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // ============ Audit Log Actions ============
-    const addAuditLog = useCallback((log) => {
-        const newLog = {
-            ...log,
-            id: `audit${Date.now()}`,
-            timestamp: new Date().toISOString(),
-            ipAddress: '192.168.1.100' // Mock IP
-        };
-        setAuditLogs(prev => [newLog, ...prev]);
-    }, []);
+
 
     // ============ Auth Actions ============
     const login = useCallback((role, id) => {
@@ -1437,7 +1410,6 @@ export const AppProvider = ({ children }) => {
         ));
     }, []);
 
-<<<<<<< HEAD
     const deleteMessageForMe = useCallback(async (messageId, currentUserId) => {
         // Optimistic: hide this message from local state for this user only
         setMessages(prev => prev.filter(m => m.id !== messageId && m._id !== messageId));
@@ -1447,8 +1419,6 @@ export const AppProvider = ({ children }) => {
             console.warn('Failed to delete message for me on backend:', err);
         }
     }, []);
-=======
->>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
 
     const deleteMessageForEveryone = useCallback(async (messageId) => {
         // Optimistic: replace content with "deleted" placeholder
@@ -1478,7 +1448,6 @@ export const AppProvider = ({ children }) => {
         }
     }, []);
 
-    // ============ Audit Log Actions ============
 
 
     // ============ Notification Actions ============
@@ -1722,18 +1691,12 @@ export const AppProvider = ({ children }) => {
     }, []);
 
     const getTherapistStats = useCallback((therapistId) => {
-<<<<<<< HEAD
         const safeSessions = Array.isArray(sessions) ? sessions : [];
         const safeKids = Array.isArray(kids) ? kids : [];
 
         const therapistSessions = safeSessions.filter(s => s && s.therapistId === therapistId);
-        const children = safeKids.filter(k => k && k.therapistId === therapistId);
+        const children = safeKids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
         const todayStr = new Date().toISOString().split('T')[0];
-
-=======
-        const therapistSessions = sessions.filter(s => s.therapistId === therapistId);
-        const children = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
->>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
         const completedToday = therapistSessions.filter(s =>
             s && s.status === 'completed' &&
             s.date && typeof s.date === 'string' && s.date.startsWith(todayStr)
@@ -1798,11 +1761,8 @@ export const AppProvider = ({ children }) => {
         getChildrenByParent,
         updateChildMood,
         assignChildToTherapist,
-<<<<<<< HEAD
         addChild,
-=======
         unassignChildFromTherapist,
->>>>>>> 748b94b9a72a8862b168f48cef7cb41e2e2f7dfc
 
         // Skill Score Actions
         getChildSkillScores,
