@@ -269,8 +269,21 @@ export const sessionAPI = {
         } catch (error) {
             throw error.response?.data || error.message;
         }
+    },
+    /**
+     * Delete a therapy session record
+     * @param {string} sessionId 
+     */
+    delete: async (sessionId) => {
+        try {
+            const response = await apiClient.delete(`/api/sessions/${sessionId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
     }
 };
+
 
 // Community API
 export const communityAPI = {

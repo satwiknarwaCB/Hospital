@@ -460,54 +460,56 @@ export const AppProvider = ({ children }) => {
     }, [isAuthenticated, currentUser]);
 
     // Production-Level Session Synchronization
-    useEffect(() => {
-        const syncSessionsFromCloud = async () => {
-            if (!isAuthenticated || !currentUser) return;
+    const refreshSessions = useCallback(async () => {
+        if (!isAuthenticated || !currentUser) return;
 
-            try {
-                let cloudSessions = [];
+        try {
+            console.log('🔄 Refreshing sessions from cloud...');
+            let cloudSessions = [];
 
-                if (currentUser.role === 'parent' && currentUser.childId) {
-                    cloudSessions = await sessionAPI.getByChild(currentUser.childId);
-                } else if (currentUser.role === 'therapist') {
-                    cloudSessions = await sessionAPI.getByTherapist(currentUser.id);
-                }
-
-                if (cloudSessions.length > 0) {
-                    const normalizedSessions = cloudSessions.map(s => ({
-                        ...s,
-                        id: s.id || s._id,
-                        _id: s.id || s._id,
-                        childId: s.childId || s.child_id,
-                        therapistId: s.therapistId || s.therapist_id
-                    }));
-
-                    setSessions(prev => {
-                        const sessionMap = new Map();
-                        // Add cloud sessions first (source of truth)
-                        normalizedSessions.forEach(s => sessionMap.set(s.id, s));
-                        // Add local sessions if they don't exist by ID or content (date + child)
-                        prev.forEach(s => {
-                            const sId = s.id || s._id;
-                            if (!sessionMap.has(sId)) {
-                                const isDuplicate = Array.from(sessionMap.values()).some(existing =>
-                                    existing.childId === s.childId &&
-                                    existing.date === s.date &&
-                                    existing.type === s.type
-                                );
-                                if (!isDuplicate) sessionMap.set(sId, s);
-                            }
-                        });
-                        return Array.from(sessionMap.values());
-                    });
-                }
-            } catch (err) {
-                console.error('❌ Cloud Session Sync Failed:', err);
+            if (currentUser.role === 'parent' && currentUser.childId) {
+                cloudSessions = await sessionAPI.getByChild(currentUser.childId);
+            } else if (currentUser.role === 'therapist') {
+                cloudSessions = await sessionAPI.getByTherapist(currentUser.id);
             }
-        };
 
-        syncSessionsFromCloud();
+            if (cloudSessions.length > 0) {
+                const normalizedSessions = cloudSessions.map(s => ({
+                    ...s,
+                    id: s.id || s._id,
+                    _id: s.id || s._id,
+                    childId: s.childId || s.child_id,
+                    therapistId: s.therapistId || s.therapist_id
+                }));
+
+                setSessions(prev => {
+                    const sessionMap = new Map();
+                    // Add cloud sessions first (source of truth)
+                    normalizedSessions.forEach(s => sessionMap.set(s.id, s));
+                    // Add local sessions if they don't exist by ID or content (date + child)
+                    prev.forEach(s => {
+                        const sId = s.id || s._id;
+                        if (!sessionMap.has(sId)) {
+                            const isDuplicate = Array.from(sessionMap.values()).some(existing =>
+                                existing.childId === s.childId &&
+                                existing.date === s.date &&
+                                existing.type === s.type
+                            );
+                            if (!isDuplicate) sessionMap.set(sId, s);
+                        }
+                    });
+                    return Array.from(sessionMap.values());
+                });
+            }
+        } catch (err) {
+            console.error('❌ Cloud Session Sync Failed:', err);
+        }
     }, [isAuthenticated, currentUser]);
+
+    useEffect(() => {
+        refreshSessions();
+    }, [refreshSessions]);
+
 
     // Production-Level Periodic Review Synchronization
     useEffect(() => {
@@ -910,11 +912,30 @@ export const AppProvider = ({ children }) => {
         };
 
         setSessions(prev => {
-            const current = replaceId ? prev.filter(s => s.id !== replaceId) : prev;
-            const exists = current.some(s => s.id === sessionWithId.id || (s.date === sessionWithId.date && s.childId === sessionWithId.childId));
-            if (exists) return prev;
+            // 1. Remove session if we're replacing an existing one
+            let current = prev;
+            if (replaceId) {
+                current = prev.filter(s => s.id !== replaceId && s._id !== replaceId);
+            }
+
+            // 2. Check if this exact session (by database ID) already exists
+            const alreadyExists = current.some(s => (s.id === sessionWithId.id && s.id) || (s._id === sessionWithId._id && s._id));
+            if (alreadyExists) return prev;
+
+            // 3. Check for clinical duplicates (same child, same time, SAME TYPE)
+            // Note: Multiple types at same time is valid in our system (multi-fork)
+            const clinicalDuplicate = current.some(s =>
+                s.childId === sessionWithId.childId &&
+                s.date === sessionWithId.date &&
+                s.type === sessionWithId.type &&
+                s.status === sessionWithId.status
+            );
+
+            if (clinicalDuplicate) return prev;
+
             return [sessionWithId, ...current];
         });
+
 
         // Log audit event
         const childName = kids.find(k => k.id === newSession.childId)?.name || 'Unknown';
@@ -1104,6 +1125,20 @@ export const AppProvider = ({ children }) => {
             return localKid;
         }
     }, [currentUser]);
+
+    const addDocument = useCallback((doc) => {
+        const newDoc = {
+            ...doc,
+            id: doc.id || `doc-${Date.now()}`,
+            date: doc.date || new Date().toISOString().split('T')[0]
+        };
+        setChildDocuments(prev => [newDoc, ...prev]);
+        return newDoc;
+    }, []);
+
+    const deleteDocument = useCallback((docId) => {
+        setChildDocuments(prev => prev.filter(d => d.id !== docId));
+    }, []);
 
     // ============ Skill Score Actions ============
     const getChildSkillScores = useCallback((childId, limit = null) => {
@@ -1700,16 +1735,65 @@ export const AppProvider = ({ children }) => {
         };
     }, [sessions, kids]);
 
+    // ============ Dynamic Derived State ============
+    const kidsWithStats = useMemo(() => {
+        return kids.map(child => {
+            const childId = child.id;
+            const childSessions = sessions
+                .filter(s => s.childId === childId && s.status === 'completed')
+                .map(s => s.date.split('T')[0]);
+
+            // Calculate Current Streak
+            const uniqueDates = [...new Set(childSessions)].sort((a, b) => new Date(b) - new Date(a));
+            let streak = 0;
+            if (uniqueDates.length > 0) {
+                const today = new Date().toISOString().split('T')[0];
+                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+                // If the most recent session wasn't today or yesterday, streak is 0
+                if (uniqueDates[0] === today || uniqueDates[0] === yesterday) {
+                    streak = 1;
+                    for (let i = 0; i < uniqueDates.length - 1; i++) {
+                        const current = new Date(uniqueDates[i]);
+                        const next = new Date(uniqueDates[i + 1]);
+                        const diffInDays = Math.round((current - next) / (1000 * 60 * 60 * 24));
+
+                        if (diffInDays === 1) {
+                            streak++;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Calculate School Ready Score (Avg of latest skills)
+            const latestScores = getLatestSkillScores(childId);
+            const schoolReadinessScore = latestScores.length > 0
+                ? Math.round(latestScores.reduce((a, b) => a + (b.score || 0), 0) / latestScores.length)
+                : 0;
+
+            return {
+                ...child,
+                streak,
+                schoolReadinessScore: child.schoolReadinessScore || schoolReadinessScore
+            };
+        });
+    }, [kids, sessions, getLatestSkillScores]);
+
     // ============ Context Value ============
     const value = useMemo(() => ({
         // State
         users: allUsers,
         realUsers: allUsers,
         refreshUsers,
-        kids,
+        kids: kidsWithStats,
         refreshChildren,
+
         sessions,
+        refreshSessions,
         skillScores,
+
         roadmap,
         homeActivities,
         messages,
@@ -1720,7 +1804,6 @@ export const AppProvider = ({ children }) => {
         adminStats,
         refreshAdminStats,
         realParents,
-        refreshUsers,
         currentUser,
         isAuthenticated,
         notifications,
@@ -1834,11 +1917,8 @@ export const AppProvider = ({ children }) => {
 
             return merged.sort((a, b) => new Date(b.date) - new Date(a.date));
         },
-        addDocument: (doc) => {
-            const newDoc = { ...doc, id: `doc-${Date.now()}`, date: new Date().toISOString().split('T')[0] };
-            setChildDocuments(prev => [newDoc, ...prev]);
-            return newDoc;
-        },
+        addDocument,
+        deleteDocument,
 
         // UI Actions
         setIsLoading
@@ -1864,7 +1944,7 @@ export const AppProvider = ({ children }) => {
         periodicReviews, addPeriodicReview,
         roadmap, addRoadmapGoal,
         skillGoals, getChildGoals, updateSkillGoal, addSkillGoal, deleteSkillGoal, deleteSkillProgress,
-        childDocuments, addChild, realParents
+        childDocuments, addChild, realParents, deleteDocument
     ]);
 
     return (

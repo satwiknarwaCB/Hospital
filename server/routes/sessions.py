@@ -84,3 +84,36 @@ async def get_therapist_sessions(therapist_id: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error retrieving therapist records"
         )
+
+@router.delete("/{session_id}")
+async def delete_session(
+    session_id: str,
+    current_doctor: DoctorResponse = Depends(get_current_active_doctor)
+):
+    """
+    Delete a therapy session record.
+    Security: Doctors can only delete sessions if authorized (simplified here).
+    """
+    try:
+        # Check if ID is valid ObjectId
+        try:
+            query_id = ObjectId(session_id)
+        except:
+            query_id = session_id
+
+        # Delete from MongoDB
+        result = db_manager.sessions.delete_one({"_id": query_id})
+        
+        if result.deleted_count == 0:
+            # Try plain string ID
+            result = db_manager.sessions.delete_one({"_id": session_id})
+
+        return {"status": "success", "message": "Session deleted"}
+    except Exception as e:
+        print(f"[ERROR] Session deletion failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete session record"
+        )
+
+

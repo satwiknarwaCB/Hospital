@@ -141,7 +141,7 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                     {sidebarItems.map((item) => {
                         const isActive = location.pathname.startsWith(item.path);
                         const roleColorText = roleColor ? roleColor.replace('bg-', 'text-') : 'text-primary-600';
-                        const roleColorBg = roleColor ? roleColor.replace('bg-', 'bg-').replace('-600', '-50').replace('-700', '-50') : 'bg-primary-50';
+                        const roleColorBg = roleColor ? roleColor.replace(/-\d+$/, '-50') : 'bg-primary-50';
 
                         return (
                             <Link

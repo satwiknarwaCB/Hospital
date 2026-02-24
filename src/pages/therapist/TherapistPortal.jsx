@@ -144,7 +144,10 @@ const TherapistDashboard = () => {
                     </CardHeader>
                     <CardContent>
                         <p className="text-3xl font-bold text-neutral-800">{todaySessions.length}</p>
-                        <p className="text-sm text-neutral-500">{completedSessions.length} Completed</p>
+                        <p className="text-sm text-neutral-500">
+                            {todaySessions.length > 0 && completedSessions.length === todaySessions.length ? 'Completed' : `${completedSessions.length} Completed`}
+                        </p>
+
                     </CardContent>
                 </Card>
                 <Card className="border-l-4 border-l-orange-400">
@@ -253,8 +256,10 @@ const TherapistDashboard = () => {
                                     <div className="w-full sm:w-auto mt-2 sm:mt-0">
                                         {session.status === 'completed' ? (
                                             <span className="block sm:inline-block text-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Completed</span>
+                                        ) : new Date(session.date) > new Date() ? (
+                                            <span className="block sm:inline-block text-center px-3 py-1 bg-blue-50 text-blue-500 border border-blue-100 rounded-full text-xs font-medium">Scheduled</span>
                                         ) : (
-                                            <Button size="sm" variant="secondary" className="w-full sm:w-auto" onClick={(e) => { e.stopPropagation(); navigate('/therapist/log', { state: { childId: session.childId, sessionId: session.id, sessionType: session.type } }); }}>
+                                            <Button size="sm" variant="secondary" className="w-full sm:w-auto" onClick={(e) => { e.stopPropagation(); navigate('/therapist/log', { state: { childId: session.childId, sessionId: session.id, sessionType: session.type, sessionDate: session.date, sessionDuration: session.duration } }); }}>
                                                 Start Session
                                             </Button>
                                         )}
