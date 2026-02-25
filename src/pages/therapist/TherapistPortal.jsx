@@ -25,7 +25,7 @@ import { useAuth } from '../../hooks/useAuth';
 
 import Sessions from './Sessions';
 import MyChildren from './MyPatients';
-import TherapyIntelligence from './TherapyIntelligence';
+
 import RoadmapEditor from './RoadmapEditor';
 import TherapistMessages from './TherapistMessages';
 import TherapistProgressTracking from './TherapistProgressTracking';
@@ -52,10 +52,10 @@ const TherapistLayoutWrapper = () => {
         { label: 'Schedule', path: '/therapist/schedule', icon: Calendar },
         { label: 'Care Hub', path: '/therapist/care-hub', icon: Users },
         { label: 'Growth Tracking', path: '/therapist/growth-tracking', icon: Activity },
-        { label: 'Clinical Brain', path: '/therapist/clinical-brain', icon: Brain },
         { label: 'Blueprints', path: '/therapist/blueprints', icon: Target },
         { label: 'Dossier', path: '/therapist/dossier', icon: ClipboardList },
         { label: 'Connect', path: '/therapist/connect', icon: MessageSquare, badge: totalMessagesUnread },
+
     ];
 
     return (
@@ -187,15 +187,7 @@ const TherapistDashboard = () => {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-violet-500 to-purple-600 text-white" onClick={() => navigate('/therapist/clinical-brain')}>
-                    <CardContent className="p-6 flex items-center gap-4">
-                        <Brain className="h-10 w-10 text-violet-200" />
-                        <div>
-                            <h3 className="font-semibold">AI Intelligence</h3>
-                            <p className="text-sm text-violet-200">View insights & analytics</p>
-                        </div>
-                    </CardContent>
-                </Card>
+
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-primary-500 to-primary-600 text-white" onClick={() => navigate('/therapist/blueprints')}>
                     <CardContent className="p-6 flex items-center gap-4">
                         <Target className="h-10 w-10 text-primary-200" />
@@ -315,7 +307,7 @@ const TherapistPortal = () => {
                 <Route path="command-center" element={<TherapistDashboard />} />
                 <Route path="schedule" element={<Sessions />} />
                 <Route path="care-hub" element={<MyChildren />} />
-                <Route path="clinical-brain" element={<TherapyIntelligence />} />
+
                 <Route path="blueprints" element={<RoadmapEditor />} />
                 <Route path="dossier" element={<BaselineArchive />} />
                 <Route path="connect/*" element={<TherapistMessages />} />
