@@ -51,38 +51,18 @@ const Login = () => {
         fetchDemoUsers();
     }, []);
 
-    // Demo Credentials - Merge static with dynamic users
+    // Demo Credentials - Show only DB-registered users
     const getDemoAccounts = () => {
-        const staticParents = [
-            { name: 'Priya Patel', email: 'priya.patel@parent.com', password: 'Parent@123' },
-            { name: 'Arun Sharma', email: 'arun.sharma@parent.com', password: 'Parent@123' }
-        ];
+        // Only use users fetched from the database (no static/hardcoded users)
+        const allParents = (demoUsers.parents || []).map(p => ({
+            ...p,
+            password: localStorage.getItem(`demo_pwd_${p.email}`) || 'Parent@123'
+        }));
 
-        const staticTherapists = [
-            { name: 'Dr. Rajesh Kumar', email: 'dr.rajesh@therapist.com', password: 'Therapist@123' },
-            { name: 'Dr. Meera Singh', email: 'dr.meera@therapist.com', password: 'Therapist@123' }
-        ];
-
-        // Merge dynamic users with static ones
-        const allParents = [
-            ...staticParents,
-            ...demoUsers.parents
-                .filter(p => !staticParents.find(sp => sp.email === p.email))
-                .map(p => ({
-                    ...p,
-                    password: localStorage.getItem(`demo_pwd_${p.email}`) || 'Parent@123'
-                }))
-        ];
-
-        const allTherapists = [
-            ...staticTherapists,
-            ...demoUsers.therapists
-                .filter(t => !staticTherapists.find(st => st.email === t.email))
-                .map(t => ({
-                    ...t,
-                    password: localStorage.getItem(`demo_pwd_${t.email}`) || 'Therapist@123'
-                }))
-        ];
+        const allTherapists = (demoUsers.therapists || []).map(t => ({
+            ...t,
+            password: localStorage.getItem(`demo_pwd_${t.email}`) || 'Therapist@123'
+        }));
 
         return [
             {
@@ -262,8 +242,8 @@ const Login = () => {
                                         >
                                             <div className="flex items-center justify-between mb-1">
                                                 <p className="text-sm font-bold text-neutral-700 group-hover:text-primary-600">{u.name}</p>
-                                                <span className="text-[9px] text-neutral-300 bg-neutral-50 px-1 rounded uppercase">
-                                                    {u.email.includes('@therapist.com') || u.email.includes('@parent.com') || u.email.includes('@neurobridge.com') ? 'System' : 'New'}
+                                                <span className="text-[9px] text-emerald-500 bg-emerald-50 px-1 rounded uppercase font-bold">
+                                                    {u.email.includes('@neurobridge.com') ? 'Admin' : 'DB'}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-1.5 text-primary-500 font-bold text-[10px]">

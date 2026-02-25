@@ -35,7 +35,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const TherapistProgressOverview = () => {
-    const { users, kids, sessions, skillGoals, skillProgress, cdcMetrics } = useApp();
+    const { users, kids, sessions, skillGoals, skillProgress, cdcMetrics, realTherapists } = useApp();
     const [timeframe, setTimeframe] = useState('15d');
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'performance'
@@ -293,10 +293,11 @@ const TherapistProgressOverview = () => {
     };
 
     const therapists = useMemo(() => {
-        return users
-            .filter(u => u.role === 'therapist')
-            .filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [users, searchTerm]);
+        const baseTherapists = (realTherapists && realTherapists.length > 0)
+            ? realTherapists.map(t => ({ ...t, id: t.id || t._id, role: 'therapist' }))
+            : users.filter(u => u.role === 'therapist');
+        return baseTherapists.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [users, realTherapists, searchTerm]);
 
     // Hospital Average for Benchmarking
     const hospitalAvg = {

@@ -1673,6 +1673,7 @@ export const AppProvider = ({ children }) => {
         adminStats,
         refreshAdminStats,
         realParents,
+        realTherapists,
         refreshUsers,
         currentUser,
         isAuthenticated,
@@ -1816,7 +1817,7 @@ export const AppProvider = ({ children }) => {
         periodicReviews, addPeriodicReview,
         roadmap, addRoadmapGoal,
         skillGoals, getChildGoals, updateSkillGoal, addSkillGoal, deleteSkillGoal, deleteSkillProgress,
-        childDocuments, addChild, realParents
+        childDocuments, addChild, realParents, realTherapists
     ]);
 
     return (

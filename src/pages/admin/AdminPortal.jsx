@@ -40,12 +40,12 @@ import Modal from '../../components/ui/Modal';
 // Admin Dashboard - Main Overview
 // ============================================================
 const AdminDashboard = () => {
-    const { cdcMetrics, kids, sessions, users, adminStats } = useApp();
+    const { cdcMetrics, kids, sessions, users, adminStats, realTherapists, realParents } = useApp();
 
-    // Calculate real metrics
+    // Calculate real metrics - use only DB therapists/parents
     const MAX_CASELOAD = 15;
     const activeChildren = kids.filter(k => k.status === 'active').length;
-    const therapists = users.filter(u => u.role === 'therapist');
+    const therapists = (realTherapists && realTherapists.length > 0) ? realTherapists.map(t => ({ ...t, id: t.id || t._id, role: 'therapist' })) : users.filter(u => u.role === 'therapist');
 
     // Dynamic Therapist Performance Data
     const therapistPerformance = therapists.map(t => {
@@ -90,7 +90,7 @@ const AdminDashboard = () => {
                     </CardHeader>
                     <CardContent>
                         <div className="flex items-end justify-between gap-2">
-                            <p className="text-xl md:text-2xl lg:text-3xl font-black text-neutral-800">{adminStats.therapist_count}</p>
+                            <p className="text-xl md:text-2xl lg:text-3xl font-black text-neutral-800">{(realTherapists && realTherapists.length > 0) ? realTherapists.length : adminStats.therapist_count}</p>
                             <Building2 className="h-4 w-4 md:h-5 md:w-5 text-violet-500 shrink-0" />
                         </div>
                     </CardContent>
@@ -114,6 +114,83 @@ const AdminDashboard = () => {
                         <div className="flex items-end justify-between gap-2">
                             <p className="text-xl md:text-2xl lg:text-3xl font-black text-neutral-800">{cdcMetrics.parentEngagementRate}%</p>
                             <Heart className="h-4 w-4 md:h-5 md:w-5 text-pink-500 shrink-0" />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Parents & Therapists Directory */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Therapists List */}
+                <Card className="border-none shadow-sm ring-1 ring-neutral-200 rounded-xl md:rounded-2xl overflow-hidden">
+                    <CardHeader className="bg-violet-50/50 border-b border-violet-100/50 pb-3">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm md:text-base font-black text-neutral-800 uppercase tracking-tight flex items-center gap-2">
+                                <Building2 className="h-4 w-4 text-violet-500" />
+                                Therapists
+                            </CardTitle>
+                            <span className="text-[10px] font-black text-violet-600 bg-violet-100 px-2 py-1 rounded-lg uppercase tracking-widest">
+                                {(realTherapists && realTherapists.length > 0) ? realTherapists.length : 0} registered
+                            </span>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="max-h-[320px] overflow-y-auto divide-y divide-neutral-100">
+                            {(realTherapists && realTherapists.length > 0) ? realTherapists.map((t, idx) => (
+                                <div key={t.id || t._id || idx} className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 transition-colors">
+                                    <div className="h-9 w-9 rounded-xl bg-violet-100 flex items-center justify-center text-violet-600 font-black text-sm shrink-0">
+                                        {(t.name || 'T').charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-neutral-800 truncate">{t.name}</p>
+                                        <p className="text-[10px] text-neutral-400 truncate">{t.email || t.specialization || 'Therapist'}</p>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tight shrink-0 ${t.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+                                        {t.is_active !== false ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+                            )) : (
+                                <div className="py-8 text-center text-neutral-400 text-xs">
+                                    No therapists registered in database yet
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Parents List */}
+                <Card className="border-none shadow-sm ring-1 ring-neutral-200 rounded-xl md:rounded-2xl overflow-hidden">
+                    <CardHeader className="bg-pink-50/50 border-b border-pink-100/50 pb-3">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm md:text-base font-black text-neutral-800 uppercase tracking-tight flex items-center gap-2">
+                                <Heart className="h-4 w-4 text-pink-500" />
+                                Parents
+                            </CardTitle>
+                            <span className="text-[10px] font-black text-pink-600 bg-pink-100 px-2 py-1 rounded-lg uppercase tracking-widest">
+                                {(realParents && realParents.length > 0) ? realParents.length : 0} registered
+                            </span>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="max-h-[320px] overflow-y-auto divide-y divide-neutral-100">
+                            {(realParents && realParents.length > 0) ? realParents.map((p, idx) => (
+                                <div key={p.id || p._id || idx} className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 transition-colors">
+                                    <div className="h-9 w-9 rounded-xl bg-pink-100 flex items-center justify-center text-pink-600 font-black text-sm shrink-0">
+                                        {(p.name || 'P').charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-neutral-800 truncate">{p.name}</p>
+                                        <p className="text-[10px] text-neutral-400 truncate">{p.email || p.relationship || 'Parent'}</p>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tight shrink-0 ${p.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+                                        {p.is_active !== false ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+                            )) : (
+                                <div className="py-8 text-center text-neutral-400 text-xs">
+                                    No parents registered in database yet
+                                </div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -339,7 +416,7 @@ const AdminDashboard = () => {
 // Operations Management Page
 // ============================================================
 const OperationsPage = () => {
-    const { cdcMetrics, sessions, kids, users, adminStats, assignChildToTherapist } = useApp();
+    const { cdcMetrics, sessions, kids, users, adminStats, assignChildToTherapist, realTherapists, realParents } = useApp();
     const [selectedTherapist, setSelectedTherapist] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -392,7 +469,7 @@ const OperationsPage = () => {
                         <div className="h-10 w-10 bg-violet-50 rounded-xl flex items-center justify-center mb-3 mx-auto md:mx-0">
                             <Building2 className="h-5 w-5 text-violet-500" />
                         </div>
-                        <p className="text-2xl md:text-3xl font-black text-neutral-800 leading-none">{adminStats.therapist_count}</p>
+                        <p className="text-2xl md:text-3xl font-black text-neutral-800 leading-none">{(realTherapists && realTherapists.length > 0) ? realTherapists.length : adminStats.therapist_count}</p>
                         <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-2 px-1">Team Size</p>
                     </CardContent>
                 </Card>
@@ -414,7 +491,7 @@ const OperationsPage = () => {
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {users.filter(u => u.role === 'therapist').map((therapist) => {
+                        {((realTherapists && realTherapists.length > 0) ? realTherapists.map(t => ({ ...t, id: t.id || t._id, role: 'therapist' })) : users.filter(u => u.role === 'therapist')).map((therapist) => {
                             const assignedKidsCount = kids.filter(k => k.therapistId === therapist.id).length;
                             const utilization = Math.min(Math.round((assignedKidsCount / 15) * 100), 100);
 
