@@ -17,6 +17,7 @@ from routes.messages import router as messages_router
 from routes.progress import router as progress_router
 from routes.user_management import router as user_management_router
 from routes.public_api import router as public_api_router
+from routes.roadmap import router as roadmap_router
 
 
 @asynccontextmanager
@@ -65,6 +66,7 @@ app.include_router(messages_router)
 app.include_router(progress_router)
 app.include_router(user_management_router)
 app.include_router(public_api_router)
+app.include_router(roadmap_router)
 
 
 # Health check endpoint

@@ -649,6 +649,58 @@ export const progressAPI = {
     }
 };
 
+// Roadmap API
+export const roadmapAPI = {
+    /**
+     * Create a new roadmap goal
+     */
+    createGoal: async (goalData) => {
+        try {
+            const response = await apiClient.post('/api/roadmap', goalData);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Get full roadmap for a child
+     */
+    getByChild: async (childId) => {
+        try {
+            const response = await apiClient.get(`/api/roadmap/child/${childId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Update a roadmap goal (including milestones)
+     */
+    updateGoal: async (roadmapId, updates) => {
+        try {
+            const response = await apiClient.put(`/api/roadmap/${roadmapId}`, updates);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Delete a roadmap goal
+     */
+    deleteGoal: async (roadmapId) => {
+        try {
+            const response = await apiClient.delete(`/api/roadmap/${roadmapId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    }
+};
+
+
 // User Management API
 export const userManagementAPI = {
     /**

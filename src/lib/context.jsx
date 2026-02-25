@@ -20,7 +20,7 @@ import {
     DOCUMENTS,
     PERIODIC_REVIEWS
 } from '../data/mockData';
-import { sessionAPI, communityAPI, messagesAPI, progressAPI, userManagementAPI } from './api';
+import { sessionAPI, communityAPI, messagesAPI, progressAPI, userManagementAPI, roadmapAPI } from './api';
 import { cryptoUtils } from './crypto';
 
 const AppContext = createContext();
@@ -72,6 +72,7 @@ export const AppProvider = ({ children }) => {
     const [communityUnreadCount, setCommunityUnreadCount] = useState(0);
     const [privateUnreadCount, setPrivateUnreadCount] = useState(0);
     const notifiedMessageIds = useRef(new Set());
+    const isMigratingRoadmap = useRef(false);
     const [quickTestResults, setQuickTestResults] = useState(() => {
         const saved = localStorage.getItem('neurobridge_quick_test_results');
         return saved ? JSON.parse(saved) : [];
@@ -105,6 +106,7 @@ export const AppProvider = ({ children }) => {
     useEffect(() => {
         localStorage.setItem('neurobridge_roadmap', JSON.stringify(roadmap));
     }, [roadmap]);
+
 
     useEffect(() => {
         const handleStorage = (e) => {
@@ -152,6 +154,50 @@ export const AppProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [realTherapists, setRealTherapists] = useState([]);
     const [realParents, setRealParents] = useState([]);
+
+    // Data Migration Bridge: Move LocalStorage Roadmap to MongoDB
+    useEffect(() => {
+        const migrateRoadmap = async () => {
+            if (isMigratingRoadmap.current) return;
+
+            const localData = roadmap.filter(r => !r._id && !r.isMigrated);
+            if (localData.length === 0) return;
+
+            isMigratingRoadmap.current = true;
+            console.log(`🚀 [Migration] Found ${localData.length} roadmap items to migrate...`);
+
+            try {
+                const results = [];
+                for (const item of localData) {
+                    try {
+                        const { id, ...cleanItem } = item;
+                        const savedItem = await roadmapAPI.createGoal(cleanItem);
+                        results.push({ oldId: item.id, newItem: savedItem });
+                    } catch (err) {
+                        console.error(`❌ [Migration] Failed to migrate ${item.title}:`, err);
+                    }
+                }
+
+                if (results.length > 0) {
+                    setRoadmap(prev => {
+                        let updated = [...prev];
+                        results.forEach(({ oldId, newItem }) => {
+                            updated = updated.map(r =>
+                                (r.id === oldId) ? { ...newItem, id: newItem._id, isMigrated: true } : r
+                            );
+                        });
+                        return updated;
+                    });
+                }
+            } finally {
+                isMigratingRoadmap.current = false;
+            }
+        };
+
+        if (isAuthenticated && currentUser) {
+            migrateRoadmap();
+        }
+    }, [isAuthenticated, currentUser, roadmap]);
 
     // ============ Audit Log Actions ============
     const addAuditLog = useCallback((log) => {
@@ -1163,21 +1209,99 @@ export const AppProvider = ({ children }) => {
     }, [skillScores]);
 
     // ============ Roadmap Actions ============
+    const refreshRoadmap = useCallback(async (childId) => {
+        if (!childId) return;
+        try {
+            const data = await roadmapAPI.getByChild(childId);
+            setRoadmap(prev => {
+                // Keep other kids
+                const otherKids = prev.filter(r => r.childId !== childId);
+
+                // Keep local items for THIS child that aren't on the server yet (those without _id)
+                const localUnsaved = prev.filter(r => r.childId === childId && !r._id && !r.isMigrated);
+
+                // Deduplicate server data against localUnsaved by title/domain to be extra safe
+                const serverData = data.map(item => ({ ...item, id: item._id || item.id }));
+
+                // Extra safety: Deduplicate items from server itself if DB has duplicates
+                const uniqueServerData = [];
+                const seenServer = new Set();
+                serverData.forEach(s => {
+                    const key = `${s.domain}-${s.title}`;
+                    if (!seenServer.has(key)) {
+                        seenServer.add(key);
+                        uniqueServerData.push(s);
+                    }
+                });
+
+                const filteredServer = uniqueServerData.filter(s =>
+                    !localUnsaved.some(l => l.title === s.title && l.domain === s.domain)
+                );
+
+                return [...otherKids, ...localUnsaved, ...filteredServer];
+            });
+        } catch (err) {
+            console.error("Failed to fetch roadmap:", err);
+        }
+    }, []);
+
     const getChildRoadmap = useCallback((childId) => {
-        return roadmap
-            .filter(r => r.childId === childId)
+        const childRoadmap = roadmap.filter(r => r.childId === childId);
+
+        // Deduplicate items with the same title and domain to prevent "double double" display
+        const uniqueGoalsMap = new Map();
+        childRoadmap.forEach(item => {
+            const key = `${item.domain}-${item.title}`;
+            // If we have a duplicate, prioritize the one with an _id (backend item)
+            if (!uniqueGoalsMap.has(key) || (!uniqueGoalsMap.get(key)._id && item._id)) {
+                uniqueGoalsMap.set(key, item);
+            }
+        });
+
+        return Array.from(uniqueGoalsMap.values())
+            .map(r => {
+                const total = r.milestones?.length || 0;
+                const completed = r.milestones?.filter(m => m.completed).length || 0;
+                const progress = total > 0 ? Math.round((completed / total) * 100) : r.progress;
+                const targetDate = r.targetDate ? new Date(r.targetDate) : null;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const isOverdue = targetDate && targetDate < today && progress < 100;
+
+                let status = r.status;
+                if (progress === 100 && total > 0) {
+                    status = 'completed';
+                } else if (isOverdue) {
+                    status = 'at-risk';
+                }
+
+                return {
+                    ...r,
+                    progress,
+                    status
+                };
+            })
             .sort((a, b) => {
-                // Sort by status (in-progress first), then by target date
-                if (a.status === 'in-progress' && b.status !== 'in-progress') return -1;
-                if (b.status === 'in-progress' && a.status !== 'in-progress') return 1;
+                const statusOrder = { 'at-risk': 0, 'in-progress': 1, 'upcoming': 2, 'completed': 3 };
+                const orderA = statusOrder[a.status] ?? 4;
+                const orderB = statusOrder[b.status] ?? 4;
+                if (orderA !== orderB) return orderA - orderB;
                 return new Date(a.targetDate) - new Date(b.targetDate);
             });
     }, [roadmap]);
 
-    const updateRoadmapProgress = useCallback((roadmapId, updates) => {
+    const updateRoadmapProgress = useCallback(async (roadmapId, updates) => {
+        // Optimistic update
         setRoadmap(prev => prev.map(r =>
-            r.id === roadmapId ? { ...r, ...updates } : r
+            (r.id === roadmapId || r._id === roadmapId) ? { ...r, ...updates } : r
         ));
+
+        try {
+            await roadmapAPI.updateGoal(roadmapId, updates);
+        } catch (err) {
+            console.error("Failed to update roadmap goal:", err);
+            // We could revert here if needed, but usually a refresh will fix it
+        }
 
         addAuditLog({
             action: 'ROADMAP_UPDATED',
@@ -1189,9 +1313,11 @@ export const AppProvider = ({ children }) => {
         });
     }, [currentUser]);
 
-    const completeMilestone = useCallback((roadmapId, milestoneId) => {
+    const completeMilestone = useCallback(async (roadmapId, milestoneId) => {
+        let updatedGoal = null;
+
         setRoadmap(prev => prev.map(r => {
-            if (r.id === roadmapId) {
+            if (r.id === roadmapId || r._id === roadmapId) {
                 const updatedMilestones = r.milestones.map(m =>
                     m.id === milestoneId
                         ? { ...m, completed: true, date: new Date().toISOString().split('T')[0] }
@@ -1200,35 +1326,68 @@ export const AppProvider = ({ children }) => {
                 const completedCount = updatedMilestones.filter(m => m.completed).length;
                 const progress = Math.round((completedCount / updatedMilestones.length) * 100);
 
-                return { ...r, milestones: updatedMilestones, progress };
+                const status = progress === 100 ? 'completed' : r.status;
+                updatedGoal = { ...r, milestones: updatedMilestones, progress, status };
+                return updatedGoal;
             }
             return r;
         }));
+
+        if (updatedGoal) {
+            try {
+                await roadmapAPI.updateGoal(roadmapId, {
+                    milestones: updatedGoal.milestones,
+                    progress: updatedGoal.progress,
+                    status: updatedGoal.status
+                });
+            } catch (err) {
+                console.error("Failed to sync milestone completion:", err);
+            }
+        }
     }, []);
 
-    const addRoadmapGoal = useCallback((goalData) => {
-        const newGoal = {
-            ...goalData,
-            id: goalData.id || `r${Date.now()}`,
-            progress: goalData.progress || 0,
-            status: goalData.status || 'in-progress',
-            confidence: goalData.confidence || 70,
-            milestones: goalData.milestones || []
-        };
+    const addRoadmapGoal = useCallback(async (goalData) => {
+        try {
+            const response = await roadmapAPI.createGoal(goalData);
+            const newGoal = { ...response, id: response._id || response.id };
 
-        setRoadmap(prev => [...prev, newGoal]);
+            setRoadmap(prev => [...prev, newGoal]);
+
+            addAuditLog({
+                action: 'ROADMAP_GOAL_ADDED',
+                userId: currentUser?.id,
+                userName: currentUser?.name,
+                targetType: 'roadmap',
+                targetId: newGoal.id,
+                details: `Added new goal: ${goalData.title}`
+            });
+
+            return newGoal;
+        } catch (err) {
+            console.error("Failed to add roadmap goal:", err);
+            throw err;
+        }
+    }, [currentUser, addAuditLog]);
+
+    const deleteRoadmapGoal = useCallback(async (roadmapId) => {
+        // Optimistic delete
+        setRoadmap(prev => prev.filter(r => r.id !== roadmapId && r._id !== roadmapId));
+
+        try {
+            await roadmapAPI.deleteGoal(roadmapId);
+        } catch (err) {
+            console.error("Failed to delete roadmap goal:", err);
+        }
 
         addAuditLog({
-            action: 'ROADMAP_GOAL_ADDED',
+            action: 'ROADMAP_GOAL_DELETED',
             userId: currentUser?.id,
             userName: currentUser?.name,
             targetType: 'roadmap',
-            targetId: newGoal.id,
-            details: `Added new roadmap goal: ${newGoal.title}`
+            targetId: roadmapId,
+            details: 'Deleted roadmap goal'
         });
-
-        return newGoal;
-    }, [currentUser, addAuditLog]);
+    }, [currentUser]);
 
     // ============ Home Activity Actions ============
     const getChildHomeActivities = useCallback((childId) => {
@@ -1838,10 +1997,12 @@ export const AppProvider = ({ children }) => {
         getSkillHistory,
 
         // Roadmap Actions
+        refreshRoadmap,
         getChildRoadmap,
         updateRoadmapProgress,
         completeMilestone,
         addRoadmapGoal,
+        deleteRoadmapGoal,
         getPeriodicReviews,
         addPeriodicReview,
 
@@ -1932,8 +2093,8 @@ export const AppProvider = ({ children }) => {
         notifications, isLoading, login, logout, getChildSessions, getRecentSessions,
         addSession, getSessionsByTherapist, getTodaysSessions, getChildById,
         getChildrenByTherapist, getChildrenByParent, updateChildMood, assignChildToTherapist, unassignChildFromTherapist, getChildSkillScores,
-        getLatestSkillScores, getSkillHistory, getChildRoadmap, updateRoadmapProgress,
-        completeMilestone, getChildHomeActivities, logActivityCompletion, getActivityAdherence,
+        refreshRoadmap, getChildRoadmap, updateRoadmapProgress, completeMilestone, addRoadmapGoal, deleteRoadmapGoal,
+        getPeriodicReviews, addPeriodicReview,
         getActivityAdherence20Days, completeQuickTestGame, getLatestQuickTestResult,
         shareQuickTestResult,
         quickTestResults, quickTestProgress,

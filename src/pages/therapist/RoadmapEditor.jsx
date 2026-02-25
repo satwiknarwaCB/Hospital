@@ -327,7 +327,16 @@ const RoadmapGoalCard = ({ goal, onEdit, onToggleLock, onCompleteMilestone }) =>
 
 // Main Roadmap Editor Component
 const RoadmapEditor = () => {
-    const { currentUser, kids, getChildRoadmap, updateRoadmapProgress, completeMilestone, addRoadmapGoal, quickTestResults } = useApp();
+    const {
+        currentUser,
+        kids,
+        refreshRoadmap,
+        getChildRoadmap,
+        updateRoadmapProgress,
+        completeMilestone,
+        addRoadmapGoal,
+        quickTestResults
+    } = useApp();
     const [showSharedAssessment, setShowSharedAssessment] = useState(false);
     const [selectedChildId, setSelectedChildId] = useState(null);
     const [showGoalForm, setShowGoalForm] = useState(false);
@@ -343,6 +352,13 @@ const RoadmapEditor = () => {
             setSelectedChildId(myChildren[0].id);
         }
     }, [myChildren, selectedChildId]);
+
+    // Refresh roadmap when child changes
+    React.useEffect(() => {
+        if (selectedChildId) {
+            refreshRoadmap(selectedChildId);
+        }
+    }, [selectedChildId, refreshRoadmap]);
 
     const selectedChild = kids.find(k => k.id === selectedChildId);
     const roadmap = selectedChildId ? getChildRoadmap(selectedChildId) : [];
