@@ -91,6 +91,11 @@ class DatabaseManager:
         """Get direct (private) messages collection"""
         return self.get_database()["direct_messages"]
 
+    @property
+    def roadmaps(self):
+        """Get roadmaps collection"""
+        return self.get_database()["roadmaps"]
+
 
 
 # Create global database manager instance

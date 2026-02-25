@@ -27,7 +27,7 @@ const TherapistProgressTracking = () => {
     const therapistId = currentUser?.id || 't1';
     const safeKids = Array.isArray(kids) ? kids : [];
     const therapistKids = safeKids.filter(k =>
-        k && (k.therapistId === therapistId) &&
+        (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId) &&
         (k.name || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 

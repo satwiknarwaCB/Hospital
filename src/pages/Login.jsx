@@ -5,8 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { LogIn, Mail, Lock, AlertCircle, Loader2, ShieldCheck, User, Briefcase, Heart, Activity, CheckCircle2 } from 'lucide-react';
-import { publicAPI } from '../lib/api';
+import { LogIn, Mail, Lock, AlertCircle, Loader2, User, CheckCircle2 } from 'lucide-react';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -31,7 +30,6 @@ const Login = () => {
         address: '',
         relationship: 'Mother'
     });
-    const [demoUsers, setDemoUsers] = useState({ therapists: [], parents: [] });
 
     useEffect(() => {
         if (location.state?.openSignup) {
@@ -39,6 +37,7 @@ const Login = () => {
         }
     }, [location.state]);
 
+<<<<<<< HEAD
     React.useEffect(() => {
         const fetchDemoUsers = async () => {
             try {
@@ -93,11 +92,19 @@ const Login = () => {
 
     const demoAccounts = getDemoAccounts();
 
+=======
+>>>>>>> f01dc3b2a8652e75c00d95c6c2546e3c221f38af
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
         setErrors((prev) => ({ ...prev, [name]: '' }));
         setApiError('');
+    };
+
+    const handleSignupChange = (e) => {
+        const { name, value } = e.target;
+        setSignupData(prev => ({ ...prev, [name]: value }));
+        setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
     const validateForm = () => {
@@ -117,9 +124,6 @@ const Login = () => {
 
         if (!signupData.password) newErrors.password = 'Password is required';
         else if (signupData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
-        else if (!/[A-Z]/.test(signupData.password)) newErrors.password = 'Password must have one uppercase letter';
-        else if (!/[a-z]/.test(signupData.password)) newErrors.password = 'Password must have one lowercase letter';
-        else if (!/[0-9]/.test(signupData.password)) newErrors.password = 'Password must have one digit';
 
         if (signupData.password !== signupData.confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match';
@@ -151,7 +155,6 @@ const Login = () => {
             await signup(signupPayload);
             setSignupSuccess('Account created successfully! You can now sign in.');
             setIsSignup(false);
-            // Pre-fill email for login
             setFormData(prev => ({ ...prev, email: signupData.email }));
         } catch (error) {
             setApiError(error.message || 'Signup failed. Please try again.');
@@ -170,9 +173,6 @@ const Login = () => {
         try {
             const user = await login(formData.email, formData.password);
 
-            // SUCCESS: Save password for Quick Fill (Local Persistence)
-            localStorage.setItem(`demo_pwd_${formData.email}`, formData.password);
-
             // Redirect based on role
             if (user.role === 'parent') {
                 navigate('/parent/today');
@@ -181,14 +181,8 @@ const Login = () => {
             } else if (user.role === 'therapist' || user.role === 'doctor') {
                 navigate('/therapist/command-center');
             } else {
-                // Fallback based on email if role is somehow missing
-                if (formData.email.includes('@parent.com')) {
-                    navigate('/parent/today');
-                } else if (formData.email.includes('@neurobridge.com')) {
-                    navigate('/admin/overview');
-                } else {
-                    navigate('/therapist/command-center');
-                }
+                // Default fallback if role is missing but login succeeded
+                navigate('/');
             }
         } catch (error) {
             setApiError(error.message || 'Login failed. Please check your credentials.');
@@ -197,21 +191,9 @@ const Login = () => {
         }
     };
 
-    const fillDemo = (email, password) => {
-        setFormData({ email, password });
-        setIsSignup(false);
-        setErrors({});
-        setApiError('');
-    };
-
-    const handleSignupChange = (e) => {
-        const { name, value } = e.target;
-        setSignupData(prev => ({ ...prev, [name]: value }));
-        setErrors(prev => ({ ...prev, [name]: '' }));
-    };
-
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+<<<<<<< HEAD
             <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-neutral-100">
 
                 {/* Demo Credentials Sidebar */}
@@ -259,6 +241,9 @@ const Login = () => {
                 </div>
 
                 {/* Login Form Section */}
+=======
+            <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex border border-neutral-100">
+>>>>>>> f01dc3b2a8652e75c00d95c6c2546e3c221f38af
                 <div className="flex-1 p-8 md:p-12">
                     <div className="max-w-md mx-auto">
                         <div className="text-center mb-10">

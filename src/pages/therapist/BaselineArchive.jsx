@@ -7,14 +7,15 @@ import {
     Eye,
     CheckCircle2,
     Calendar,
-    Baby
+    Baby,
+    Trash2
 } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useApp } from '../../lib/context';
 
 const BaselineArchive = () => {
-    const { kids, childDocuments, addDocument, addNotification, currentUser } = useApp();
+    const { kids, childDocuments, addDocument, deleteDocument, addNotification, currentUser } = useApp();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedChild, setSelectedChild] = useState('All');
     const fileInputRef = useRef(null);
@@ -215,6 +216,25 @@ const BaselineArchive = () => {
                                                                     <Download className="h-4 w-4" />
                                                                 </Button>
                                                             </a>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                className="h-8 w-8 p-0 text-neutral-400 hover:text-red-500"
+                                                                title="Delete Report"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    if (window.confirm('Are you sure you want to delete this report?')) {
+                                                                        deleteDocument(doc.id);
+                                                                        addNotification({
+                                                                            type: 'success',
+                                                                            title: 'Report Removed',
+                                                                            message: 'The report has been deleted from the archive.'
+                                                                        });
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
                                                         </>
                                                     )}
                                                 </div>

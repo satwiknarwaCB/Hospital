@@ -9,6 +9,8 @@ class ChildCreate(BaseModel):
     condition: str
     school_name: Optional[str] = None
     parent_id: str = Field(..., description="ID of the parent to link to")
+    therapy_start_date: Optional[str] = None
+    therapy_type: Optional[str] = None
 
 class ChildResponse(BaseModel):
     id: str
@@ -18,7 +20,8 @@ class ChildResponse(BaseModel):
     condition: str
     school_name: Optional[str] = None
     parent_id: str
-    therapistId: Optional[str] = None
+    therapistId: Optional[str] = None  # Primary therapist (for backward compatibility)
+    therapistIds: List[str] = []  # List of all assigned therapists
     photoUrl: Optional[str] = None
     program: List[str] = []
     currentMood: Optional[str] = None
@@ -26,7 +29,11 @@ class ChildResponse(BaseModel):
     streak: int = 0
     schoolReadinessScore: int = 0
     status: str = "active"
+    is_active: bool = True
     documents: List[dict] = []
+    therapy_start_date: Optional[str] = None
+    therapy_type: Optional[str] = None
+    therapy_start_dates: Optional[dict] = None
     created_at: datetime
     
     class Config:

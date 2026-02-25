@@ -269,8 +269,21 @@ export const sessionAPI = {
         } catch (error) {
             throw error.response?.data || error.message;
         }
+    },
+    /**
+     * Delete a therapy session record
+     * @param {string} sessionId 
+     */
+    delete: async (sessionId) => {
+        try {
+            const response = await apiClient.delete(`/api/sessions/${sessionId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
     }
 };
+
 
 // Community API
 export const communityAPI = {
@@ -636,6 +649,58 @@ export const progressAPI = {
     }
 };
 
+// Roadmap API
+export const roadmapAPI = {
+    /**
+     * Create a new roadmap goal
+     */
+    createGoal: async (goalData) => {
+        try {
+            const response = await apiClient.post('/api/roadmap', goalData);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Get full roadmap for a child
+     */
+    getByChild: async (childId) => {
+        try {
+            const response = await apiClient.get(`/api/roadmap/child/${childId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Update a roadmap goal (including milestones)
+     */
+    updateGoal: async (roadmapId, updates) => {
+        try {
+            const response = await apiClient.put(`/api/roadmap/${roadmapId}`, updates);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    /**
+     * Delete a roadmap goal
+     */
+    deleteGoal: async (roadmapId) => {
+        try {
+            const response = await apiClient.delete(`/api/roadmap/${roadmapId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    }
+};
+
+
 // User Management API
 export const userManagementAPI = {
     /**
@@ -724,11 +789,18 @@ export const userManagementAPI = {
     },
 
     /**
-     * Assign a child to a therapist
+     * Assign a child to a therapist (adds to list)
      */
     assignTherapist: async (childId, therapistId) => {
-        const tId = therapistId || 'none';
-        const response = await apiClient.patch(`/api/admin/users/child/${childId}/assign/${tId}`);
+        const response = await apiClient.patch(`/api/admin/users/child/${childId}/assign/${therapistId}`);
+        return response.data;
+    },
+
+    /**
+     * Unassign a child from a therapist (removes from list)
+     */
+    unassignTherapist: async (childId, therapistId) => {
+        const response = await apiClient.delete(`/api/admin/users/child/${childId}/assign/${therapistId}`);
         return response.data;
     },
 

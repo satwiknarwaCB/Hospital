@@ -189,19 +189,6 @@ const AdminLogin = () => {
                         </button>
                     </form>
 
-                    {/* Demo Credentials */}
-                    <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                        <p className="text-xs font-medium text-slate-700 mb-3">Clinical Director Access:</p>
-
-                        <button
-                            type="button"
-                            onClick={fillDemoCredentials}
-                            className="w-full flex items-center justify-between p-3 bg-white rounded-lg border border-slate-100 hover:border-slate-300 transition-colors group"
-                        >
-                            <p className="text-sm font-semibold text-slate-800">Fill Director Anjali Sharma</p>
-                            <ShieldCheck className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
-                        </button>
-                    </div>
                 </div>
 
                 {/* Footer */}

@@ -179,25 +179,6 @@ const DoctorLogin = () => {
                         </button>
                     </form>
 
-                    {/* Demo Credentials */}
-                    <div className="mt-6 p-4 bg-primary-50 rounded-xl border border-primary-100">
-                        <p className="text-xs font-medium text-primary-700 mb-3">Demo Credentials:</p>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setFormData({
-                                    email: 'dr.rajesh@therapist.com',
-                                    password: 'Therapist@123',
-                                });
-                                setErrors({});
-                                setApiError('');
-                            }}
-                            className="w-full py-2.5 bg-white border border-primary-200 text-primary-600 rounded-lg text-xs font-bold hover:bg-primary-50 transition-colors flex items-center justify-center gap-2"
-                        >
-                            <LogIn className="w-3.5 h-3.5" />
-                            Quick Fill Dr. Rajesh
-                        </button>
-                    </div>
                 </div>
 
                 {/* Footer */}

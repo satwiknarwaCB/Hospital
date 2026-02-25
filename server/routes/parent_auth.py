@@ -68,6 +68,13 @@ async def login(credentials: ParentLogin):
         data={"sub": str(parent_data["_id"]), "email": str(parent_data["email"])}
     )
     
+    # Update last login timestamp in DB
+    login_time = datetime.now(timezone.utc)
+    db_manager.parents.update_one(
+        {"_id": parent_data["_id"]},
+        {"$set": {"last_login": login_time}}
+    )
+    
     # Prepare parent response - ensure _id is converted to string
     parent_id = str(parent_data["_id"])
     
@@ -94,6 +101,7 @@ async def login(credentials: ParentLogin):
         relationship=str(parent_data.get("relationship")) if parent_data.get("relationship") else None,
         is_active=bool(parent_data.get("is_active", True)),
         created_at=parent_data.get("created_at"),
+        last_login=login_time,
         role="parent"
     )
     

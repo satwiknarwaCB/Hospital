@@ -25,7 +25,8 @@ import {
     Upload,
     Download,
     Eye,
-    PlusCircle
+    PlusCircle,
+    Trash2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -93,7 +94,7 @@ const ChildCard = ({ child, sessions = [], skillScores = [], onSelect }) => {
                         <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-neutral-100">
                             <div className="text-center">
                                 <p className="text-lg font-bold text-neutral-800">{avgScore}%</p>
-                                <p className="text-xs text-neutral-500">Percentage</p>
+                                <p className="text-xs text-neutral-500">School Ready</p>
                             </div>
                             <div className="text-center">
                                 <p className="text-lg font-bold text-neutral-800">{sessions.length}</p>
@@ -143,7 +144,7 @@ const ChildCard = ({ child, sessions = [], skillScores = [], onSelect }) => {
 // Child Detail Modal
 const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
     const navigate = useNavigate();
-    const { getChildDocuments, addDocument, addNotification } = useApp();
+    const { getChildDocuments, addDocument, deleteDocument, addNotification } = useApp();
     const [activeTab, setActiveTab] = useState('summary');
     const fileInputRef = React.useRef(null);
     const documents = getChildDocuments(child.id);
@@ -151,6 +152,7 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
     if (!child) return null;
 
     const handleViewDocument = (doc) => {
+        console.log('📄 Attempting to view document:', doc.title, 'URL length:', doc.url?.length);
         if (!doc.url || doc.url === '#') {
             addNotification({
                 type: 'error',
@@ -160,28 +162,41 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
             return;
         }
 
-        // Handle Data URLs (Base64) by converting to Blob to prevent blank pages in some browsers
-        if (doc.url.startsWith('data:')) {
-            try {
+        try {
+            if (doc.url.startsWith('data:')) {
+                // For PDF/Images, blob approach is most reliable for window.open
                 const parts = doc.url.split(',');
-                const type = parts[0].split(':')[1].split(';')[0];
-                const base64 = parts[1];
-                const binary = atob(base64);
-                const array = new Uint8Array(binary.length);
-                for (let i = 0; i < binary.length; i++) {
-                    array[i] = binary.charCodeAt(i);
+                const mime = parts[0].match(/:(.*?);/)[1];
+                const bstr = atob(parts[1]);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while (n--) {
+                    u8arr[n] = bstr.charCodeAt(n);
                 }
-                const blob = new Blob([array], { type });
+                const blob = new Blob([u8arr], { type: mime });
                 const blobUrl = URL.createObjectURL(blob);
-                window.open(blobUrl, '_blank');
-            } catch (e) {
-                console.error('Error opening data URL:', e);
-                window.open(doc.url, '_blank');
+
+                const newWindow = window.open(blobUrl, '_blank');
+                if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                    // Pop-up blocked fallback
+                    alert('Pop-up blocked! Please allow pop-ups for this site to view reports.');
+                }
+            } else {
+                const newWindow = window.open(doc.url, '_blank');
+                if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                    alert('Pop-up blocked! Please allow pop-ups for this site to view reports.');
+                }
             }
-        } else {
-            window.open(doc.url, '_blank');
+        } catch (err) {
+            console.error('❌ Error viewing report:', err);
+            // Fallback for simple link
+            const link = document.createElement('a');
+            link.href = doc.url;
+            link.target = '_blank';
+            link.click();
         }
     };
+
 
     const handleLogNewSession = () => {
         // Navigate to session log with childId in state
@@ -373,22 +388,27 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
                                     onChange={(e) => {
                                         const file = e.target.files[0];
                                         if (file) {
-                                            addDocument({
-                                                childId: child.id,
-                                                title: file.name.replace(/\.[^/.]+$/, ""),
-                                                type: 'Other',
-                                                category: 'Clinical',
-                                                format: file.type.split('/')[1] || 'pdf',
-                                                uploadedBy: 'Therapist',
-                                                fileSize: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
-                                                url: URL.createObjectURL(file)
-                                            });
-                                            addNotification({
-                                                type: 'success',
-                                                title: 'Document Archived',
-                                                message: `${file.name} added to dossier.`
-                                            });
+                                            const reader = new FileReader();
+                                            reader.onload = (event) => {
+                                                addDocument({
+                                                    childId: child.id,
+                                                    title: file.name.replace(/\.[^/.]+$/, ""),
+                                                    type: 'Other',
+                                                    category: 'Clinical',
+                                                    format: file.type.split('/')[1] || 'pdf',
+                                                    uploadedBy: 'Therapist',
+                                                    fileSize: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+                                                    url: event.target.result // Persistent DataURL
+                                                });
+                                                addNotification({
+                                                    type: 'success',
+                                                    title: 'Document Archived',
+                                                    message: `${file.name} added to dossier.`
+                                                });
+                                            };
+                                            reader.readAsDataURL(file);
                                         }
+
                                     }}
                                 />
                                 <Button size="sm" variant="outline" className="h-8 text-[10px] font-black uppercase tracking-widest gap-2"
@@ -425,16 +445,37 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
                                                 <>
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleViewDocument(doc); }}
-                                                        className="p-2 text-neutral-300 hover:text-primary-600 transition-colors"
+                                                        className="p-2 text-primary-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all"
                                                         title="View Report"
                                                     >
                                                         <Eye className="h-5 w-5" />
                                                     </button>
-                                                    <a href={doc.url} download={doc.title} onClick={(e) => e.stopPropagation()}>
-                                                        <button className="p-2 text-neutral-300 hover:text-secondary-600 transition-colors" title="Download">
-                                                            <Download className="h-5 w-5" />
-                                                        </button>
+                                                    <a
+                                                        href={doc.url}
+                                                        download={`${doc.title}.${doc.format || 'pdf'}`}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="p-2 text-secondary-400 hover:text-secondary-600 hover:bg-secondary-50 rounded-lg transition-all"
+                                                        title="Download"
+                                                    >
+                                                        <Download className="h-5 w-5" />
                                                     </a>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (window.confirm('Are you sure you want to delete this report?')) {
+                                                                deleteDocument(doc.id);
+                                                                addNotification({
+                                                                    type: 'success',
+                                                                    title: 'Report Removed',
+                                                                    message: 'The report has been deleted from the profile.'
+                                                                });
+                                                            }
+                                                        }}
+                                                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                        title="Delete Report"
+                                                    >
+                                                        <Trash2 className="h-5 w-5" />
+                                                    </button>
                                                 </>
                                             )}
                                             {(doc.url === '#' || !doc.url) && (
@@ -645,8 +686,7 @@ const MyChildren = () => {
     // Get therapist's children
     const therapistId = currentUser?.id || 't1';
     const safeKids = Array.isArray(kids) ? kids : [];
-
-    const myChildren = safeKids.filter(k => k && k.therapistId === therapistId);
+    const myChildren = safeKids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
 
     // Filter children
     const filteredChildren = myChildren.filter(child => {

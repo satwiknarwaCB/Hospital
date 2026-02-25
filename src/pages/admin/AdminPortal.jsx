@@ -49,7 +49,7 @@ const AdminDashboard = () => {
 
     // Dynamic Therapist Performance Data
     const therapistPerformance = therapists.map(t => {
-        const assignedKids = kids.filter(k => k.therapistId === t.id);
+        const assignedKids = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(t.id));
         const caseload = assignedKids.length;
         const utilization = Math.min(Math.round((caseload / MAX_CASELOAD) * 100), 100);
 
@@ -68,27 +68,52 @@ const AdminDashboard = () => {
         : 0;
 
     return (
+<<<<<<< HEAD
         <div className="space-y-8 pb-safe-nav animate-slide-up overflow-x-hidden max-w-full">
             {/* Top Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 max-w-full">
                 <Card className="btn-premium bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-xl shadow-primary-200/50 border-none rounded-xl md:rounded-2xl overflow-hidden">
+=======
+        <div className="space-y-4 md:space-y-6 overflow-x-hidden max-w-full">
+            {/* Top Metrics - Production Redesign */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
+                {/* Total Parents */}
+                <Card className="bg-white border-none shadow-premium rounded-[2rem] overflow-hidden group hover:shadow-xl transition-all duration-300 ring-1 ring-neutral-100 hover-lift">
+>>>>>>> f01dc3b2a8652e75c00d95c6c2546e3c221f38af
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-[10px] md:text-xs font-black text-primary-100 uppercase tracking-widest truncate">Active Children</CardTitle>
+                        <div className="flex items-center justify-between">
+                            <div className="p-2 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition-colors">
+                                <Users className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg uppercase tracking-wider">Parents</span>
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex items-end justify-between gap-2">
-                            <p className="text-xl md:text-2xl lg:text-3xl font-black">{adminStats.active_children}</p>
-                            <span className="text-[9px] md:text-[10px] font-black text-primary-200 bg-primary-400/30 px-1.5 md:px-2 py-0.5 md:py-1 rounded-lg uppercase tracking-tighter whitespace-nowrap">
-                                Real-time
-                            </span>
+                        <div className="space-y-1">
+                            <p className="text-3xl font-black text-neutral-800 tabular-nums tracking-tighter">
+                                {adminStats.parent_count || 0}
+                            </p>
+                            <CardTitle className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Total Parents</CardTitle>
                         </div>
                     </CardContent>
                 </Card>
+<<<<<<< HEAD
                 <Card className="glass-card border-none rounded-xl md:rounded-2xl overflow-hidden">
+=======
+
+                {/* Total Therapists */}
+                <Card className="bg-white border-none shadow-premium rounded-[2rem] overflow-hidden group hover:shadow-xl transition-all duration-300 ring-1 ring-neutral-100 hover-lift">
+>>>>>>> f01dc3b2a8652e75c00d95c6c2546e3c221f38af
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-[10px] md:text-xs font-black text-neutral-400 uppercase tracking-widest truncate">Total Therapists</CardTitle>
+                        <div className="flex items-center justify-between">
+                            <div className="p-2 bg-violet-50 rounded-xl group-hover:bg-violet-100 transition-colors">
+                                <Building2 className="h-5 w-5 text-violet-600" />
+                            </div>
+                            <span className="text-[10px] font-black text-violet-600 bg-violet-50 px-2 py-1 rounded-lg uppercase tracking-wider">Therapists</span>
+                        </div>
                     </CardHeader>
                     <CardContent>
+<<<<<<< HEAD
                         <div className="flex items-end justify-between gap-2">
                             <p className="text-xl md:text-2xl lg:text-3xl font-black text-neutral-800">{(realTherapists && realTherapists.length > 0) ? realTherapists.length : adminStats.therapist_count}</p>
                             <Building2 className="h-4 w-4 md:h-5 md:w-5 text-violet-500 shrink-0" />
@@ -96,24 +121,77 @@ const AdminDashboard = () => {
                     </CardContent>
                 </Card>
                 <Card className="glass-card border-none rounded-xl md:rounded-2xl overflow-hidden">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-[10px] md:text-xs font-black text-neutral-400 uppercase tracking-widest truncate">Therapy Completion</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-end justify-between gap-2">
-                            <p className="text-xl md:text-2xl lg:text-3xl font-black text-neutral-800">{cdcMetrics.therapyCompletionRate}%</p>
-                            <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5 text-green-500 shrink-0" />
+=======
+                        <div className="space-y-1">
+                            <p className="text-3xl font-black text-neutral-800 tabular-nums tracking-tighter">
+                                {adminStats.therapist_count || 0}
+                            </p>
+                            <CardTitle className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Total Therapists</CardTitle>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="glass-card border-none rounded-xl md:rounded-2xl overflow-hidden">
+
+                {/* Total Children */}
+                <Card className="bg-white border-none shadow-premium rounded-[2rem] overflow-hidden group hover:shadow-xl transition-all duration-300 ring-1 ring-neutral-100 hover-lift">
+>>>>>>> f01dc3b2a8652e75c00d95c6c2546e3c221f38af
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-[10px] md:text-xs font-black text-neutral-400 uppercase tracking-widest truncate">Parent Engagement</CardTitle>
+                        <div className="flex items-center justify-between">
+                            <div className="p-2 bg-emerald-50 rounded-xl group-hover:bg-emerald-100 transition-colors">
+                                <Heart className="h-5 w-5 text-emerald-600" />
+                            </div>
+                            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg uppercase tracking-wider">Children</span>
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex items-end justify-between gap-2">
-                            <p className="text-xl md:text-2xl lg:text-3xl font-black text-neutral-800">{cdcMetrics.parentEngagementRate}%</p>
-                            <Heart className="h-4 w-4 md:h-5 md:w-5 text-pink-500 shrink-0" />
+                        <div className="space-y-1">
+                            <p className="text-3xl font-black text-neutral-800 tabular-nums tracking-tighter">
+                                {adminStats.child_count || 0}
+                            </p>
+                            <CardTitle className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Total Children</CardTitle>
+                        </div>
+                    </CardContent>
+                </Card>
+<<<<<<< HEAD
+                <Card className="glass-card border-none rounded-xl md:rounded-2xl overflow-hidden">
+=======
+
+                {/* Ongoing Therapies */}
+                <Card className="bg-white border-none shadow-premium rounded-[2rem] overflow-hidden group hover:shadow-xl transition-all duration-300 ring-1 ring-neutral-100 hover-lift">
+>>>>>>> f01dc3b2a8652e75c00d95c6c2546e3c221f38af
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                            <div className="p-2 bg-amber-50 rounded-xl group-hover:bg-amber-100 transition-colors">
+                                <Activity className="h-5 w-5 text-amber-600" />
+                            </div>
+                            <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-1 rounded-lg uppercase tracking-wider">Therapies</span>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-1">
+                            <p className="text-3xl font-black text-neutral-800 tabular-nums tracking-tighter">
+                                {adminStats.ongoing_therapies || 0}
+                            </p>
+                            <CardTitle className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Ongoing Therapies</CardTitle>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Pending Assignments */}
+                <Card className="bg-white border-none shadow-premium rounded-[2rem] overflow-hidden group hover:shadow-xl transition-all duration-300 ring-1 ring-neutral-100 hover-lift">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                            <div className="p-2 bg-rose-50 rounded-xl group-hover:bg-rose-100 transition-colors">
+                                <Clock className="h-5 w-5 text-rose-600" />
+                            </div>
+                            <span className="text-[10px] font-black text-rose-600 bg-rose-50 px-2 py-1 rounded-lg uppercase tracking-wider">Assignments</span>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-1">
+                            <p className="text-3xl font-black text-neutral-800 tabular-nums tracking-tighter">
+                                {adminStats.pending_assignments || 0}
+                            </p>
+                            <CardTitle className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Pending Assignments</CardTitle>
                         </div>
                     </CardContent>
                 </Card>
@@ -289,6 +367,7 @@ const AdminDashboard = () => {
                     </div>
                 </CardContent>
             </Card>
+<<<<<<< HEAD
 
             {/* Compliance & Risk Alerts */}
             <Card className="glass-card border-none rounded-[2rem]">
@@ -408,6 +487,8 @@ const AdminDashboard = () => {
                     </div>
                 </CardContent>
             </Card>
+=======
+>>>>>>> f01dc3b2a8652e75c00d95c6c2546e3c221f38af
         </div>
     );
 };
@@ -416,21 +497,28 @@ const AdminDashboard = () => {
 // Operations Management Page
 // ============================================================
 const OperationsPage = () => {
+<<<<<<< HEAD
     const { cdcMetrics, sessions, kids, users, adminStats, assignChildToTherapist, realTherapists, realParents } = useApp();
+=======
+    const { cdcMetrics, sessions, kids, users, adminStats, assignChildToTherapist, unassignChildFromTherapist } = useApp();
+>>>>>>> f01dc3b2a8652e75c00d95c6c2546e3c221f38af
     const [selectedTherapist, setSelectedTherapist] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
     const assignedKids = useMemo(() => {
         if (!selectedTherapist) return [];
-        return kids.filter(k => k.therapistId === selectedTherapist.id);
+        return kids.filter(k => {
+            const ids = k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : []);
+            return ids.includes(selectedTherapist.id);
+        });
     }, [kids, selectedTherapist]);
 
     const availableKids = useMemo(() => {
         if (!selectedTherapist) return [];
-        return kids.filter(k =>
-            (!k.therapistId || k.therapistId !== selectedTherapist.id) &&
-            k.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        return kids.filter(k => {
+            const ids = k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : []);
+            return !ids.includes(selectedTherapist.id) && k.name.toLowerCase().includes(searchTerm.toLowerCase());
+        });
     }, [kids, selectedTherapist, searchTerm]);
 
     const usersMap = useMemo(() => {
@@ -460,7 +548,7 @@ const OperationsPage = () => {
                         <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center mb-3 mx-auto md:mx-0">
                             <Activity className="h-5 w-5 text-emerald-500" />
                         </div>
-                        <p className="text-2xl md:text-3xl font-black text-neutral-800 leading-none">{cdcMetrics.avgSessionsPerWeek}</p>
+                        <p className="text-2xl md:text-3xl font-black text-neutral-800 leading-none">0</p>
                         <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-2 px-1">Sess / Week</p>
                     </CardContent>
                 </Card>
@@ -478,7 +566,7 @@ const OperationsPage = () => {
                         <div className="h-10 w-10 bg-amber-50 rounded-xl flex items-center justify-center mb-3 mx-auto md:mx-0">
                             <Clock className="h-5 w-5 text-amber-500" />
                         </div>
-                        <p className="text-2xl md:text-3xl font-black text-neutral-800 leading-none">{cdcMetrics.waitlistSize}</p>
+                        <p className="text-2xl md:text-3xl font-black text-neutral-800 leading-none">0</p>
                         <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-2 px-1">Waitlist</p>
                     </CardContent>
                 </Card>
@@ -491,14 +579,22 @@ const OperationsPage = () => {
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+<<<<<<< HEAD
                         {((realTherapists && realTherapists.length > 0) ? realTherapists.map(t => ({ ...t, id: t.id || t._id, role: 'therapist' })) : users.filter(u => u.role === 'therapist')).map((therapist) => {
                             const assignedKidsCount = kids.filter(k => k.therapistId === therapist.id).length;
+=======
+                        {users.filter(u => u.role === 'therapist').map((therapist) => {
+                            const assignedKidsCount = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapist.id)).length;
+>>>>>>> f01dc3b2a8652e75c00d95c6c2546e3c221f38af
                             const utilization = Math.min(Math.round((assignedKidsCount / 15) * 100), 100);
 
                             return (
                                 <div key={therapist.id} className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 bg-neutral-50 rounded-[1.5rem] border border-neutral-100 hover:bg-white hover:shadow-lg transition-all">
                                     <div className="flex-1">
                                         <p className="font-black text-neutral-900 uppercase text-sm tracking-tight">{therapist.name}</p>
+                                        <p className="text-[10px] font-black text-primary-600 uppercase tracking-widest mt-0.5">
+                                            {therapist.specialization}
+                                        </p>
                                         <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">
                                             {assignedKidsCount} patients assigned
                                         </p>
@@ -540,23 +636,35 @@ const OperationsPage = () => {
                     <div className="mb-6 bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
                         <h4 className="text-xs font-black text-neutral-400 uppercase tracking-widest mb-3">Currently Assigned ({assignedKids.length})</h4>
                         {assignedKids.length > 0 ? (
-                            <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                            <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
                                 {assignedKids.map(kid => (
                                     <div key={kid.id} className="flex items-center justify-between p-2 bg-white rounded-xl border border-neutral-200 shadow-sm">
                                         <div className="flex items-center gap-3">
                                             <div className="h-8 w-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs">
                                                 {kid.name.charAt(0)}
                                             </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-neutral-900">{kid.name}</p>
-                                                <p className="text-[10px] text-neutral-500 uppercase tracking-wide">{kid.id}</p>
+                                            <div className="space-y-0.5">
+                                                <p className="text-sm font-black text-neutral-900 uppercase tracking-tight">{kid.name}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[9px] font-black text-neutral-400 uppercase tracking-widest">{kid.id}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1 mt-1">
+                                                    <Clock className="h-2.5 w-2.5 text-amber-500" />
+                                                    <p className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">
+                                                        Started: <span className="text-neutral-700">
+                                                            {((kid.therapy_start_dates && kid.therapy_start_dates[selectedTherapist.id]) || kid.therapy_start_date || kid.enrollmentDate || kid.created_at)
+                                                                ? new Date((kid.therapy_start_dates && kid.therapy_start_dates[selectedTherapist.id]) || kid.therapy_start_date || kid.enrollmentDate || kid.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                                                                : 'Not set'}
+                                                        </span>
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 px-3 text-[10px] font-black uppercase"
-                                            onClick={() => assignChildToTherapist(kid.id, null)}
+                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 h-9 px-4 text-[10px] font-black uppercase rounded-xl border border-transparent hover:border-red-100 transition-all"
+                                            onClick={() => unassignChildFromTherapist(kid.id, selectedTherapist.id)}
                                         >
                                             Unassign
                                         </Button>
@@ -593,7 +701,11 @@ const OperationsPage = () => {
                                         <div>
                                             <p className="text-sm font-bold text-neutral-900">{kid.name}</p>
                                             <p className="text-[10px] text-neutral-500 uppercase tracking-wide">
-                                                {kid.therapistId ? `Assigned to ${usersMap[kid.therapistId]?.name || kid.therapistId}` : 'Unassigned'}
+                                                {(kid.therapistIds && kid.therapistIds.length > 0)
+                                                    ? `Assigned to: ${kid.therapistIds.map(id => usersMap[id]?.name || id).join(', ')}`
+                                                    : (kid.therapistId
+                                                        ? `Assigned to ${usersMap[kid.therapistId]?.name || kid.therapistId}`
+                                                        : 'Unassigned')}
                                             </p>
                                         </div>
                                     </div>
@@ -624,7 +736,7 @@ const OperationsPage = () => {
                         {['Therapy Room A', 'Therapy Room B', 'Sensory Room', 'Group Room'].map((room, idx) => (
                             <div key={idx} className="p-4 border border-neutral-200 rounded-xl text-center">
                                 <p className="font-medium text-neutral-800">{room}</p>
-                                <p className="text-2xl font-bold text-primary-600 mt-2">{70 + Math.random() * 25 | 0}%</p>
+                                <p className="text-2xl font-bold text-primary-600 mt-2">0%</p>
                                 <p className="text-xs text-neutral-500">Today's usage</p>
                             </div>
                         ))}
@@ -641,13 +753,7 @@ const OperationsPage = () => {
 const ReportsPage = () => {
     const [selectedReport, setSelectedReport] = useState(null);
 
-    const reports = [
-        { id: 1, name: 'Monthly Progress Summary', type: 'Clinical', date: '2025-12-01', status: 'ready' },
-        { id: 2, name: 'Therapist Performance Report', type: 'Operations', date: '2025-12-01', status: 'ready' },
-        { id: 3, name: 'Parent Satisfaction Survey', type: 'Satisfaction', date: '2025-11-15', status: 'ready' },
-        { id: 4, name: 'Compliance Audit Report', type: 'Compliance', date: '2025-11-01', status: 'ready' },
-        { id: 5, name: 'Financial Summary Q4', type: 'Financial', date: '2025-12-15', status: 'pending' },
-    ];
+    const reports = [];
 
     return (
         <div className="space-y-6">
@@ -707,7 +813,7 @@ const ReportsPage = () => {
                 </CardHeader>
                 <CardContent className="p-4 md:p-6">
                     <div className="grid grid-cols-1 gap-4">
-                        {reports.map(report => (
+                        {reports.length > 0 ? reports.map(report => (
                             <div
                                 key={report.id}
                                 className="flex flex-col sm:flex-row sm:items-center justify-between p-5 md:p-6 border border-neutral-100 rounded-[1.5rem] hover:bg-neutral-50 transition-all gap-6 shadow-sm hover:shadow-md"
@@ -742,7 +848,12 @@ const ReportsPage = () => {
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="text-center py-12 text-neutral-400">
+                                <FileBarChart className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                                <p className="font-black uppercase tracking-widest text-[10px]">No clinical reports available</p>
+                            </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -750,140 +861,7 @@ const ReportsPage = () => {
     );
 };
 
-// ============================================================
-// Compliance & Audit Page
-// ============================================================
-const CompliancePage = () => {
-    const { auditLogs, consentRecords, cdcMetrics } = useApp();
-    const [activeTab, setActiveTab] = useState('audit');
 
-    return (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-2xl font-bold text-neutral-800">Compliance & Audit</h2>
-                <p className="text-neutral-500">Monitor compliance and view audit logs</p>
-            </div>
-
-            {/* Compliance Overview */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-none shadow-lg shadow-emerald-100 rounded-2xl md:rounded-[2rem]">
-                    <CardContent className="p-4 md:p-6">
-                        <ShieldAlert className="h-6 w-6 text-emerald-100 mb-2" />
-                        <p className="text-2xl md:text-3xl font-black">{cdcMetrics.complianceScore}%</p>
-                        <p className="text-[10px] font-black text-emerald-100 uppercase tracking-widest mt-1">Audit Score</p>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
-                    <CardContent className="p-4 md:p-6">
-                        <CheckCircle2 className="h-6 w-6 text-emerald-500 mb-2" />
-                        <p className="text-2xl md:text-3xl font-black text-neutral-800">{consentRecords.filter(c => c.status === 'active').length}</p>
-                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Active Consents</p>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
-                    <CardContent className="p-4 md:p-6">
-                        <Activity className="h-6 w-6 text-primary-500 mb-2" />
-                        <p className="text-2xl md:text-3xl font-black text-neutral-800">{auditLogs.length}</p>
-                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Audit Logs</p>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
-                    <CardContent className="p-4 md:p-6">
-                        <Calendar className="h-6 w-6 text-amber-500 mb-2" />
-                        <p className="text-2xl md:text-3xl font-black text-neutral-800">0</p>
-                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Pending Review</p>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex gap-2 border-b border-neutral-200">
-                <button
-                    className={`px-4 py-2 font-medium transition-colors ${activeTab === 'audit' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-neutral-500'
-                        }`}
-                    onClick={() => setActiveTab('audit')}
-                >
-                    Audit Logs
-                </button>
-                <button
-                    className={`px-4 py-2 font-medium transition-colors ${activeTab === 'consent' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-neutral-500'
-                        }`}
-                    onClick={() => setActiveTab('consent')}
-                >
-                    Consent Records
-                </button>
-            </div>
-
-            {/* Audit Logs */}
-            {activeTab === 'audit' && (
-                <Card className="rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200 overflow-hidden">
-                    <CardHeader className="bg-neutral-50/50 border-b border-neutral-100">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg font-black text-neutral-800 uppercase tracking-tight">Recent Audit Events</CardTitle>
-                            <Button variant="outline" className="rounded-xl font-black text-xs uppercase h-10 px-4">
-                                <Download className="h-4 w-4 mr-2" />
-                                Export
-                            </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="p-4 md:p-6">
-                        <div className="grid grid-cols-1 gap-3">
-                            {auditLogs.map(log => (
-                                <div key={log.id} className="flex flex-col sm:flex-row sm:items-start gap-4 p-4 bg-neutral-50 rounded-2xl border border-neutral-100 hover:bg-white hover:shadow-lg transition-all">
-                                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 ${log.action.includes('CREATE') ? 'bg-emerald-100 text-emerald-600' :
-                                        log.action.includes('UPDATE') ? 'bg-amber-100 text-amber-600' :
-                                            log.action.includes('LOGIN') ? 'bg-primary-100 text-primary-600' : 'bg-neutral-100 text-neutral-600'
-                                        }`}>
-                                        <Activity className="h-6 w-6" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
-                                            <p className="font-black text-neutral-900 uppercase text-sm tracking-tight">{log.action.replace(/_/g, ' ')}</p>
-                                            <span className="text-[9px] font-black text-neutral-400 uppercase tracking-widest">{new Date(log.timestamp).toLocaleString()}</span>
-                                        </div>
-                                        <p className="text-xs font-medium text-neutral-500 leading-relaxed mb-2">{log.details}</p>
-                                        <div className="flex items-center gap-2">
-                                            <div className="h-5 w-5 rounded-full bg-neutral-200 shrink-0" />
-                                            <p className="text-[10px] font-black text-neutral-900 uppercase tracking-tight">Actor: {log.userName}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* Consent Records */}
-            {activeTab === 'consent' && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Consent Management</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            {consentRecords.map(consent => (
-                                <div key={consent.id} className="flex items-center justify-between p-4 border border-neutral-200 rounded-xl">
-                                    <div>
-                                        <p className="font-medium text-neutral-800">{consent.description}</p>
-                                        <p className="text-sm text-neutral-500">
-                                            Granted: {new Date(consent.grantedAt).toLocaleDateString()} •
-                                            Expires: {new Date(consent.expiresAt).toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${consent.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                        }`}>
-                                        {consent.status.charAt(0).toUpperCase() + consent.status.slice(1)}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-        </div>
-    );
-};
 
 // ============================================================
 // Admin Portal Router
@@ -901,7 +879,6 @@ const AdminPortal = () => {
         { label: 'Operations', path: '/admin/operations', icon: Building2 },
         { label: 'Users', path: '/admin/users', icon: Users },
         { label: 'Reports', path: '/admin/reports', icon: FileBarChart },
-        { label: 'Compliance', path: '/admin/compliance', icon: ShieldAlert },
     ];
 
     return (
@@ -911,7 +888,6 @@ const AdminPortal = () => {
                 <Route path="operations" element={<OperationsPage />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="reports" element={<ReportsPage />} />
-                <Route path="compliance" element={<CompliancePage />} />
                 <Route path="*" element={<Navigate to="overview" replace />} />
             </Route>
         </Routes>

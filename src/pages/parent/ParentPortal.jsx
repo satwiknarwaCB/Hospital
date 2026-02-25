@@ -347,26 +347,26 @@ const ParentDashboard = () => {
     const therapyProgress = [
         {
             name: 'Speech Therapy',
-            val: skillScores.find(s => s.domain.toLowerCase().includes('language'))?.score || 65,
-            trend: 'improving',
+            val: skillScores.find(s => s.domain.toLowerCase().includes('language'))?.score || 0,
+            trend: 'stable',
             color: 'text-violet-500'
         },
         {
             name: 'Occupational Therapy',
-            val: skillScores.find(s => s.domain.toLowerCase().includes('sensory') || s.domain.toLowerCase().includes('interaction'))?.score || 58,
-            trend: 'improving',
+            val: skillScores.find(s => s.domain.toLowerCase().includes('sensory') || s.domain.toLowerCase().includes('interaction'))?.score || 0,
+            trend: 'stable',
             color: 'text-orange-500'
         },
         {
             name: 'Physical Therapy',
-            val: skillScores.find(s => s.domain.toLowerCase().includes('motor'))?.score || 45,
+            val: skillScores.find(s => s.domain.toLowerCase().includes('motor'))?.score || 0,
             trend: 'stable',
             color: 'text-blue-500'
         },
         {
             name: 'Behavioral Therapy',
-            val: skillScores.find(s => s.domain.toLowerCase().includes('emotional') || s.domain.toLowerCase().includes('regulation'))?.score || 72,
-            trend: 'improving',
+            val: skillScores.find(s => s.domain.toLowerCase().includes('emotional') || s.domain.toLowerCase().includes('regulation'))?.score || 0,
+            trend: 'stable',
             color: 'text-green-500'
         }
     ];

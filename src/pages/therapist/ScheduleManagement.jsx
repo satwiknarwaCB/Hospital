@@ -4,6 +4,7 @@
 // ============================================================
 
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Calendar,
     Clock,
@@ -171,9 +172,16 @@ const SessionDetailModal = ({ session, child, onClose, onStatusChange }) => {
                     <div className="flex gap-2 mt-6">
                         {session.status === 'scheduled' && (
                             <>
-                                <Button className="flex-1" onClick={() => onStatusChange(session.id, 'start')}>
-                                    Start Session
-                                </Button>
+                                {new Date(session.date) > new Date() ? (
+                                    <div className="flex-1 p-3 bg-blue-50 border border-blue-100 rounded-lg text-center">
+                                        <p className="text-xs text-blue-600 font-medium">Future Session</p>
+                                        <p className="text-[10px] text-blue-400">Can be started after {new Date(session.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                    </div>
+                                ) : (
+                                    <Button className="flex-1" onClick={() => onStatusChange(session.id, 'start')}>
+                                        Start Session
+                                    </Button>
+                                )}
                                 <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
                                     Cancel
                                 </Button>
@@ -192,11 +200,11 @@ const SessionDetailModal = ({ session, child, onClose, onStatusChange }) => {
 };
 
 // New Session Modal
-const NewSessionModal = ({ kidsList = [], onSave, onClose, isLoading }) => {
+const NewSessionModal = ({ kidsList = [], onSave, onClose, isLoading, initialDate }) => {
     const [formData, setFormData] = useState({
         childId: kidsList[0]?.id || '',
         type: THERAPY_TYPES?.[0]?.name || '',
-        date: new Date().toISOString().split('T')[0],
+        date: initialDate ? initialDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         time: '10:00',
         duration: 45,
         location: ''
@@ -349,6 +357,7 @@ const NewSessionModal = ({ kidsList = [], onSave, onClose, isLoading }) => {
 // Main Schedule Component
 const ScheduleManagement = () => {
     const { currentUser, kids, sessions, addSession, addNotification } = useApp();
+    const navigate = useNavigate();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [viewMode, setViewMode] = useState('week'); // week or month
@@ -472,6 +481,24 @@ const ScheduleManagement = () => {
             setIsLoading(false);
         }
     };
+
+    const handleStatusChange = (sessionId, action) => {
+        if (action === 'start') {
+            const session = safeSessions.find(s => s.id === sessionId);
+            if (session) {
+                navigate('/therapist/log', {
+                    state: {
+                        childId: session.childId,
+                        sessionId: session.id,
+                        sessionType: session.type,
+                        sessionDate: session.date,
+                        sessionDuration: session.duration
+                    }
+                });
+            }
+        }
+    };
+
 
     return (
         <div className="space-y-6">
@@ -609,6 +636,7 @@ const ScheduleManagement = () => {
                     onSave={handleNewSession}
                     onClose={() => setShowNewSession(false)}
                     isLoading={isLoading}
+                    initialDate={selectedDate}
                 />
             )}
 
@@ -617,7 +645,7 @@ const ScheduleManagement = () => {
                     session={selectedSession.session}
                     child={selectedSession.child}
                     onClose={() => setSelectedSession(null)}
-                    onStatusChange={(id, action) => console.log('Status change:', id, action)}
+                    onStatusChange={handleStatusChange}
                 />
             )}
         </div>

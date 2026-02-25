@@ -20,74 +20,62 @@ import {
     DOCUMENTS,
     PERIODIC_REVIEWS
 } from '../data/mockData';
-import { sessionAPI, communityAPI, messagesAPI, progressAPI, userManagementAPI } from './api';
+import { sessionAPI, communityAPI, messagesAPI, progressAPI, userManagementAPI, roadmapAPI } from './api';
 import { cryptoUtils } from './crypto';
 
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
     // ============ Core State ============
-    const [users] = useState(USERS);
+    const [users] = useState([]);
     const [realChildren, setRealChildren] = useState([]);
-    const [kids, setKids] = useState(CHILDREN);
-    const [sessions, setSessions] = useState(SESSIONS);
-    const [skillScores, setSkillScores] = useState(SKILL_SCORES);
+    const [kids, setKids] = useState([]);
+    const [sessions, setSessions] = useState([]);
+    const [skillScores, setSkillScores] = useState([]);
     const [roadmap, setRoadmap] = useState(() => {
         const saved = localStorage.getItem('neurobridge_roadmap');
-        return saved ? JSON.parse(saved) : ROADMAP;
+        return saved ? JSON.parse(saved) : [];
     });
-    const [homeActivities, setHomeActivities] = useState(HOME_ACTIVITIES);
-    const [messages, setMessages] = useState(MESSAGES);
-    const [consentRecords] = useState(CONSENT_RECORDS);
-    const [auditLogs, setAuditLogs] = useState(AUDIT_LOGS);
-    const [cdcMetrics] = useState(CDC_METRICS);
-    const [periodicReviews, setPeriodicReviews] = useState(PERIODIC_REVIEWS);
+    const [homeActivities, setHomeActivities] = useState([]);
+    const [messages, setMessages] = useState([]);
+    const [consentRecords] = useState([]);
+    const [auditLogs, setAuditLogs] = useState([]);
+    const [cdcMetrics] = useState({
+        activeChildren: 0,
+        waitlistSize: 0,
+        therapistCount: 0,
+        monthlyRevenue: 0,
+        revenueTarget: 0,
+        totalHours: 0
+    });
+    const [periodicReviews, setPeriodicReviews] = useState([]);
     const [adminStats, setAdminStats] = useState({
-        therapist_count: CDC_METRICS.therapistCount,
-        parent_count: 2, // Mock baseline
-        child_count: CDC_METRICS.activeChildren,
-        active_children: CDC_METRICS.activeChildren
+        therapist_count: 0,
+        parent_count: 0,
+        child_count: 0,
+        active_children: 0,
+        ongoing_therapies: 0,
+        pending_assignments: 0
     });
     const [skillProgress, setSkillProgress] = useState(() => {
         const saved = localStorage.getItem('neurobridge_skill_progress');
-        return saved ? JSON.parse(saved) : SKILL_PROGRESS;
+        return saved ? JSON.parse(saved) : [];
     });
     const [skillGoals, setSkillGoals] = useState(() => {
         const saved = localStorage.getItem('neurobridge_skill_goals');
-        return saved ? JSON.parse(saved) : SKILL_GOALS;
+        return saved ? JSON.parse(saved) : [];
     });
     const [childDocuments, setChildDocuments] = useState(() => {
         const saved = localStorage.getItem('neurobridge_documents');
-        return saved ? JSON.parse(saved) : DOCUMENTS;
+        return saved ? JSON.parse(saved) : [];
     });
     const [communityUnreadCount, setCommunityUnreadCount] = useState(0);
     const [privateUnreadCount, setPrivateUnreadCount] = useState(0);
     const notifiedMessageIds = useRef(new Set());
+    const isMigratingRoadmap = useRef(false);
     const [quickTestResults, setQuickTestResults] = useState(() => {
         const saved = localStorage.getItem('neurobridge_quick_test_results');
-        let results = saved ? JSON.parse(saved) : [];
-
-        // Ensure all results have the proper structure
-        results = results.filter(r => r && typeof r === 'object' && Array.isArray(r.games));
-
-        // Add a sample result if none exists to ensure "Show Result Game" works for demo
-        if (results.length === 0) {
-            results = [{
-                id: 'demo-result',
-                childId: 'c1',
-                date: new Date(Date.now() - 86400000).toISOString(),
-                games: Array(6).fill(0).map((_, i) => ({
-                    id: `g${i}`,
-                    results: { score: 85 + i },
-                    timestamp: new Date().toISOString()
-                })),
-                summary: {
-                    score: 88,
-                    interpretation: "Aarav is showing great progress in communication and sensory focus. His engagement in joint attention activities has improved by 15%."
-                }
-            }];
-        }
-        return results;
+        return saved ? JSON.parse(saved) : [];
     });
     const [quickTestProgress, setQuickTestProgress] = useState(() => {
         const saved = localStorage.getItem('neurobridge_quick_test_progress');
@@ -118,6 +106,7 @@ export const AppProvider = ({ children }) => {
     useEffect(() => {
         localStorage.setItem('neurobridge_roadmap', JSON.stringify(roadmap));
     }, [roadmap]);
+
 
     useEffect(() => {
         const handleStorage = (e) => {
@@ -165,6 +154,61 @@ export const AppProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [realTherapists, setRealTherapists] = useState([]);
     const [realParents, setRealParents] = useState([]);
+
+    // Data Migration Bridge: Move LocalStorage Roadmap to MongoDB
+    useEffect(() => {
+        const migrateRoadmap = async () => {
+            if (isMigratingRoadmap.current) return;
+
+            const localData = roadmap.filter(r => !r._id && !r.isMigrated);
+            if (localData.length === 0) return;
+
+            isMigratingRoadmap.current = true;
+            console.log(`🚀 [Migration] Found ${localData.length} roadmap items to migrate...`);
+
+            try {
+                const results = [];
+                for (const item of localData) {
+                    try {
+                        const { id, ...cleanItem } = item;
+                        const savedItem = await roadmapAPI.createGoal(cleanItem);
+                        results.push({ oldId: item.id, newItem: savedItem });
+                    } catch (err) {
+                        console.error(`❌ [Migration] Failed to migrate ${item.title}:`, err);
+                    }
+                }
+
+                if (results.length > 0) {
+                    setRoadmap(prev => {
+                        let updated = [...prev];
+                        results.forEach(({ oldId, newItem }) => {
+                            updated = updated.map(r =>
+                                (r.id === oldId) ? { ...newItem, id: newItem._id, isMigrated: true } : r
+                            );
+                        });
+                        return updated;
+                    });
+                }
+            } finally {
+                isMigratingRoadmap.current = false;
+            }
+        };
+
+        if (isAuthenticated && currentUser) {
+            migrateRoadmap();
+        }
+    }, [isAuthenticated, currentUser, roadmap]);
+
+    // ============ Audit Log Actions ============
+    const addAuditLog = useCallback((log) => {
+        const newLog = {
+            ...log,
+            id: `audit${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            ipAddress: '192.168.1.100' // Mock IP
+        };
+        setAuditLogs(prev => [newLog, ...prev]);
+    }, []);
 
     const refreshChildren = useCallback(async () => {
         try {
@@ -462,54 +506,56 @@ export const AppProvider = ({ children }) => {
     }, [isAuthenticated, currentUser]);
 
     // Production-Level Session Synchronization
-    useEffect(() => {
-        const syncSessionsFromCloud = async () => {
-            if (!isAuthenticated || !currentUser) return;
+    const refreshSessions = useCallback(async () => {
+        if (!isAuthenticated || !currentUser) return;
 
-            try {
-                let cloudSessions = [];
+        try {
+            console.log('🔄 Refreshing sessions from cloud...');
+            let cloudSessions = [];
 
-                if (currentUser.role === 'parent' && currentUser.childId) {
-                    cloudSessions = await sessionAPI.getByChild(currentUser.childId);
-                } else if (currentUser.role === 'therapist') {
-                    cloudSessions = await sessionAPI.getByTherapist(currentUser.id);
-                }
-
-                if (cloudSessions.length > 0) {
-                    const normalizedSessions = cloudSessions.map(s => ({
-                        ...s,
-                        id: s.id || s._id,
-                        _id: s.id || s._id,
-                        childId: s.childId || s.child_id,
-                        therapistId: s.therapistId || s.therapist_id
-                    }));
-
-                    setSessions(prev => {
-                        const sessionMap = new Map();
-                        // Add cloud sessions first (source of truth)
-                        normalizedSessions.forEach(s => sessionMap.set(s.id, s));
-                        // Add local sessions if they don't exist by ID or content (date + child)
-                        prev.forEach(s => {
-                            const sId = s.id || s._id;
-                            if (!sessionMap.has(sId)) {
-                                const isDuplicate = Array.from(sessionMap.values()).some(existing =>
-                                    existing.childId === s.childId &&
-                                    existing.date === s.date &&
-                                    existing.type === s.type
-                                );
-                                if (!isDuplicate) sessionMap.set(sId, s);
-                            }
-                        });
-                        return Array.from(sessionMap.values());
-                    });
-                }
-            } catch (err) {
-                console.error('❌ Cloud Session Sync Failed:', err);
+            if (currentUser.role === 'parent' && currentUser.childId) {
+                cloudSessions = await sessionAPI.getByChild(currentUser.childId);
+            } else if (currentUser.role === 'therapist') {
+                cloudSessions = await sessionAPI.getByTherapist(currentUser.id);
             }
-        };
 
-        syncSessionsFromCloud();
+            if (cloudSessions.length > 0) {
+                const normalizedSessions = cloudSessions.map(s => ({
+                    ...s,
+                    id: s.id || s._id,
+                    _id: s.id || s._id,
+                    childId: s.childId || s.child_id,
+                    therapistId: s.therapistId || s.therapist_id
+                }));
+
+                setSessions(prev => {
+                    const sessionMap = new Map();
+                    // Add cloud sessions first (source of truth)
+                    normalizedSessions.forEach(s => sessionMap.set(s.id, s));
+                    // Add local sessions if they don't exist by ID or content (date + child)
+                    prev.forEach(s => {
+                        const sId = s.id || s._id;
+                        if (!sessionMap.has(sId)) {
+                            const isDuplicate = Array.from(sessionMap.values()).some(existing =>
+                                existing.childId === s.childId &&
+                                existing.date === s.date &&
+                                existing.type === s.type
+                            );
+                            if (!isDuplicate) sessionMap.set(sId, s);
+                        }
+                    });
+                    return Array.from(sessionMap.values());
+                });
+            }
+        } catch (err) {
+            console.error('❌ Cloud Session Sync Failed:', err);
+        }
     }, [isAuthenticated, currentUser]);
+
+    useEffect(() => {
+        refreshSessions();
+    }, [refreshSessions]);
+
 
     // Production-Level Periodic Review Synchronization
     useEffect(() => {
@@ -644,7 +690,7 @@ export const AppProvider = ({ children }) => {
 
                 // Therapist View: Fetch for their active caseload
                 if (currentUser.role === 'therapist') {
-                    const therapistKids = kids.filter(k => k.therapistId === currentUser.id);
+                    const therapistKids = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(currentUser.id));
                     for (const kid of therapistKids) {
                         try {
                             const [goals, progress] = await Promise.all([
@@ -843,16 +889,7 @@ export const AppProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // ============ Audit Log Actions ============
-    const addAuditLog = useCallback((log) => {
-        const newLog = {
-            ...log,
-            id: `audit${Date.now()}`,
-            timestamp: new Date().toISOString(),
-            ipAddress: '192.168.1.100' // Mock IP
-        };
-        setAuditLogs(prev => [newLog, ...prev]);
-    }, []);
+
 
     // ============ Auth Actions ============
     const login = useCallback((role, id) => {
@@ -921,11 +958,30 @@ export const AppProvider = ({ children }) => {
         };
 
         setSessions(prev => {
-            const current = replaceId ? prev.filter(s => s.id !== replaceId) : prev;
-            const exists = current.some(s => s.id === sessionWithId.id || (s.date === sessionWithId.date && s.childId === sessionWithId.childId));
-            if (exists) return prev;
+            // 1. Remove session if we're replacing an existing one
+            let current = prev;
+            if (replaceId) {
+                current = prev.filter(s => s.id !== replaceId && s._id !== replaceId);
+            }
+
+            // 2. Check if this exact session (by database ID) already exists
+            const alreadyExists = current.some(s => (s.id === sessionWithId.id && s.id) || (s._id === sessionWithId._id && s._id));
+            if (alreadyExists) return prev;
+
+            // 3. Check for clinical duplicates (same child, same time, SAME TYPE)
+            // Note: Multiple types at same time is valid in our system (multi-fork)
+            const clinicalDuplicate = current.some(s =>
+                s.childId === sessionWithId.childId &&
+                s.date === sessionWithId.date &&
+                s.type === sessionWithId.type &&
+                s.status === sessionWithId.status
+            );
+
+            if (clinicalDuplicate) return prev;
+
             return [sessionWithId, ...current];
         });
+
 
         // Log audit event
         const childName = kids.find(k => k.id === newSession.childId)?.name || 'Unknown';
@@ -961,7 +1017,7 @@ export const AppProvider = ({ children }) => {
     }, [kids]);
 
     const getChildrenByTherapist = useCallback((therapistId) => {
-        return kids.filter(k => k.therapistId === therapistId);
+        return kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
     }, [kids]);
 
     const getChildrenByParent = useCallback((parentId) => {
@@ -977,32 +1033,92 @@ export const AppProvider = ({ children }) => {
     }, []);
 
     const assignChildToTherapist = useCallback(async (childId, therapistId) => {
-        // Optimistic update
-        setKids(prev => prev.map(k =>
-            k.id === childId
-                ? { ...k, therapistId: therapistId }
-                : k
-        ));
+        console.log(`[AppProvider] Assigning child ${childId} to therapist ${therapistId}`);
+        // 1. Optimistic Update
+        setKids(prev => prev.map(k => {
+            if (k.id === childId) {
+                const currentIds = k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : []);
+                if (!currentIds.includes(therapistId)) {
+                    const currentStartDates = k.therapy_start_dates || {};
+                    return {
+                        ...k,
+                        therapistIds: [...currentIds, therapistId],
+                        therapistId: therapistId,
+                        therapy_start_dates: {
+                            ...currentStartDates,
+                            [therapistId]: new Date().toISOString()
+                        }
+                    };
+                }
+            }
+            return k;
+        }));
 
         try {
-            await userManagementAPI.assignTherapist(childId, therapistId);
-            // Refresh to ensure we have the latest server state
+            // 2. API Call
+            const response = await userManagementAPI.assignTherapist(childId, therapistId);
+            console.log(`[AppProvider] Successfully assigned therapist. API Response:`, response);
+
+            // 3. Final State Sync (using response)
+            if (response && response.therapistIds) {
+                setKids(prev => prev.map(k =>
+                    k.id === childId ? { ...k, therapistIds: response.therapistIds, therapistId: therapistId } : k
+                ));
+            }
+
+            // 4. Background Refresh
             refreshChildren();
+
         } catch (err) {
-            console.error("Failed to persist therapist assignment:", err);
-            // Revert on failure could be added here
+            console.error("Failed to assign therapist:", err);
+            // 5. Revert on error via refresh
+            refreshChildren();
         }
 
-        // Log audit event
-        const childName = kids.find(k => k.id === childId)?.name || 'Unknown Child';
-        const action = therapistId ? 'ASSIGN_THERAPIST' : 'UNASSIGN_THERAPIST';
         addAuditLog({
-            action: action,
+            action: 'ASSIGN_THERAPIST',
             userId: currentUser?.id,
             userName: currentUser?.name,
-            details: `${action === 'ASSIGN_THERAPIST' ? 'Assigned' : 'Unassigned'} ${childName} ${therapistId ? `to therapist ${therapistId}` : 'from therapist'}`
+            details: `Assigned child ${childId} to therapist ${therapistId}`
         });
-    }, [currentUser, kids, refreshChildren]);
+    }, [currentUser, refreshChildren, addAuditLog]);
+
+    const unassignChildFromTherapist = useCallback(async (childId, therapistId) => {
+        console.log(`[AppProvider] Unassigning child ${childId} from therapist ${therapistId}`);
+        // 1. Optimistic Update
+        setKids(prev => prev.map(k => {
+            if (k.id === childId) {
+                const currentIds = k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : []);
+                const newIds = currentIds.filter(id => id !== therapistId);
+                return {
+                    ...k,
+                    therapistIds: newIds,
+                    therapistId: newIds[0] || null
+                };
+            }
+            return k;
+        }));
+
+        try {
+            // 2. API Call
+            await userManagementAPI.unassignTherapist(childId, therapistId);
+            console.log(`[AppProvider] Successfully unassigned therapist via API`);
+
+            // 3. Background Refresh
+            refreshChildren();
+        } catch (err) {
+            console.error("Failed to unassign therapist:", err);
+            // 4. Revert on error via refresh
+            refreshChildren();
+        }
+
+        addAuditLog({
+            action: 'UNASSIGN_THERAPIST',
+            userId: currentUser?.id,
+            userName: currentUser?.name,
+            details: `Unassigned child ${childId} from therapist ${therapistId}`
+        });
+    }, [currentUser, refreshChildren, addAuditLog]);
 
     const addChild = useCallback(async (childData) => {
         try {
@@ -1056,6 +1172,20 @@ export const AppProvider = ({ children }) => {
         }
     }, [currentUser]);
 
+    const addDocument = useCallback((doc) => {
+        const newDoc = {
+            ...doc,
+            id: doc.id || `doc-${Date.now()}`,
+            date: doc.date || new Date().toISOString().split('T')[0]
+        };
+        setChildDocuments(prev => [newDoc, ...prev]);
+        return newDoc;
+    }, []);
+
+    const deleteDocument = useCallback((docId) => {
+        setChildDocuments(prev => prev.filter(d => d.id !== docId));
+    }, []);
+
     // ============ Skill Score Actions ============
     const getChildSkillScores = useCallback((childId, limit = null) => {
         const scores = skillScores
@@ -1079,21 +1209,99 @@ export const AppProvider = ({ children }) => {
     }, [skillScores]);
 
     // ============ Roadmap Actions ============
+    const refreshRoadmap = useCallback(async (childId) => {
+        if (!childId) return;
+        try {
+            const data = await roadmapAPI.getByChild(childId);
+            setRoadmap(prev => {
+                // Keep other kids
+                const otherKids = prev.filter(r => r.childId !== childId);
+
+                // Keep local items for THIS child that aren't on the server yet (those without _id)
+                const localUnsaved = prev.filter(r => r.childId === childId && !r._id && !r.isMigrated);
+
+                // Deduplicate server data against localUnsaved by title/domain to be extra safe
+                const serverData = data.map(item => ({ ...item, id: item._id || item.id }));
+
+                // Extra safety: Deduplicate items from server itself if DB has duplicates
+                const uniqueServerData = [];
+                const seenServer = new Set();
+                serverData.forEach(s => {
+                    const key = `${s.domain}-${s.title}`;
+                    if (!seenServer.has(key)) {
+                        seenServer.add(key);
+                        uniqueServerData.push(s);
+                    }
+                });
+
+                const filteredServer = uniqueServerData.filter(s =>
+                    !localUnsaved.some(l => l.title === s.title && l.domain === s.domain)
+                );
+
+                return [...otherKids, ...localUnsaved, ...filteredServer];
+            });
+        } catch (err) {
+            console.error("Failed to fetch roadmap:", err);
+        }
+    }, []);
+
     const getChildRoadmap = useCallback((childId) => {
-        return roadmap
-            .filter(r => r.childId === childId)
+        const childRoadmap = roadmap.filter(r => r.childId === childId);
+
+        // Deduplicate items with the same title and domain to prevent "double double" display
+        const uniqueGoalsMap = new Map();
+        childRoadmap.forEach(item => {
+            const key = `${item.domain}-${item.title}`;
+            // If we have a duplicate, prioritize the one with an _id (backend item)
+            if (!uniqueGoalsMap.has(key) || (!uniqueGoalsMap.get(key)._id && item._id)) {
+                uniqueGoalsMap.set(key, item);
+            }
+        });
+
+        return Array.from(uniqueGoalsMap.values())
+            .map(r => {
+                const total = r.milestones?.length || 0;
+                const completed = r.milestones?.filter(m => m.completed).length || 0;
+                const progress = total > 0 ? Math.round((completed / total) * 100) : r.progress;
+                const targetDate = r.targetDate ? new Date(r.targetDate) : null;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const isOverdue = targetDate && targetDate < today && progress < 100;
+
+                let status = r.status;
+                if (progress === 100 && total > 0) {
+                    status = 'completed';
+                } else if (isOverdue) {
+                    status = 'at-risk';
+                }
+
+                return {
+                    ...r,
+                    progress,
+                    status
+                };
+            })
             .sort((a, b) => {
-                // Sort by status (in-progress first), then by target date
-                if (a.status === 'in-progress' && b.status !== 'in-progress') return -1;
-                if (b.status === 'in-progress' && a.status !== 'in-progress') return 1;
+                const statusOrder = { 'at-risk': 0, 'in-progress': 1, 'upcoming': 2, 'completed': 3 };
+                const orderA = statusOrder[a.status] ?? 4;
+                const orderB = statusOrder[b.status] ?? 4;
+                if (orderA !== orderB) return orderA - orderB;
                 return new Date(a.targetDate) - new Date(b.targetDate);
             });
     }, [roadmap]);
 
-    const updateRoadmapProgress = useCallback((roadmapId, updates) => {
+    const updateRoadmapProgress = useCallback(async (roadmapId, updates) => {
+        // Optimistic update
         setRoadmap(prev => prev.map(r =>
-            r.id === roadmapId ? { ...r, ...updates } : r
+            (r.id === roadmapId || r._id === roadmapId) ? { ...r, ...updates } : r
         ));
+
+        try {
+            await roadmapAPI.updateGoal(roadmapId, updates);
+        } catch (err) {
+            console.error("Failed to update roadmap goal:", err);
+            // We could revert here if needed, but usually a refresh will fix it
+        }
 
         addAuditLog({
             action: 'ROADMAP_UPDATED',
@@ -1105,9 +1313,11 @@ export const AppProvider = ({ children }) => {
         });
     }, [currentUser]);
 
-    const completeMilestone = useCallback((roadmapId, milestoneId) => {
+    const completeMilestone = useCallback(async (roadmapId, milestoneId) => {
+        let updatedGoal = null;
+
         setRoadmap(prev => prev.map(r => {
-            if (r.id === roadmapId) {
+            if (r.id === roadmapId || r._id === roadmapId) {
                 const updatedMilestones = r.milestones.map(m =>
                     m.id === milestoneId
                         ? { ...m, completed: true, date: new Date().toISOString().split('T')[0] }
@@ -1116,35 +1326,68 @@ export const AppProvider = ({ children }) => {
                 const completedCount = updatedMilestones.filter(m => m.completed).length;
                 const progress = Math.round((completedCount / updatedMilestones.length) * 100);
 
-                return { ...r, milestones: updatedMilestones, progress };
+                const status = progress === 100 ? 'completed' : r.status;
+                updatedGoal = { ...r, milestones: updatedMilestones, progress, status };
+                return updatedGoal;
             }
             return r;
         }));
+
+        if (updatedGoal) {
+            try {
+                await roadmapAPI.updateGoal(roadmapId, {
+                    milestones: updatedGoal.milestones,
+                    progress: updatedGoal.progress,
+                    status: updatedGoal.status
+                });
+            } catch (err) {
+                console.error("Failed to sync milestone completion:", err);
+            }
+        }
     }, []);
 
-    const addRoadmapGoal = useCallback((goalData) => {
-        const newGoal = {
-            ...goalData,
-            id: goalData.id || `r${Date.now()}`,
-            progress: goalData.progress || 0,
-            status: goalData.status || 'in-progress',
-            confidence: goalData.confidence || 70,
-            milestones: goalData.milestones || []
-        };
+    const addRoadmapGoal = useCallback(async (goalData) => {
+        try {
+            const response = await roadmapAPI.createGoal(goalData);
+            const newGoal = { ...response, id: response._id || response.id };
 
-        setRoadmap(prev => [...prev, newGoal]);
+            setRoadmap(prev => [...prev, newGoal]);
+
+            addAuditLog({
+                action: 'ROADMAP_GOAL_ADDED',
+                userId: currentUser?.id,
+                userName: currentUser?.name,
+                targetType: 'roadmap',
+                targetId: newGoal.id,
+                details: `Added new goal: ${goalData.title}`
+            });
+
+            return newGoal;
+        } catch (err) {
+            console.error("Failed to add roadmap goal:", err);
+            throw err;
+        }
+    }, [currentUser, addAuditLog]);
+
+    const deleteRoadmapGoal = useCallback(async (roadmapId) => {
+        // Optimistic delete
+        setRoadmap(prev => prev.filter(r => r.id !== roadmapId && r._id !== roadmapId));
+
+        try {
+            await roadmapAPI.deleteGoal(roadmapId);
+        } catch (err) {
+            console.error("Failed to delete roadmap goal:", err);
+        }
 
         addAuditLog({
-            action: 'ROADMAP_GOAL_ADDED',
+            action: 'ROADMAP_GOAL_DELETED',
             userId: currentUser?.id,
             userName: currentUser?.name,
             targetType: 'roadmap',
-            targetId: newGoal.id,
-            details: `Added new roadmap goal: ${newGoal.title}`
+            targetId: roadmapId,
+            details: 'Deleted roadmap goal'
         });
-
-        return newGoal;
-    }, [currentUser, addAuditLog]);
+    }, [currentUser]);
 
     // ============ Home Activity Actions ============
     const getChildHomeActivities = useCallback((childId) => {
@@ -1384,7 +1627,6 @@ export const AppProvider = ({ children }) => {
         }
     }, []);
 
-    // ============ Audit Log Actions ============
 
 
     // ============ Notification Actions ============
@@ -1632,9 +1874,8 @@ export const AppProvider = ({ children }) => {
         const safeKids = Array.isArray(kids) ? kids : [];
 
         const therapistSessions = safeSessions.filter(s => s && s.therapistId === therapistId);
-        const children = safeKids.filter(k => k && k.therapistId === therapistId);
+        const children = safeKids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
         const todayStr = new Date().toISOString().split('T')[0];
-
         const completedToday = therapistSessions.filter(s =>
             s && s.status === 'completed' &&
             s.date && typeof s.date === 'string' && s.date.startsWith(todayStr)
@@ -1653,16 +1894,65 @@ export const AppProvider = ({ children }) => {
         };
     }, [sessions, kids]);
 
+    // ============ Dynamic Derived State ============
+    const kidsWithStats = useMemo(() => {
+        return kids.map(child => {
+            const childId = child.id;
+            const childSessions = sessions
+                .filter(s => s.childId === childId && s.status === 'completed')
+                .map(s => s.date.split('T')[0]);
+
+            // Calculate Current Streak
+            const uniqueDates = [...new Set(childSessions)].sort((a, b) => new Date(b) - new Date(a));
+            let streak = 0;
+            if (uniqueDates.length > 0) {
+                const today = new Date().toISOString().split('T')[0];
+                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+                // If the most recent session wasn't today or yesterday, streak is 0
+                if (uniqueDates[0] === today || uniqueDates[0] === yesterday) {
+                    streak = 1;
+                    for (let i = 0; i < uniqueDates.length - 1; i++) {
+                        const current = new Date(uniqueDates[i]);
+                        const next = new Date(uniqueDates[i + 1]);
+                        const diffInDays = Math.round((current - next) / (1000 * 60 * 60 * 24));
+
+                        if (diffInDays === 1) {
+                            streak++;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Calculate School Ready Score (Avg of latest skills)
+            const latestScores = getLatestSkillScores(childId);
+            const schoolReadinessScore = latestScores.length > 0
+                ? Math.round(latestScores.reduce((a, b) => a + (b.score || 0), 0) / latestScores.length)
+                : 0;
+
+            return {
+                ...child,
+                streak,
+                schoolReadinessScore: child.schoolReadinessScore || schoolReadinessScore
+            };
+        });
+    }, [kids, sessions, getLatestSkillScores]);
+
     // ============ Context Value ============
     const value = useMemo(() => ({
         // State
         users: allUsers,
         realUsers: allUsers,
         refreshUsers,
-        kids,
+        kids: kidsWithStats,
         refreshChildren,
+
         sessions,
+        refreshSessions,
         skillScores,
+
         roadmap,
         homeActivities,
         messages,
@@ -1673,8 +1963,11 @@ export const AppProvider = ({ children }) => {
         adminStats,
         refreshAdminStats,
         realParents,
+<<<<<<< HEAD
         realTherapists,
         refreshUsers,
+=======
+>>>>>>> f01dc3b2a8652e75c00d95c6c2546e3c221f38af
         currentUser,
         isAuthenticated,
         notifications,
@@ -1701,6 +1994,7 @@ export const AppProvider = ({ children }) => {
         updateChildMood,
         assignChildToTherapist,
         addChild,
+        unassignChildFromTherapist,
 
         // Skill Score Actions
         getChildSkillScores,
@@ -1708,10 +2002,12 @@ export const AppProvider = ({ children }) => {
         getSkillHistory,
 
         // Roadmap Actions
+        refreshRoadmap,
         getChildRoadmap,
         updateRoadmapProgress,
         completeMilestone,
         addRoadmapGoal,
+        deleteRoadmapGoal,
         getPeriodicReviews,
         addPeriodicReview,
 
@@ -1787,11 +2083,8 @@ export const AppProvider = ({ children }) => {
 
             return merged.sort((a, b) => new Date(b.date) - new Date(a.date));
         },
-        addDocument: (doc) => {
-            const newDoc = { ...doc, id: `doc-${Date.now()}`, date: new Date().toISOString().split('T')[0] };
-            setChildDocuments(prev => [newDoc, ...prev]);
-            return newDoc;
-        },
+        addDocument,
+        deleteDocument,
 
         // UI Actions
         setIsLoading
@@ -1804,9 +2097,9 @@ export const AppProvider = ({ children }) => {
         consentRecords, auditLogs, cdcMetrics, adminStats, refreshAdminStats, currentUser, isAuthenticated,
         notifications, isLoading, login, logout, getChildSessions, getRecentSessions,
         addSession, getSessionsByTherapist, getTodaysSessions, getChildById,
-        getChildrenByTherapist, getChildrenByParent, updateChildMood, assignChildToTherapist, getChildSkillScores,
-        getLatestSkillScores, getSkillHistory, getChildRoadmap, updateRoadmapProgress,
-        completeMilestone, getChildHomeActivities, logActivityCompletion, getActivityAdherence,
+        getChildrenByTherapist, getChildrenByParent, updateChildMood, assignChildToTherapist, unassignChildFromTherapist, getChildSkillScores,
+        refreshRoadmap, getChildRoadmap, updateRoadmapProgress, completeMilestone, addRoadmapGoal, deleteRoadmapGoal,
+        getPeriodicReviews, addPeriodicReview,
         getActivityAdherence20Days, completeQuickTestGame, getLatestQuickTestResult,
         shareQuickTestResult,
         quickTestResults, quickTestProgress,
@@ -1817,7 +2110,11 @@ export const AppProvider = ({ children }) => {
         periodicReviews, addPeriodicReview,
         roadmap, addRoadmapGoal,
         skillGoals, getChildGoals, updateSkillGoal, addSkillGoal, deleteSkillGoal, deleteSkillProgress,
+<<<<<<< HEAD
         childDocuments, addChild, realParents, realTherapists
+=======
+        childDocuments, addChild, realParents, deleteDocument
+>>>>>>> f01dc3b2a8652e75c00d95c6c2546e3c221f38af
     ]);
 
     return (

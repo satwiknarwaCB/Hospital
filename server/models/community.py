@@ -94,7 +94,6 @@ class CommunityMemberResponse(BaseModel):
     email: str
     joined_at: datetime
     role: str = "parent"
-    avatar: Optional[str] = None
     
     class Config:
         json_encoders = {

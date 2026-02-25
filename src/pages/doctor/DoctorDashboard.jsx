@@ -117,7 +117,7 @@ const DoctorDashboard = () => {
                     </CardContent>
                 </Card>
 
-                <Card className="glass-card border-none hover:-translate-y-1 doctor-card-urgent">
+                <Card className="glass-card border-none hover:-translate-y-1">
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
                             <div className="p-2 bg-red-100 rounded-lg text-red-600">
@@ -125,8 +125,8 @@ const DoctorDashboard = () => {
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-widest text-red-500">Urgent</span>
                         </div>
-                        <p className="text-3xl font-black text-red-600 mb-1">3</p>
-                        <p className="text-xs font-bold text-red-400 uppercase tracking-tighter">Needs Review</p>
+                        <p className="text-3xl font-black text-neutral-800 mb-1">0</p>
+                        <p className="text-xs font-bold text-neutral-400 uppercase tracking-tighter">Needs Review</p>
                     </CardContent>
                 </Card>
 
@@ -138,7 +138,7 @@ const DoctorDashboard = () => {
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-widest text-blue-500">Today</span>
                         </div>
-                        <p className="text-3xl font-black text-neutral-800 mb-1">8</p>
+                        <p className="text-3xl font-black text-neutral-800 mb-1">0</p>
                         <p className="text-xs font-bold text-neutral-400 uppercase tracking-tighter">Appointments</p>
                     </CardContent>
                 </Card>
@@ -156,53 +156,11 @@ const DoctorDashboard = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <Card className="glass-card border-none doctor-card-stable overflow-hidden">
-                        <CardContent className="p-5">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 bg-neutral-100 rounded-full overflow-hidden" />
-                                    <div>
-                                        <h4 className="font-bold text-neutral-800">Aarav Sharma</h4>
-                                        <p className="text-[10px] font-bold text-neutral-400 uppercase">ASD - Level 2</p>
-                                    </div>
-                                </div>
-                                <Activity className="h-4 w-4 text-green-500" />
-                            </div>
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-[10px] font-black uppercase text-neutral-400">
-                                    <span>Weekly Activity</span>
-                                    <span className="text-green-600">85% Improved</span>
-                                </div>
-                                <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden">
-                                    <div className="h-full bg-green-500" style={{ width: '85%' }} />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="glass-card border-none doctor-card-urgent overflow-hidden">
-                        <CardContent className="p-5">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 bg-neutral-100 rounded-full overflow-hidden" />
-                                    <div>
-                                        <h4 className="font-bold text-neutral-800">Ishani Gupta</h4>
-                                        <p className="text-[10px] font-bold text-neutral-400 uppercase">Sensory Processing</p>
-                                    </div>
-                                </div>
-                                <AlertCircle className="h-4 w-4 text-red-500 animate-pulse" />
-                            </div>
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-[10px] font-black uppercase text-neutral-400">
-                                    <span>Weekly Activity</span>
-                                    <span className="text-red-600">No Activity for 3 days</span>
-                                </div>
-                                <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden">
-                                    <div className="h-full bg-red-400" style={{ width: '20%' }} />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    {/* Placeholder for when no children are tracked */}
+                    <div className="lg:col-span-3 text-center py-12 bg-neutral-50 rounded-3xl border border-dashed border-neutral-200">
+                        <Activity className="h-10 w-10 text-neutral-300 mx-auto mb-3" />
+                        <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest">No Children Currently Tracked</p>
+                    </div>
                 </div>
             </div>
 

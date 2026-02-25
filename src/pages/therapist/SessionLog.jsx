@@ -9,13 +9,18 @@ import { THERAPY_TYPES } from '../../data/mockData';
 import { sessionAPI } from '../../lib/api';
 
 const SessionLog = () => {
-  const { kids, addSession, getChildDocuments } = useApp();
+  const { kids, addSession, getChildDocuments, currentUser, refreshSessions } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const childIdFromState = location.state?.childId;
 
+  // Filter kids assigned to this therapist or all if admin
+  const myKids = kids.filter(k =>
+    (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(currentUser?.id || 't1')
+  );
+
   const [selectedChild, setSelectedChild] = useState(
-    childIdFromState || (kids && kids[0] ? kids[0].id : '')
+    childIdFromState || (myKids && myKids[0] ? myKids[0].id : '')
   );
 
   const baselineDocs = getChildDocuments(selectedChild);
@@ -101,6 +106,9 @@ const SessionLog = () => {
     try {
       console.log('🚀 Initiating Multi-Fork Session Publish...');
       const typesToSave = Object.keys(aiSummary || {});
+      const originalSessionId = location.state?.sessionId;
+      const originalDate = location.state?.sessionDate;
+      const originalDuration = location.state?.sessionDuration || 45;
 
       for (const type of typesToSave) {
         const summary = aiSummary[type];
@@ -117,20 +125,40 @@ const SessionLog = () => {
           wins: summary.wins,
           emotionalState: mood,
           status: 'completed',
-          duration: Math.floor(45 / typesToSave.length), // Split duration
-          date: new Date().toISOString()
+          duration: Math.floor(originalDuration / typesToSave.length), // Split original duration
+          date: originalDate || new Date().toISOString() // Keep original date!
         };
 
         const savedSession = await sessionAPI.create(sessionData);
+
+        // Add to context (which replaces locally if replaceId exists)
         addSession({
           ...sessionData,
           id: savedSession.id || savedSession._id
-        }, location.state?.sessionId);
+        }, originalSessionId);
       }
+
+      // 🧹 Database Cleanup - Remove the scheduled placeholder from MongoDB
+      if (originalSessionId) {
+        console.log(`🧹 Cleaning up original session ${originalSessionId} from database...`);
+        try {
+          await sessionAPI.delete(originalSessionId);
+          console.log('✅ Original placeholder removed successfully');
+        } catch (delErr) {
+          console.error('⚠️ Failed to delete original placeholder from database', delErr);
+        }
+      }
+
+      // 🏁 Final Synchronization
+      console.log('🔄 Triggering global session refresh...');
+      await refreshSessions();
+
 
       alert(`🎉 Successfully published ${typesToSave.length} clinical records to MongoDB!`);
       navigate('/therapist/command-center');
     } catch (error) {
+
+
       console.error('❌ Failed to Save Session:', error);
       const errorMsg = typeof error === 'object'
         ? (error.detail || JSON.stringify(error))
@@ -184,7 +212,7 @@ const SessionLog = () => {
                   onChange={(e) => setSelectedChild(e.target.value)}
                 >
                   <option value="" disabled className="text-neutral-400" style={{ color: '#a3a3a3' }}>Select a child</option>
-                  {(Array.isArray(kids) ? kids : []).map(c => (
+                  {myKids.map(c => (
                     <option key={c.id} value={c.id} className="text-neutral-900" style={{ color: '#171717' }}>
                       {c.name} - {c.diagnosis}
                     </option>

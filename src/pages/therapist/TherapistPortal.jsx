@@ -25,7 +25,7 @@ import { useAuth } from '../../hooks/useAuth';
 
 import Sessions from './Sessions';
 import MyChildren from './MyPatients';
-import TherapyIntelligence from './TherapyIntelligence';
+
 import RoadmapEditor from './RoadmapEditor';
 import TherapistMessages from './TherapistMessages';
 import TherapistProgressTracking from './TherapistProgressTracking';
@@ -52,10 +52,10 @@ const TherapistLayoutWrapper = () => {
         { label: 'Schedule', path: '/therapist/schedule', icon: Calendar },
         { label: 'Care Hub', path: '/therapist/care-hub', icon: Users },
         { label: 'Growth Tracking', path: '/therapist/growth-tracking', icon: Activity },
-        { label: 'Clinical Brain', path: '/therapist/clinical-brain', icon: Brain },
         { label: 'Blueprints', path: '/therapist/blueprints', icon: Target },
         { label: 'Dossier', path: '/therapist/dossier', icon: ClipboardList },
         { label: 'Connect', path: '/therapist/connect', icon: MessageSquare, badge: totalMessagesUnread },
+
     ];
 
     return (
@@ -93,8 +93,8 @@ const TherapistDashboard = () => {
     const safeSessions = Array.isArray(sessions) ? sessions : [];
 
     // RELAXED FILTER: Show all kids if none are specifically assigned to avoid empty states
-    const myChildren = safeKids.filter(k => k.therapistId === therapistId).length > 0
-        ? safeKids.filter(k => k.therapistId === therapistId)
+    const myChildren = safeKids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId)).length > 0
+        ? safeKids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId))
         : safeKids;
 
     const stats = typeof getTherapistStats === 'function' ? getTherapistStats(therapistId) : { totalChildren: 0, pendingReports: 0, weeklyHours: 0 };
@@ -144,7 +144,10 @@ const TherapistDashboard = () => {
                     </CardHeader>
                     <CardContent>
                         <p className="text-3xl font-bold text-neutral-800">{todaySessions.length}</p>
-                        <p className="text-sm text-neutral-500">{completedSessions.length} Completed</p>
+                        <p className="text-sm text-neutral-500">
+                            {todaySessions.length > 0 && completedSessions.length === todaySessions.length ? 'Completed' : `${completedSessions.length} Completed`}
+                        </p>
+
                     </CardContent>
                 </Card>
                 <Card className="border-l-4 border-l-orange-400">
@@ -184,15 +187,7 @@ const TherapistDashboard = () => {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-violet-500 to-purple-600 text-white" onClick={() => navigate('/therapist/clinical-brain')}>
-                    <CardContent className="p-6 flex items-center gap-4">
-                        <Brain className="h-10 w-10 text-violet-200" />
-                        <div>
-                            <h3 className="font-semibold">AI Intelligence</h3>
-                            <p className="text-sm text-violet-200">View insights & analytics</p>
-                        </div>
-                    </CardContent>
-                </Card>
+
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-primary-500 to-primary-600 text-white" onClick={() => navigate('/therapist/blueprints')}>
                     <CardContent className="p-6 flex items-center gap-4">
                         <Target className="h-10 w-10 text-primary-200" />
@@ -253,8 +248,10 @@ const TherapistDashboard = () => {
                                     <div className="w-full sm:w-auto mt-2 sm:mt-0">
                                         {session.status === 'completed' ? (
                                             <span className="block sm:inline-block text-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Completed</span>
+                                        ) : new Date(session.date) > new Date() ? (
+                                            <span className="block sm:inline-block text-center px-3 py-1 bg-blue-50 text-blue-500 border border-blue-100 rounded-full text-xs font-medium">Scheduled</span>
                                         ) : (
-                                            <Button size="sm" variant="secondary" className="w-full sm:w-auto" onClick={(e) => { e.stopPropagation(); navigate('/therapist/log', { state: { childId: session.childId, sessionId: session.id, sessionType: session.type } }); }}>
+                                            <Button size="sm" variant="secondary" className="w-full sm:w-auto" onClick={(e) => { e.stopPropagation(); navigate('/therapist/log', { state: { childId: session.childId, sessionId: session.id, sessionType: session.type, sessionDate: session.date, sessionDuration: session.duration } }); }}>
                                                 Start Session
                                             </Button>
                                         )}
@@ -310,7 +307,7 @@ const TherapistPortal = () => {
                 <Route path="command-center" element={<TherapistDashboard />} />
                 <Route path="schedule" element={<Sessions />} />
                 <Route path="care-hub" element={<MyChildren />} />
-                <Route path="clinical-brain" element={<TherapyIntelligence />} />
+
                 <Route path="blueprints" element={<RoadmapEditor />} />
                 <Route path="dossier" element={<BaselineArchive />} />
                 <Route path="connect/*" element={<TherapistMessages />} />

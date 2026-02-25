@@ -354,7 +354,7 @@ const TherapistMessages = () => {
 
     // Get all children assigned to this therapist
     const safeKids = Array.isArray(kids) ? kids : [];
-    const myPatients = safeKids.filter(k => k && k.therapistId === therapistId);
+    const myPatients = safeKids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
     const myPatientIds = myPatients.map(p => p.id);
 
     // Group messages into threads by child

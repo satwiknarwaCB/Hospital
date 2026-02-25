@@ -23,7 +23,12 @@ import {
     Baby,
     Phone,
     MapPin,
-    Fingerprint
+    Fingerprint,
+    Edit,
+    Key,
+    Image,
+    Upload,
+    Clock
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
@@ -49,10 +54,12 @@ const UserManagement = () => {
         password: 'User@123',
         specialization: 'Speech Therapy',
         customSpecialization: '',
-        experience_years: 5,
+        qualification: '',
+        experience_years: '',
         relationship: 'Mother',
         phone: '',
-        address: ''
+        address: '',
+        profile_photo: ''
     });
 
     const [childFormData, setChildFormData] = useState({
@@ -62,11 +69,16 @@ const UserManagement = () => {
         medical_condition: 'Autism',
         customCondition: '',
         school_name: '',
-        parent_id: ''
+        parent_id: '',
+        therapy_start_date: '',
+        therapy_type: 'Speech Therapy'
     });
 
     const [message, setMessage] = useState({ type: '', text: '' });
     const [invitationModal, setInvitationModal] = useState(null);
+    const [editingUser, setEditingUser] = useState(null); // User being edited
+    const [passwordResetModal, setPasswordResetModal] = useState(null); // { user, role }
+    const [resetPasswordData, setResetPasswordData] = useState({ newPassword: '', confirmPassword: '' });
 
     const handleCreateChild = async (e) => {
         e.preventDefault();
@@ -89,10 +101,12 @@ const UserManagement = () => {
                 gender: childFormData.gender,
                 condition: childFormData.medical_condition === '+ Add Custom' ? childFormData.customCondition : childFormData.medical_condition,
                 school_name: childFormData.school_name,
-                parent_id: childFormData.parent_id
+                parent_id: childFormData.parent_id,
+                therapy_start_date: childFormData.therapy_start_date,
+                therapy_type: childFormData.therapy_type
             });
             setMessage({ type: 'success', text: 'Child record created successfully' });
-            setChildFormData({ name: '', age: '', gender: 'Male', medical_condition: 'Autism', customCondition: '', school_name: '', parent_id: '' });
+            setChildFormData({ name: '', age: '', gender: 'Male', medical_condition: 'Autism', customCondition: '', school_name: '', parent_id: '', therapy_start_date: '', therapy_type: 'Speech Therapy' });
             setIsCreating(false);
             fetchChildren();
             refreshChildren(); // Sync global state
@@ -175,6 +189,21 @@ const UserManagement = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleFileChange = (e, isEditing = false) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                if (isEditing) {
+                    setEditingUser(prev => ({ ...prev, profile_photo: reader.result }));
+                } else {
+                    setFormData(prev => ({ ...prev, profile_photo: reader.result }));
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleDeleteUser = async (e, userId, userName) => {
         e.stopPropagation(); // Prevent card click
         if (!window.confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) return;
@@ -200,7 +229,7 @@ const UserManagement = () => {
 
     const handleToggleUserStatus = async (user) => {
         try {
-            const role = activeTab === 'therapists' ? 'therapist' : 'parent';
+            const role = user.role || (activeTab === 'therapists' ? 'therapist' : 'parent');
             const response = await userManagementAPI.toggleUserStatus(role, user.id);
             if (response.data.status === 'success') {
                 setMessage({ type: 'success', text: `Account ${response.data.is_active ? 'enabled' : 'disabled'} successfully` });
@@ -209,6 +238,141 @@ const UserManagement = () => {
         } catch (error) {
             console.error('Failed to toggle status:', error);
             setMessage({ type: 'error', text: 'Failed to update account status' });
+        }
+    };
+
+    const handleEditUser = (user) => {
+        // Populate editingUser state with current user data
+        setEditingUser({
+            ...user,
+            customCondition: '',
+            qualification: user.qualification || '',
+            profile_photo: user.profile_photo || '',
+            originalEmail: user.email, // Track original email to check if it changed
+            therapy_start_date: user.therapy_start_date || '',
+            therapy_type: user.therapy_type || 'Speech Therapy'
+        });
+        setActiveMenu(null);
+    };
+
+    const handleUpdateUser = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+
+        try {
+            const updateData = {};
+
+            if (activeTab === 'therapists') {
+                // Therapist fields
+                updateData.name = editingUser.name;
+                updateData.email = editingUser.email;
+                updateData.specialization = editingUser.specialization === '+ Add Custom'
+                    ? editingUser.customSpecialization
+                    : editingUser.specialization;
+                updateData.experience_years = parseInt(editingUser.experience_years) || 0;
+                updateData.qualification = editingUser.qualification;
+                updateData.phone = editingUser.phone;
+                updateData.profile_photo = editingUser.profile_photo;
+                updateData.license_number = editingUser.license_number;
+
+                await userManagementAPI.updateTherapist(editingUser.id, updateData);
+            } else if (activeTab === 'parents') {
+                // Parent fields
+                updateData.name = editingUser.name;
+                updateData.email = editingUser.email;
+                updateData.phone = editingUser.phone;
+                updateData.address = editingUser.address;
+                updateData.relationship = editingUser.relationship;
+
+                await userManagementAPI.updateParent(editingUser.id, updateData);
+            } else if (activeTab === 'children') {
+                // Child fields
+                updateData.name = editingUser.name;
+                updateData.age = parseInt(editingUser.age) || 0;
+                updateData.gender = editingUser.gender;
+                updateData.condition = editingUser.condition === '+ Add Custom'
+                    ? editingUser.customCondition
+                    : editingUser.condition;
+                updateData.school_name = editingUser.school_name;
+                updateData.therapy_start_date = editingUser.therapy_start_date;
+                updateData.therapy_type = editingUser.therapy_type;
+
+                await userManagementAPI.updateChild(editingUser.id, updateData);
+            }
+
+            setMessage({ type: 'success', text: `${activeTab.slice(0, -1)} updated successfully!` });
+            setEditingUser(null);
+
+            if (activeTab === 'children') {
+                fetchChildren();
+            } else {
+                fetchUsers();
+            }
+        } catch (error) {
+            console.error('Update failed:', error);
+            let errorText = 'Failed to update user';
+            const detail = error.response?.data?.detail;
+
+            if (typeof detail === 'string') {
+                errorText = detail;
+            } else if (Array.isArray(detail)) {
+                errorText = detail.map(err => err.msg).join(', ');
+            }
+
+            setMessage({ type: 'error', text: errorText });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleOpenPasswordReset = (user) => {
+        const role = activeTab === 'therapists' ? 'therapist' : 'parent';
+        setPasswordResetModal({ user, role });
+        setResetPasswordData({ newPassword: '', confirmPassword: '' });
+        setActiveMenu(null);
+    };
+
+    const handleResetPassword = async (e) => {
+        e.preventDefault();
+
+        // Validate passwords match
+        if (resetPasswordData.newPassword !== resetPasswordData.confirmPassword) {
+            setMessage({ type: 'error', text: 'Passwords do not match!' });
+            return;
+        }
+
+        // Validate password length
+        if (resetPasswordData.newPassword.length < 8) {
+            setMessage({ type: 'error', text: 'Password must be at least 8 characters long' });
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const response = await userManagementAPI.resetPassword(
+                passwordResetModal.role,
+                passwordResetModal.user.id,
+                resetPasswordData.newPassword
+            );
+
+            setMessage({ type: 'success', text: response.message || 'Password reset successfully!' });
+            setPasswordResetModal(null);
+            setResetPasswordData({ newPassword: '', confirmPassword: '' });
+            fetchUsers(); // Refresh to show updated is_active status
+        } catch (error) {
+            console.error('Password reset failed:', error);
+            let errorText = 'Failed to reset password';
+            const detail = error.response?.data?.detail;
+
+            if (typeof detail === 'string') {
+                errorText = detail;
+            } else if (Array.isArray(detail)) {
+                errorText = detail.map(err => err.msg).join(', ');
+            }
+
+            setMessage({ type: 'error', text: errorText });
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -228,8 +392,10 @@ const UserManagement = () => {
                     email: formData.email,
                     password: passwordPayload,
                     specialization: formData.specialization === '+ Add Custom' ? formData.customSpecialization : formData.specialization,
+                    qualification: formData.qualification,
                     experience_years: parseInt(formData.experience_years) || 0,
-                    phone: formData.phone
+                    phone: formData.phone,
+                    profile_photo: formData.profile_photo
                 };
 
                 response = await userManagementAPI.createTherapist(payload);
@@ -257,14 +423,14 @@ const UserManagement = () => {
                 setMessage({ type: 'success', text: 'Account created successfully!' });
             }
 
-            setIsCreating(false);
             setFormData({
                 name: '', email: '', password: 'User@123', specialization: 'Speech Therapy',
-                customSpecialization: '', experience_years: 5, relationship: 'Mother', phone: '',
-                address: ''
+                customSpecialization: '', qualification: '', experience_years: '', relationship: 'Mother', phone: '',
+                address: '', profile_photo: ''
             });
-            fetchUsers();
-            refreshAdminStats();
+            setIsCreating(false);
+            await fetchUsers();
+            await refreshAdminStats();
         } catch (error) {
             console.error('Create failed:', error);
 
@@ -286,25 +452,6 @@ const UserManagement = () => {
             setIsLoading(false);
         }
     };
-
-    const quickFill = (user) => {
-        setFormData({
-            ...formData,
-            name: user.name,
-            email: user.email,
-            password: 'User@123'
-        });
-    };
-
-    const exampleTherapists = [
-        { name: 'Dr. Rajesh Kumar', email: 'dr.rajesh@therapist.com' },
-        { name: 'Dr. Meera Singh', email: 'dr.meera@therapist.com' }
-    ];
-
-    const exampleParents = [
-        { name: 'Priya Patel', email: 'priya.patel@parent.com' },
-        { name: 'Arun Sharma', email: 'arun.sharma@parent.com' }
-    ];
 
     const currentUsers = activeTab === 'therapists' ? therapists : activeTab === 'children' ? childrenList : parents;
     const filteredUsers = currentUsers.filter(u =>
@@ -542,6 +689,39 @@ const UserManagement = () => {
                                             placeholder="School Name"
                                         />
                                     </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-neutral-400 tracking-widest flex items-center gap-2 px-1">
+                                            <Clock className="h-3.5 w-3.5" />
+                                            Therapy Start Date
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={childFormData.therapy_start_date}
+                                            onChange={(e) => setChildFormData({ ...childFormData, therapy_start_date: e.target.value })}
+                                            className="w-full px-5 py-4 bg-neutral-100/50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 transition-all outline-none font-black text-sm tracking-tight cursor-pointer"
+                                        />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-neutral-400 tracking-widest flex items-center gap-2 px-1">
+                                            <Activity className="h-3.5 w-3.5" />
+                                            Therapy Type
+                                        </label>
+                                        <div className="relative">
+                                            <select
+                                                value={childFormData.therapy_type}
+                                                onChange={(e) => setChildFormData({ ...childFormData, therapy_type: e.target.value })}
+                                                className="w-full px-5 py-4 bg-neutral-100/50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 transition-all outline-none appearance-none font-black text-sm tracking-tight cursor-pointer"
+                                            >
+                                                <option>Speech Therapy</option>
+                                                <option>Occupational Therapy</option>
+                                                <option>Behavioral Therapy (ABA)</option>
+                                                <option>Physical Therapy</option>
+                                                <option>Social Skills</option>
+                                                <option>Sensory Integration</option>
+                                            </select>
+                                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="flex justify-end gap-3 pt-4 border-t border-neutral-100">
                                     <Button type="button" variant="ghost" onClick={() => setIsCreating(false)}>Cancel</Button>
@@ -635,6 +815,87 @@ const UserManagement = () => {
                                         </div>
                                     </div>
 
+                                    {activeTab === 'therapists' && (
+                                        <>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 tracking-widest flex items-center gap-2 px-1">
+                                                    <Phone className="h-3.5 w-3.5" />
+                                                    Phone Number
+                                                </label>
+                                                <input
+                                                    type="tel"
+                                                    name="phone"
+                                                    value={formData.phone}
+                                                    onChange={handleInputChange}
+                                                    required
+                                                    className="w-full px-5 py-4 bg-neutral-100/50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 transition-all outline-none font-black text-sm tracking-tight"
+                                                    placeholder="+91 XXXXX XXXXX"
+                                                />
+                                            </div>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 tracking-widest flex items-center gap-2 px-1">
+                                                    <Upload className="h-3.5 w-3.5" />
+                                                    Profile Photo
+                                                </label>
+                                                <div className="flex items-center gap-4">
+                                                    {formData.profile_photo && (
+                                                        <div className="h-14 w-14 rounded-2xl border-2 border-primary-100 overflow-hidden bg-neutral-100 flex-shrink-0 shadow-sm">
+                                                            <img src={formData.profile_photo} alt="Preview" className="w-full h-full object-cover" />
+                                                        </div>
+                                                    )}
+                                                    <label className="flex-1 flex items-center justify-center gap-3 px-5 py-4 bg-neutral-100/50 border-2 border-neutral-200 border-dashed rounded-2xl hover:bg-white hover:border-primary-400 hover:shadow-md transition-all cursor-pointer group">
+                                                        <Upload className="h-4 w-4 text-neutral-400 group-hover:text-primary-600" />
+                                                        <span className="text-[10px] font-black text-neutral-600 group-hover:text-primary-700 uppercase tracking-widest">
+                                                            Choose Image
+                                                        </span>
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={(e) => handleFileChange(e, false)}
+                                                            className="hidden"
+                                                        />
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            {/* Professional Details Section */}
+                                            <div className="col-span-full mt-4 pt-6 border-t border-neutral-100">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                    <div className="space-y-3">
+                                                        <label className="text-[10px] font-black text-neutral-400 tracking-widest flex items-center gap-2 px-1">
+                                                            <Briefcase className="h-3.5 w-3.5" />
+                                                            Qualification
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            name="qualification"
+                                                            value={formData.qualification}
+                                                            onChange={handleInputChange}
+                                                            required
+                                                            className="w-full px-5 py-4 bg-neutral-100/50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 transition-all outline-none font-black text-sm tracking-tight"
+                                                            placeholder="e.g. BPT, MPT, Psychology"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-3">
+                                                        <label className="text-[10px] font-black text-neutral-400 tracking-widest flex items-center gap-2 px-1">
+                                                            <Activity className="h-3.5 w-3.5" />
+                                                            Experience (Years)
+                                                        </label>
+                                                        <input
+                                                            type="number"
+                                                            name="experience_years"
+                                                            value={formData.experience_years}
+                                                            onChange={handleInputChange}
+                                                            required
+                                                            className="w-full px-5 py-4 bg-neutral-100/50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 transition-all outline-none font-black text-sm tracking-tight"
+                                                            placeholder="Years of experience"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+
                                     {activeTab === 'parents' && (
                                         <>
                                             <div className="space-y-3">
@@ -667,15 +928,7 @@ const UserManagement = () => {
                                                     placeholder="Street, City, Zip Code"
                                                 />
                                             </div>
-                                            <div className="space-y-3 opacity-60">
-                                                <label className="text-[10px] font-black text-neutral-400 tracking-widest flex items-center gap-2 px-1">
-                                                    <Fingerprint className="h-3.5 w-3.5" />
-                                                    Parent ID (Auto)
-                                                </label>
-                                                <div className="px-5 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl text-xs font-mono text-neutral-400 italic">
-                                                    System will generate unique identifier...
-                                                </div>
-                                            </div>
+
                                         </>
                                     )}
                                     {formData.specialization === '+ Add Custom' && activeTab === 'therapists' && (
@@ -691,23 +944,6 @@ const UserManagement = () => {
                                             />
                                         </div>
                                     )}
-                                </div>
-
-                                {/* Quick fill section */}
-                                <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-100">
-                                    <p className="text-xs font-bold text-neutral-400 tracking-widest mb-3">Quick Fill Examples</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {(activeTab === 'therapists' ? exampleTherapists : exampleParents).map((u, i) => (
-                                            <button
-                                                key={i}
-                                                type="button"
-                                                onClick={() => quickFill(u)}
-                                                className="px-4 py-2 bg-white border border-neutral-200 rounded-lg text-xs font-semibold hover:border-primary-400 hover:text-primary-600 transition-all shadow-sm"
-                                            >
-                                                {u.name}
-                                            </button>
-                                        ))}
-                                    </div>
                                 </div>
 
                                 <div className="flex justify-end gap-3 pt-4 border-t border-neutral-100">
@@ -767,32 +1003,80 @@ const UserManagement = () => {
                                         <div className="h-16 w-16 rounded-[1.5rem] flex items-center justify-center text-2xl font-black shadow-inner bg-emerald-50 text-emerald-600 border border-emerald-100">
                                             {child.name.charAt(0)}
                                         </div>
-                                        <div className="relative">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setActiveMenu(activeMenu === child.id ? null : child.id);
-                                                }}
-                                                className="p-2 hover:bg-neutral-100 rounded-xl transition-all border border-transparent hover:border-neutral-200"
-                                            >
-                                                <MoreVertical className="h-4 w-4 text-neutral-400" />
-                                            </button>
-                                            {activeMenu === child.id && (
-                                                <div className="absolute right-0 top-10 bg-white rounded-xl shadow-2xl border border-neutral-100 py-2 w-40 z-50 animate-in fade-in zoom-in-95 duration-300">
-                                                    <button
-                                                        onClick={(e) => handleDeleteChild(e, child.id, child.name)}
-                                                        className="w-full text-left px-4 py-2.5 text-[10px] font-black uppercase text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors"
-                                                    >
-                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                        REMOVE
-                                                    </button>
-                                                </div>
+                                        <div className="flex items-center gap-2">
+                                            {child.is_active ? (
+                                                <span className="flex items-center gap-1.5 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg uppercase tracking-widest border border-emerald-100">
+                                                    <CheckCircle2 className="h-3 w-3" />
+                                                    Active
+                                                </span>
+                                            ) : (
+                                                <span className="flex items-center gap-1.5 text-[9px] font-black text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg uppercase tracking-widest border border-rose-100">
+                                                    <XCircle className="h-3 w-3" />
+                                                    Inactive
+                                                </span>
                                             )}
+                                            <div className="relative">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setActiveMenu(activeMenu === child.id ? null : child.id);
+                                                    }}
+                                                    className="p-2 hover:bg-neutral-100 rounded-xl transition-all border border-transparent hover:border-neutral-200"
+                                                >
+                                                    <MoreVertical className="h-4 w-4 text-neutral-400" />
+                                                </button>
+                                                {activeMenu === child.id && (
+                                                    <div className="absolute right-0 top-10 bg-white rounded-xl shadow-2xl border border-neutral-100 py-2 w-40 z-50 animate-in fade-in zoom-in-95 duration-300">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleEditUser(child);
+                                                            }}
+                                                            className="w-full text-left px-4 py-2.5 text-[10px] font-black uppercase text-emerald-600 hover:bg-emerald-50 flex items-center gap-3 transition-colors border-b border-neutral-50"
+                                                        >
+                                                            <Edit className="h-3.5 w-3.5" />
+                                                            Update Record
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleToggleUserStatus({ ...child, role: 'child' });
+                                                                setActiveMenu(null);
+                                                            }}
+                                                            className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase flex items-center gap-3 transition-colors border-b border-neutral-50 ${child.is_active ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
+                                                        >
+                                                            {child.is_active ? (
+                                                                <>
+                                                                    <XCircle className="h-3.5 w-3.5" />
+                                                                    Disable Record
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                                                    Enable Record
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => handleDeleteChild(e, child.id, child.name)}
+                                                            className="w-full text-left px-4 py-2.5 text-[10px] font-black uppercase text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                            REMOVE
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 
                                     <div className="space-y-1 relative z-10">
-                                        <h3 className="font-bold text-neutral-800 text-lg group-hover:text-emerald-600 transition-colors">{child.name}</h3>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-bold text-neutral-800 text-lg group-hover:text-emerald-600 transition-colors">{child.name}</h3>
+                                            <span className="text-[9px] font-mono bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded-md border border-neutral-200 uppercase tracking-wider">
+                                                {child.id}
+                                            </span>
+                                        </div>
                                         <p className="text-sm text-neutral-500 flex items-center gap-2">
                                             <Activity className="h-3 w-3" />
                                             {child.condition}
@@ -837,22 +1121,26 @@ const UserManagement = () => {
 
                                 <CardContent className="p-7">
                                     <div className="flex items-start justify-between mb-6">
-                                        <div className={`h-16 w-16 rounded-[1.5rem] flex items-center justify-center text-2xl font-black shadow-inner ${activeTab === 'therapists'
+                                        <div className={`h-16 w-16 rounded-[1.5rem] flex items-center justify-center text-2xl font-black shadow-inner overflow-hidden ${activeTab === 'therapists'
                                             ? 'bg-primary-50 text-primary-600 border border-primary-100'
                                             : 'bg-pink-50 text-pink-600 border border-pink-100'
                                             }`}>
-                                            {user.name.charAt(0)}
+                                            {activeTab === 'therapists' && user.profile_photo ? (
+                                                <img src={user.profile_photo} alt={user.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                user.name.charAt(0)
+                                            )}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {user.is_active ? (
                                                 <span className="flex items-center gap-1.5 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg uppercase tracking-widest border border-emerald-100">
                                                     <CheckCircle2 className="h-3 w-3" />
-                                                    Operational
+                                                    Active
                                                 </span>
                                             ) : (
                                                 <span className="flex items-center gap-1.5 text-[9px] font-black text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg uppercase tracking-widest border border-rose-100">
                                                     <XCircle className="h-3 w-3" />
-                                                    Restricted
+                                                    Inactive
                                                 </span>
                                             )}
 
@@ -872,10 +1160,30 @@ const UserManagement = () => {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
+                                                                handleEditUser(user);
+                                                            }}
+                                                            className="w-full text-left px-4 py-2.5 text-[10px] font-black uppercase text-primary-600 hover:bg-primary-50 flex items-center gap-3 transition-colors border-b border-neutral-50"
+                                                        >
+                                                            <Edit className="h-3.5 w-3.5" />
+                                                            Update Profile
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleOpenPasswordReset(user);
+                                                            }}
+                                                            className="w-full text-left px-4 py-2.5 text-[10px] font-black uppercase text-neutral-600 hover:bg-neutral-50 flex items-center gap-3 transition-colors border-b border-neutral-50"
+                                                        >
+                                                            <Key className="h-3.5 w-3.5" />
+                                                            Reset Password
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
                                                                 handleToggleUserStatus(user);
                                                                 setActiveMenu(null);
                                                             }}
-                                                            className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase flex items-center gap-3 transition-colors ${user.is_active ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
+                                                            className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase flex items-center gap-3 transition-colors border-b border-neutral-50 ${user.is_active ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
                                                         >
                                                             {user.is_active ? (
                                                                 <>
@@ -894,7 +1202,7 @@ const UserManagement = () => {
                                                             className="w-full text-left px-4 py-2.5 text-[10px] font-black uppercase text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors"
                                                         >
                                                             <Trash2 className="h-3.5 w-3.5" />
-                                                            Purge Record
+                                                            Delete Account
                                                         </button>
                                                     </div>
                                                 )}
@@ -905,8 +1213,13 @@ const UserManagement = () => {
                                     <div className="space-y-1 relative z-10">
                                         <div className="flex items-center gap-2">
                                             <h3 className="font-bold text-neutral-800 text-lg group-hover:text-primary-600 transition-colors">{user.name}</h3>
-                                            <span className="text-[9px] font-mono bg-neutral-100 text-neutral-400 px-2 py-0.5 rounded-md border border-neutral-200">
-                                                ID: {user.id.split('-')[0]}...
+                                            {activeTab === 'therapists' && user.qualification && (
+                                                <span className="text-[10px] font-black bg-primary-100 text-primary-700 px-2 py-0.5 rounded-lg border border-primary-200">
+                                                    {user.qualification}
+                                                </span>
+                                            )}
+                                            <span className="text-[9px] font-mono bg-neutral-100 text-neutral-400 px-2 py-0.5 rounded-md border border-neutral-200 uppercase tracking-wider">
+                                                {user.id.length > 20 ? `ID: ${user.id.slice(0, 8)}...` : user.id}
                                             </span>
                                         </div>
                                         <p className="text-sm text-neutral-500 flex items-center gap-2">
@@ -917,6 +1230,19 @@ const UserManagement = () => {
                                             <p className="text-[10px] text-neutral-400 font-medium">
                                                 Created: {new Date(user.created_at).toLocaleDateString()} {new Date(user.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </p>
+                                        )}
+                                        {activeTab === 'parents' && (
+                                            <div className="flex items-center gap-1.5 mt-1 pt-1 border-t border-neutral-50/50">
+                                                <Clock className="h-2.5 w-2.5 text-primary-400" />
+                                                <p className="text-[10px] font-black text-primary-600 uppercase tracking-tight">
+                                                    Last Login: <span className="text-neutral-500 font-medium normal-case">
+                                                        {user.last_login
+                                                            ? `${new Date(user.last_login).toLocaleDateString()} ${new Date(user.last_login).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                                                            : 'Never'
+                                                        }
+                                                    </span>
+                                                </p>
+                                            </div>
                                         )}
                                     </div>
 
@@ -965,67 +1291,334 @@ const UserManagement = () => {
                 )}
             </div>
 
-            {/* Status Messages */}
-            {
-                message.text && (
-                    <div className={`fixed bottom-8 right-8 p-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-8 duration-500 z-50 ${message.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
-                        {message.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : <Shield className="h-5 w-5" />}
-                        <p className="font-black text-xs uppercase tracking-tight">{message.text}</p>
-                        <button onClick={() => setMessage({ text: '', type: '' })} className="ml-4 hover:scale-110">
-                            <XCircle className="h-5 w-5" />
-                        </button>
-                    </div>
-                )
-            }
+            {/* Password Reset Modal */}
+            {passwordResetModal && (
+                <div className="fixed inset-0 bg-neutral-900/60 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-md animate-in fade-in duration-300">
+                    <Card className="w-full max-w-md shadow-2xl bg-white border-0 rounded-t-[2.5rem] sm:rounded-[2rem] overflow-hidden animate-in slide-in-from-bottom duration-500">
+                        <CardHeader className="bg-amber-50/50 border-b border-amber-100 p-6">
+                            <CardTitle className="text-xl font-black flex items-center gap-3 text-amber-900 uppercase tracking-tight">
+                                <Key className="h-5 w-5 text-amber-600" />
+                                Reset Access
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6 space-y-6">
+                            <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
+                                <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest mb-1">Target Account</p>
+                                <p className="text-sm font-bold text-amber-900">{passwordResetModal.user.name}</p>
+                                <p className="text-[11px] text-amber-700">{passwordResetModal.user.email}</p>
+                            </div>
 
-            {/* Invitation Modal */}
-            {
-                invitationModal && (
-                    <div className="fixed inset-0 bg-neutral-900/60 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-md animate-in fade-in duration-300">
-                        <Card className="w-full max-w-lg shadow-[0_32px_64px_-15px_rgba(0,0,0,0.3)] bg-white border-0 rounded-t-[2.5rem] sm:rounded-[2.5rem] overflow-hidden animate-in slide-in-from-bottom duration-500">
-                            <CardHeader className="bg-emerald-50/50 border-b border-emerald-100 p-8">
-                                <CardTitle className="text-xl md:text-2xl font-black flex items-center gap-4 text-emerald-900 uppercase tracking-tight">
-                                    <div className="h-12 w-12 bg-emerald-100 rounded-2xl flex items-center justify-center shrink-0">
-                                        <CheckCircle2 className="h-6 w-6 text-emerald-600" />
-                                    </div>
-                                    Access Granted
+                            <form onSubmit={handleResetPassword} className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">New Secure Password</label>
+                                    <input
+                                        type="password"
+                                        value={resetPasswordData.newPassword}
+                                        onChange={(e) => setResetPasswordData({ ...resetPasswordData, newPassword: e.target.value })}
+                                        required
+                                        className="w-full px-4 py-3 bg-neutral-100 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm"
+                                        placeholder="Min 8 characters"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Confirm Password</label>
+                                    <input
+                                        type="password"
+                                        value={resetPasswordData.confirmPassword}
+                                        onChange={(e) => setResetPasswordData({ ...resetPasswordData, confirmPassword: e.target.value })}
+                                        required
+                                        className="w-full px-4 py-3 bg-neutral-100 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm"
+                                        placeholder="Repeat password"
+                                    />
+                                </div>
+                                <div className="flex gap-3 pt-4">
+                                    <Button type="button" variant="ghost" className="flex-1" onClick={() => setPasswordResetModal(null)}>Cancel</Button>
+                                    <Button type="submit" disabled={isLoading} className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-black text-[10px] uppercase tracking-widest h-11">
+                                        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Override Password'}
+                                    </Button>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
+
+            {/* Edit User Modal */}
+            {editingUser && (
+                <div className="fixed inset-0 bg-neutral-900/60 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-md animate-in fade-in duration-300">
+                    <Card className="w-full max-w-2xl shadow-2xl bg-white border-0 rounded-t-[2.5rem] sm:rounded-[2rem] overflow-hidden animate-in slide-in-from-bottom duration-500 overflow-y-auto max-h-[90vh]">
+                        <CardHeader className="bg-primary-50/50 border-b border-primary-100 p-6 sticky top-0 bg-white z-10">
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-xl font-black flex items-center gap-3 text-primary-900 uppercase tracking-tight">
+                                    <Edit className="h-5 w-5 text-primary-600" />
+                                    Edit {activeTab.slice(0, -1)} Registry
                                 </CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-8 md:p-10 space-y-8">
-                                <div>
-                                    <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-2">Subject Recipient</p>
-                                    <p className="text-sm font-black text-neutral-900 uppercase tracking-tight break-all border-b border-neutral-100 pb-4">
-                                        {invitationModal.email}
-                                    </p>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Secure Invitation Payload</p>
-                                    <div className="bg-neutral-100 p-6 rounded-[1.5rem] font-mono text-[11px] break-all border border-neutral-200 select-all text-neutral-600 leading-relaxed shadow-inner">
-                                        {invitationModal.link}
+                                <button onClick={() => setEditingUser(null)} className="p-2 hover:bg-primary-100 rounded-full transition-colors">
+                                    <XCircle className="h-5 w-5 text-neutral-400" />
+                                </button>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-6 md:p-8">
+                            <form onSubmit={handleUpdateUser} className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Common Fields */}
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Full Name</label>
+                                        <input
+                                            type="text"
+                                            value={editingUser.name}
+                                            onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                                            required
+                                            className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm"
+                                        />
                                     </div>
+
+                                    {activeTab !== 'children' && (
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Email Registry</label>
+                                            <input
+                                                type="email"
+                                                value={editingUser.email}
+                                                onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                                                required
+                                                className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Role Specific Fields */}
+                                    {activeTab === 'therapists' && (
+                                        <>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Specialization</label>
+                                                <div className="relative">
+                                                    <select
+                                                        value={editingUser.specialization}
+                                                        onChange={(e) => setEditingUser({ ...editingUser, specialization: e.target.value })}
+                                                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl appearance-none font-bold text-sm outline-none cursor-pointer"
+                                                    >
+                                                        <option>Speech Therapy</option>
+                                                        <option>Occupational Therapy</option>
+                                                        <option>Physical Therapy</option>
+                                                        <option>Behavioral Therapy</option>
+                                                        <option>+ Add Custom</option>
+                                                    </select>
+                                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+                                                </div>
+                                                {editingUser.specialization === '+ Add Custom' && (
+                                                    <input
+                                                        type="text"
+                                                        value={editingUser.customSpecialization}
+                                                        onChange={(e) => setEditingUser({ ...editingUser, customSpecialization: e.target.value })}
+                                                        required
+                                                        placeholder="Enter Specialization"
+                                                        className="w-full mt-2 px-4 py-3 bg-white border border-primary-200 rounded-xl outline-none font-bold text-sm"
+                                                    />
+                                                )}
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Experience (Years)</label>
+                                                <input
+                                                    type="number"
+                                                    value={editingUser.experience_years}
+                                                    onChange={(e) => setEditingUser({ ...editingUser, experience_years: e.target.value })}
+                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Professional Qualification</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingUser.qualification}
+                                                    onChange={(e) => setEditingUser({ ...editingUser, qualification: e.target.value })}
+                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                    placeholder="e.g. BPT, MPT, Psychology"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Profile Photo</label>
+                                                <div className="flex items-center gap-4">
+                                                    {editingUser.profile_photo && (
+                                                        <div className="h-12 w-12 rounded-xl border border-neutral-200 overflow-hidden bg-neutral-100 flex-shrink-0">
+                                                            <img src={editingUser.profile_photo} alt="Preview" className="w-full h-full object-cover" />
+                                                        </div>
+                                                    )}
+                                                    <label className="flex-1 flex items-center justify-center gap-2 h-[46px] bg-neutral-50 border border-neutral-200 border-dashed rounded-xl hover:bg-neutral-100 hover:border-primary-300 transition-all cursor-pointer group">
+                                                        <Upload className="h-4 w-4 text-neutral-400 group-hover:text-primary-500" />
+                                                        <span className="text-xs font-bold text-neutral-600 group-hover:text-primary-600 uppercase tracking-tight">
+                                                            Choose Image
+                                                        </span>
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={(e) => handleFileChange(e, true)}
+                                                            className="hidden"
+                                                        />
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Contact Phone</label>
+                                                <input
+                                                    type="tel"
+                                                    value={editingUser.phone}
+                                                    onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
+                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">License Registry</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingUser.license_number}
+                                                    onChange={(e) => setEditingUser({ ...editingUser, license_number: e.target.value })}
+                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {activeTab === 'parents' && (
+                                        <>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Relationship</label>
+                                                <div className="relative">
+                                                    <select
+                                                        value={editingUser.relationship}
+                                                        onChange={(e) => setEditingUser({ ...editingUser, relationship: e.target.value })}
+                                                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl appearance-none font-bold text-sm outline-none cursor-pointer"
+                                                    >
+                                                        <option>Mother</option>
+                                                        <option>Father</option>
+                                                        <option>Guardian</option>
+                                                    </select>
+                                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Contact Phone</label>
+                                                <input
+                                                    type="tel"
+                                                    value={editingUser.phone}
+                                                    onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
+                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                />
+                                            </div>
+                                            <div className="col-span-full space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Residential Address</label>
+                                                <textarea
+                                                    value={editingUser.address}
+                                                    onChange={(e) => setEditingUser({ ...editingUser, address: e.target.value })}
+                                                    rows={3}
+                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {activeTab === 'children' && (
+                                        <>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Child Age</label>
+                                                <input
+                                                    type="number"
+                                                    value={editingUser.age}
+                                                    onChange={(e) => setEditingUser({ ...editingUser, age: e.target.value })}
+                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Gender Identity</label>
+                                                <div className="relative">
+                                                    <select
+                                                        value={editingUser.gender}
+                                                        onChange={(e) => setEditingUser({ ...editingUser, gender: e.target.value })}
+                                                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl appearance-none font-bold text-sm outline-none cursor-pointer"
+                                                    >
+                                                        <option>Male</option>
+                                                        <option>Female</option>
+                                                    </select>
+                                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Medical Condition</label>
+                                                <div className="relative">
+                                                    <select
+                                                        value={editingUser.condition}
+                                                        onChange={(e) => setEditingUser({ ...editingUser, condition: e.target.value })}
+                                                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl appearance-none font-bold text-sm outline-none cursor-pointer"
+                                                    >
+                                                        <option>Autism</option>
+                                                        <option>ADHD</option>
+                                                        <option>Speech Delay</option>
+                                                        <option>Developmental Delay</option>
+                                                        <option>+ Add Custom</option>
+                                                    </select>
+                                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+                                                </div>
+                                                {editingUser.condition === '+ Add Custom' && (
+                                                    <input
+                                                        type="text"
+                                                        value={editingUser.customCondition}
+                                                        onChange={(e) => setEditingUser({ ...editingUser, customCondition: e.target.value })}
+                                                        required
+                                                        placeholder="Specify Condition"
+                                                        className="w-full mt-2 px-4 py-3 bg-white border border-primary-200 rounded-xl outline-none font-bold text-sm"
+                                                    />
+                                                )}
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">School Affiliation</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingUser.school_name}
+                                                    onChange={(e) => setEditingUser({ ...editingUser, school_name: e.target.value })}
+                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Therapy Start Date</label>
+                                                <input
+                                                    type="date"
+                                                    value={editingUser.therapy_start_date}
+                                                    onChange={(e) => setEditingUser({ ...editingUser, therapy_start_date: e.target.value })}
+                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm cursor-pointer"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Therapy Type</label>
+                                                <div className="relative">
+                                                    <select
+                                                        value={editingUser.therapy_type}
+                                                        onChange={(e) => setEditingUser({ ...editingUser, therapy_type: e.target.value })}
+                                                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl appearance-none font-bold text-sm outline-none cursor-pointer"
+                                                    >
+                                                        <option>Speech Therapy</option>
+                                                        <option>Occupational Therapy</option>
+                                                        <option>Behavioral Therapy (ABA)</option>
+                                                        <option>Physical Therapy</option>
+                                                        <option>Social Skills</option>
+                                                        <option>Sensory Integration</option>
+                                                    </select>
+                                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
 
-                                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-neutral-100">
-                                    <Button
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(invitationModal.link);
-                                            setMessage({ type: 'success', text: 'Security link copied to registry' });
-                                        }}
-                                        variant="outline"
-                                        className="h-12 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest border-neutral-200"
-                                    >
-                                        Copy Link
-                                    </Button>
-                                    <Button onClick={() => setInvitationModal(null)} className="bg-primary-600 hover:bg-primary-700 h-12 px-10 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary-50">
-                                        Finalize
+                                <div className="flex justify-end gap-3 pt-6 border-t border-neutral-100 sticky bottom-0 bg-white">
+                                    <Button type="button" variant="ghost" className="px-8" onClick={() => setEditingUser(null)}>Dismiss</Button>
+                                    <Button type="submit" disabled={isLoading} className="bg-primary-600 hover:bg-primary-700 text-white font-black text-[10px] uppercase tracking-widest px-10 h-12 shadow-xl shadow-primary-50">
+                                        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Commit Changes'}
                                     </Button>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                )
-            }
+                            </form>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
         </div >
     );
 };
