@@ -68,10 +68,10 @@ const AdminDashboard = () => {
         : 0;
 
     return (
-        <div className="space-y-4 md:space-y-6 overflow-x-hidden max-w-full">
+        <div className="space-y-8 pb-safe-nav animate-slide-up overflow-x-hidden max-w-full">
             {/* Top Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 max-w-full">
-                <Card className="bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-200 border-none rounded-xl md:rounded-2xl overflow-hidden">
+                <Card className="btn-premium bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-xl shadow-primary-200/50 border-none rounded-xl md:rounded-2xl overflow-hidden">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-[10px] md:text-xs font-black text-primary-100 uppercase tracking-widest truncate">Active Children</CardTitle>
                     </CardHeader>
@@ -84,7 +84,7 @@ const AdminDashboard = () => {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="border-none shadow-sm ring-1 ring-neutral-200 rounded-xl md:rounded-2xl overflow-hidden">
+                <Card className="glass-card border-none rounded-xl md:rounded-2xl overflow-hidden">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-[10px] md:text-xs font-black text-neutral-400 uppercase tracking-widest truncate">Total Therapists</CardTitle>
                     </CardHeader>
@@ -95,7 +95,7 @@ const AdminDashboard = () => {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="border-none shadow-sm ring-1 ring-neutral-200 rounded-xl md:rounded-2xl overflow-hidden">
+                <Card className="glass-card border-none rounded-xl md:rounded-2xl overflow-hidden">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-[10px] md:text-xs font-black text-neutral-400 uppercase tracking-widest truncate">Therapy Completion</CardTitle>
                     </CardHeader>
@@ -106,7 +106,7 @@ const AdminDashboard = () => {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="border-none shadow-sm ring-1 ring-neutral-200 rounded-xl md:rounded-2xl overflow-hidden">
+                <Card className="glass-card border-none rounded-xl md:rounded-2xl overflow-hidden">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-[10px] md:text-xs font-black text-neutral-400 uppercase tracking-widest truncate">Parent Engagement</CardTitle>
                     </CardHeader>
@@ -122,7 +122,7 @@ const AdminDashboard = () => {
             {/* Parents & Therapists Directory */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Therapists List */}
-                <Card className="border-none shadow-sm ring-1 ring-neutral-200 rounded-xl md:rounded-2xl overflow-hidden">
+                <Card className="glass-card border-none rounded-xl md:rounded-2xl overflow-hidden">
                     <CardHeader className="bg-violet-50/50 border-b border-violet-100/50 pb-3">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-sm md:text-base font-black text-neutral-800 uppercase tracking-tight flex items-center gap-2">
@@ -159,7 +159,7 @@ const AdminDashboard = () => {
                 </Card>
 
                 {/* Parents List */}
-                <Card className="border-none shadow-sm ring-1 ring-neutral-200 rounded-xl md:rounded-2xl overflow-hidden">
+                <Card className="glass-card border-none rounded-xl md:rounded-2xl overflow-hidden">
                     <CardHeader className="bg-pink-50/50 border-b border-pink-100/50 pb-3">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-sm md:text-base font-black text-neutral-800 uppercase tracking-tight flex items-center gap-2">
@@ -204,7 +204,7 @@ const AdminDashboard = () => {
             {/* Dashboard Statistics & Trends removed as requested */}
 
             {/* Therapist Performance */}
-            <Card>
+            <Card className="glass-card border-none">
                 <CardHeader>
                     <CardTitle>Therapist Performance</CardTitle>
                 </CardHeader>
@@ -291,7 +291,7 @@ const AdminDashboard = () => {
             </Card>
 
             {/* Compliance & Risk Alerts */}
-            <Card className="border-none shadow-sm ring-1 ring-neutral-200 rounded-[2rem]">
+            <Card className="glass-card border-none rounded-[2rem]">
                 <CardHeader>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <CardTitle className="text-xl font-black text-neutral-800 uppercase tracking-tight">Compliance & Risk Alerts</CardTitle>
@@ -438,7 +438,7 @@ const OperationsPage = () => {
     }, [users]);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8 pb-safe-nav animate-slide-up">
             <div>
                 <h2 className="text-2xl font-bold text-neutral-800">Operations Management</h2>
                 <p className="text-neutral-500">Monitor and manage center operations</p>
@@ -446,7 +446,7 @@ const OperationsPage = () => {
 
             {/* Operational Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
+                <Card className="glass-card rounded-2xl md:rounded-[2rem] border-none">
                     <CardContent className="p-4 md:p-6 text-center md:text-left">
                         <div className="h-10 w-10 bg-primary-50 rounded-xl flex items-center justify-center mb-3 mx-auto md:mx-0">
                             <Users className="h-5 w-5 text-primary-500" />
@@ -455,7 +455,7 @@ const OperationsPage = () => {
                         <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-2 px-1">Active Kids</p>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
+                <Card className="glass-card rounded-2xl md:rounded-[2rem] border-none">
                     <CardContent className="p-4 md:p-6 text-center md:text-left">
                         <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center mb-3 mx-auto md:mx-0">
                             <Activity className="h-5 w-5 text-emerald-500" />
@@ -464,7 +464,7 @@ const OperationsPage = () => {
                         <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-2 px-1">Sess / Week</p>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
+                <Card className="glass-card rounded-2xl md:rounded-[2rem] border-none">
                     <CardContent className="p-4 md:p-6 text-center md:text-left">
                         <div className="h-10 w-10 bg-violet-50 rounded-xl flex items-center justify-center mb-3 mx-auto md:mx-0">
                             <Building2 className="h-5 w-5 text-violet-500" />
@@ -473,7 +473,7 @@ const OperationsPage = () => {
                         <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-2 px-1">Team Size</p>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
+                <Card className="glass-card rounded-2xl md:rounded-[2rem] border-none">
                     <CardContent className="p-4 md:p-6 text-center md:text-left">
                         <div className="h-10 w-10 bg-amber-50 rounded-xl flex items-center justify-center mb-3 mx-auto md:mx-0">
                             <Clock className="h-5 w-5 text-amber-500" />
@@ -485,7 +485,7 @@ const OperationsPage = () => {
             </div>
 
             {/* Therapist Allocation */}
-            <Card className="rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
+            <Card className="glass-card rounded-[2rem] border-none">
                 <CardHeader>
                     <CardTitle className="text-xl font-black text-neutral-800 uppercase tracking-tight">Therapist Allocation</CardTitle>
                 </CardHeader>
@@ -906,7 +906,7 @@ const AdminPortal = () => {
 
     return (
         <Routes>
-            <Route element={<DashboardLayout title="CDC Admin" sidebarItems={sidebarItems} roleColor="bg-neutral-800" onLogout={handleLogout} />}>
+            <Route element={<DashboardLayout title="CDC Admin" sidebarItems={sidebarItems} roleColor="bg-primary-600" onLogout={handleLogout} />}>
                 <Route path="overview" element={<AdminDashboard />} />
                 <Route path="operations" element={<OperationsPage />} />
                 <Route path="users" element={<UserManagement />} />

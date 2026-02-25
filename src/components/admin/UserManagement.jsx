@@ -421,7 +421,7 @@ const UserManagement = () => {
 
             {/* Creation Form */}
             {isCreating && (
-                <Card className="border-none shadow-2xl ring-1 ring-neutral-200 bg-white overflow-hidden animate-in slide-in-from-top-4 duration-500 rounded-[2rem] md:rounded-[2.5rem]">
+                <Card className="glass-card border-none shadow-2xl bg-white overflow-hidden animate-in slide-in-from-top-4 duration-500 rounded-[2rem] md:rounded-[2.5rem]">
                     <CardHeader className="bg-neutral-50/50 border-b border-neutral-100 p-6 md:p-8">
                         <CardTitle className="text-xl md:text-2xl font-black text-neutral-900 uppercase tracking-tight flex items-center gap-3">
                             <Plus className="h-6 w-6 text-primary-600" />
@@ -760,7 +760,7 @@ const UserManagement = () => {
                     // Children List View
                     childrenList.length > 0 ? (
                         childrenList.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map((child) => (
-                            <Card key={child.id} className="group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border-none shadow-sm ring-1 ring-neutral-200 relative overflow-hidden rounded-[2rem] bg-white">
+                            <Card key={child.id} className="glass-card group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border-none relative overflow-hidden rounded-[2rem] bg-white">
                                 <div className="absolute top-0 right-0 w-32 h-32 -mr-12 -mt-12 rounded-full opacity-[0.03] bg-emerald-500 group-hover:opacity-10 group-hover:scale-150 transition-all duration-700" />
                                 <CardContent className="p-7">
                                     <div className="flex items-start justify-between mb-6">
@@ -832,7 +832,7 @@ const UserManagement = () => {
                     // Regular User (Therapist/Parent) List View
                     filteredUsers.length > 0 ? (
                         filteredUsers.map((user) => (
-                            <Card key={user.id} className="group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border-none shadow-sm ring-1 ring-neutral-200 relative overflow-hidden rounded-[2rem] bg-white">
+                            <Card key={user.id} className="glass-card group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border-none relative overflow-hidden rounded-[2rem] bg-white">
                                 <div className={`absolute top-0 right-0 w-32 h-32 -mr-12 -mt-12 rounded-full opacity-[0.03] group-hover:opacity-10 group-hover:scale-150 transition-all duration-700 ${activeTab === 'therapists' ? 'bg-primary-500' : 'bg-pink-500'}`} />
 
                                 <CardContent className="p-7">
