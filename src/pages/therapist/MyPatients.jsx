@@ -35,9 +35,11 @@ import { useApp } from '../../lib/context';
 // Child Card Component
 const ChildCard = ({ child, sessions = [], skillScores = [], onSelect }) => {
     const recentSession = Array.isArray(sessions) && sessions.length > 0 ? sessions[0] : null;
-    const avgScore = Array.isArray(skillScores) && skillScores.length > 0
-        ? Math.round(skillScores.reduce((a, b) => a + (b.score || 0), 0) / skillScores.length)
-        : 0;
+    const avgScore = child.schoolReadinessScore !== undefined
+        ? child.schoolReadinessScore
+        : (Array.isArray(skillScores) && skillScores.length > 0
+            ? Math.round(skillScores.reduce((a, b) => a + (b.score || 0), 0) / skillScores.length)
+            : 0);
 
     const improvingCount = Array.isArray(skillScores) ? skillScores.filter(s => s && s.trend === 'improving').length : 0;
     const attentionCount = Array.isArray(skillScores) ? skillScores.filter(s => s && s.trend === 'attention').length : 0;
@@ -91,18 +93,24 @@ const ChildCard = ({ child, sessions = [], skillScores = [], onSelect }) => {
                         </div>
 
                         {/* Quick Stats */}
-                        <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-neutral-100">
+                        <div className="grid grid-cols-4 gap-2 mt-4 pt-4 border-t border-neutral-100">
                             <div className="text-center">
                                 <p className="text-lg font-bold text-neutral-800">{avgScore}%</p>
-                                <p className="text-xs text-neutral-500">School Ready</p>
-                            </div>
-                            <div className="text-center">
-                                <p className="text-lg font-bold text-neutral-800">{sessions.length}</p>
-                                <p className="text-xs text-neutral-500">Sessions</p>
+                                <p className="text-[10px] text-neutral-500 font-medium truncate">School Ready</p>
                             </div>
                             <div className="text-center">
                                 <p className="text-lg font-bold text-neutral-800">{child.streak}</p>
-                                <p className="text-xs text-neutral-500">Day Streak</p>
+                                <p className="text-[10px] text-neutral-500 font-medium truncate">Day Streak</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-lg font-bold text-neutral-800">{sessions.length}</p>
+                                <p className="text-[10px] text-neutral-500 font-medium truncate">Sessions</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-lg font-bold text-neutral-800">
+                                    {Math.round(sessions.length > 0 ? (sessions.reduce((a, b) => a + (b.engagement || 0), 0) / sessions.filter(s => s.engagement !== undefined).length || 0) : 0)}%
+                                </p>
+                                <p className="text-[10px] text-neutral-500 font-medium truncate">Avg Engage</p>
                             </div>
                         </div>
                     </div>
@@ -117,11 +125,11 @@ const ChildCard = ({ child, sessions = [], skillScores = [], onSelect }) => {
                                 Last: {recentSession.date ? new Date(recentSession.date).toLocaleDateString() : 'N/A'} - {recentSession.type || 'N/A'}
                             </span>
                         </div>
-                        {recentSession.engagement && (
+                        {recentSession.engagement !== undefined && (
                             <span className={`text-sm font-medium ${recentSession.engagement >= 80 ? 'text-green-600' :
                                 recentSession.engagement >= 40 ? 'text-yellow-600' : 'text-red-600'
                                 }`}>
-                                {recentSession.engagement}% engagement
+                                Latest: {recentSession.engagement}% engagement
                             </span>
                         )}
                     </div>

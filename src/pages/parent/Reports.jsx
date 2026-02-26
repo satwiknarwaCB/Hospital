@@ -3,13 +3,15 @@
 // Secure View of Intake, Medical, and Assessment Reports
 // ============================================================
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
     FileText,
     Download,
     ShieldCheck,
     Clock,
     Lock,
+    Eye,
+    X,
     ExternalLink
 } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/Card';
@@ -17,13 +19,112 @@ import { Button } from '../../components/ui/Button';
 import { useApp } from '../../lib/context';
 
 const Reports = () => {
-    const { currentUser, childDocuments, kids } = useApp();
+    const { currentUser, childDocuments, kids, addNotification } = useApp();
+    const [viewingDoc, setViewingDoc] = useState(null);
 
     // Get the child for this parent
     const child = kids.find(k => k.id === currentUser?.childId);
 
     // Filter documents for this specific child
     const reports = childDocuments.filter(doc => doc.childId === child?.id);
+
+    // Handle viewing a document in overlay
+    const handleViewDocument = (doc) => {
+        if (!doc.url || doc.url === '#') {
+            addNotification({
+                type: 'error',
+                title: 'View Failed',
+                message: 'This document has no viewable content yet. Please ask your therapist to upload it.'
+            });
+            return;
+        }
+        setViewingDoc(doc);
+    };
+
+    // Handle downloading a document
+    const handleDownloadDocument = (doc) => {
+        if (!doc.url || doc.url === '#') {
+            addNotification({
+                type: 'error',
+                title: 'Download Failed',
+                message: 'This document has no downloadable file attached yet.'
+            });
+            return;
+        }
+
+        // Handle Data URLs by converting to Blob
+        if (doc.url.startsWith('data:')) {
+            try {
+                const parts = doc.url.split(',');
+                const type = parts[0].split(':')[1].split(';')[0];
+                const base64 = parts[1];
+                const binary = atob(base64);
+                const array = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    array[i] = binary.charCodeAt(i);
+                }
+                const blob = new Blob([array], { type });
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = `${doc.title || 'report'}.${doc.format || 'pdf'}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(blobUrl);
+            } catch (e) {
+                console.error('Error downloading data URL:', e);
+            }
+        } else if (doc.url.startsWith('blob:')) {
+            // Blob URLs from file uploads
+            const a = document.createElement('a');
+            a.href = doc.url;
+            a.download = `${doc.title || 'report'}.${doc.format || 'pdf'}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } else {
+            // Regular URLs
+            const a = document.createElement('a');
+            a.href = doc.url;
+            a.download = `${doc.title || 'report'}.${doc.format || 'pdf'}`;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        addNotification({
+            type: 'success',
+            title: 'Download Started',
+            message: `Downloading "${doc.title}"...`
+        });
+    };
+
+    // Open document in a new browser tab
+    const handleOpenInNewTab = (doc) => {
+        if (!doc.url || doc.url === '#') return;
+
+        if (doc.url.startsWith('data:')) {
+            try {
+                const parts = doc.url.split(',');
+                const type = parts[0].split(':')[1].split(';')[0];
+                const base64 = parts[1];
+                const binary = atob(base64);
+                const array = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    array[i] = binary.charCodeAt(i);
+                }
+                const blob = new Blob([array], { type });
+                const blobUrl = URL.createObjectURL(blob);
+                window.open(blobUrl, '_blank');
+            } catch (e) {
+                window.open(doc.url, '_blank');
+            }
+        } else {
+            window.open(doc.url, '_blank');
+        }
+    };
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 animate-slide-up">
@@ -65,7 +166,21 @@ const Reports = () => {
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
-                                        <Button variant="outline" className="h-10 px-4 rounded-xl border-neutral-200 hover:border-primary-500 hover:text-primary-600 gap-2">
+                                        {/* Eye Icon - View Report */}
+                                        <Button
+                                            variant="outline"
+                                            className="h-10 w-10 p-0 rounded-xl border-neutral-200 hover:border-violet-500 hover:text-violet-600 hover:bg-violet-50 transition-all"
+                                            title="View Report"
+                                            onClick={() => handleViewDocument(doc)}
+                                        >
+                                            <Eye className="h-4 w-4" />
+                                        </Button>
+                                        {/* Download Button */}
+                                        <Button
+                                            variant="outline"
+                                            className="h-10 px-4 rounded-xl border-neutral-200 hover:border-primary-500 hover:text-primary-600 gap-2 transition-all"
+                                            onClick={() => handleDownloadDocument(doc)}
+                                        >
                                             <Download className="h-4 w-4" />
                                             <span className="hidden sm:inline">Download</span>
                                         </Button>
@@ -98,6 +213,77 @@ const Reports = () => {
                     </p>
                 </div>
             </div>
+
+            {/* Document Viewer Overlay */}
+            {viewingDoc && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+                        {/* Overlay Header */}
+                        <div className="p-6 border-b border-neutral-100 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="h-12 w-12 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center">
+                                    <FileText className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-neutral-800 tracking-tight">{viewingDoc.title}</h3>
+                                    <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest mt-0.5">
+                                        {viewingDoc.category || 'Clinical'} • {viewingDoc.fileSize} • Uploaded by {viewingDoc.uploadedBy}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setViewingDoc(null)}
+                                className="h-10 w-10 bg-neutral-100 rounded-xl flex items-center justify-center hover:bg-neutral-200 transition-colors"
+                            >
+                                <X className="h-5 w-5 text-neutral-500" />
+                            </button>
+                        </div>
+
+                        {/* Document Preview */}
+                        <div className="flex-1 overflow-hidden bg-neutral-50 min-h-[400px]">
+                            {viewingDoc.url && viewingDoc.url !== '#' ? (
+                                <iframe
+                                    src={viewingDoc.url}
+                                    className="w-full h-full min-h-[400px]"
+                                    title={viewingDoc.title}
+                                    style={{ border: 'none' }}
+                                />
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-full py-20 text-neutral-400">
+                                    <FileText className="h-16 w-16 mb-4 opacity-30" />
+                                    <p className="font-bold text-lg">No Preview Available</p>
+                                    <p className="text-sm mt-1">The therapist has not attached a viewable file yet.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Overlay Footer */}
+                        <div className="p-6 border-t border-neutral-100 flex items-center justify-between bg-white">
+                            <div className="flex items-center gap-2 text-green-600 font-black text-[10px] uppercase tracking-widest">
+                                <ShieldCheck className="h-4 w-4" />
+                                ENCRYPTED DOCUMENT
+                            </div>
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="outline"
+                                    className="rounded-xl gap-2 font-bold border-neutral-200"
+                                    onClick={() => handleOpenInNewTab(viewingDoc)}
+                                >
+                                    <ExternalLink className="h-4 w-4" />
+                                    Open in New Tab
+                                </Button>
+                                <Button
+                                    className="rounded-xl gap-2 font-bold bg-neutral-900 hover:bg-black text-white"
+                                    onClick={() => handleDownloadDocument(viewingDoc)}
+                                >
+                                    <Download className="h-4 w-4" />
+                                    Download
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

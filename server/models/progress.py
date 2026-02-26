@@ -20,6 +20,7 @@ class SkillGoalCreate(SkillGoalBase):
 
 class SkillGoalUpdate(BaseModel):
     duration: Optional[str] = None
+    startDate: Optional[str] = None
     deadline: Optional[str] = None
     targets: Optional[List[int]] = None
     status: Optional[str] = None

@@ -1209,11 +1209,42 @@ export const AppProvider = ({ children }) => {
 
     const getLatestSkillScores = useCallback((childId) => {
         const scores = getChildSkillScores(childId);
-        const domains = [...new Set(scores.map(s => s.domain))];
-        return domains.map(domain =>
-            scores.find(s => s.domain === domain)
-        ).filter(Boolean);
-    }, [getChildSkillScores]);
+
+        if (scores.length > 0) {
+            const domains = [...new Set(scores.map(s => s.domain))];
+            return domains.map(domain =>
+                scores.find(s => s.domain === domain)
+            ).filter(Boolean);
+        }
+
+        // Fallback: Aggregate from skillProgress categories if official scores are missing
+        const progress = skillProgress.filter(p => p.childId === childId || p.child_id === childId);
+        if (progress.length > 0) {
+            const categories = [...new Set(progress.map(p => p.category || "General"))];
+            return categories.map(cat => {
+                const categorySkills = progress.filter(p => (p.category || "General") === cat);
+                const avgScore = Math.round(
+                    categorySkills.reduce((acc, curr) => acc + (curr.progress || 0), 0) /
+                    categorySkills.length
+                );
+
+                // Trend: Improving if avg > 0
+                // Attention ONLY if avg is very low (< 20)
+                const hasImproving = avgScore > 0;
+                const isVeryLow = avgScore < 20;
+
+                return {
+                    id: `derived-${cat}-${childId}`,
+                    domain: cat,
+                    score: avgScore,
+                    trend: isVeryLow ? 'attention' : (hasImproving ? 'improving' : 'stable'),
+                    isDerived: true
+                };
+            });
+        }
+
+        return [];
+    }, [getChildSkillScores, skillProgress]);
 
     const getSkillHistory = useCallback((childId, domain) => {
         return skillScores
@@ -1975,9 +2006,42 @@ export const AppProvider = ({ children }) => {
                 }
             }
 
+            // Derive mood from most recent completed session
+            const recentCompleted = sessions
+                .filter(s => s.childId === childId && s.status === 'completed' && s.emotionalState)
+                .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+
+            let currentMood = child.currentMood || '';
+            let moodContext = child.moodContext || '';
+
+            if (recentCompleted?.emotionalState) {
+                const state = recentCompleted.emotionalState;
+                const sessionType = recentCompleted.type || 'Therapy';
+                const sessionDate = recentCompleted.date
+                    ? new Date(recentCompleted.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                    : 'today';
+
+                if (state === 'Regulated') {
+                    currentMood = '😊 Regulated';
+                    moodContext = `Emotionally regulated during ${sessionType} on ${sessionDate}. Great self-control!`;
+                } else if (state === 'Neutral') {
+                    currentMood = '😐 Neutral';
+                    moodContext = `Neutral emotional state during ${sessionType} on ${sessionDate}. Steady and calm.`;
+                } else if (state === 'Dysregulated') {
+                    currentMood = '😢 Dysregulated';
+                    moodContext = `Had difficulty regulating during ${sessionType} on ${sessionDate}. Extra support recommended.`;
+                } else {
+                    // Handle any custom text the therapist typed
+                    currentMood = state;
+                    moodContext = `Observed during ${sessionType} on ${sessionDate}.`;
+                }
+            }
+
             return {
                 ...child,
                 streak,
+                currentMood,
+                moodContext,
                 schoolReadinessScore: child.schoolReadinessScore || schoolReadinessScore
             };
         });

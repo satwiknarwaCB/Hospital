@@ -240,6 +240,8 @@ const ParentDashboard = () => {
     } = useApp();
     const navigate = useNavigate();
     const [selectedSession, setSelectedSession] = useState(null);
+    const [selectedReview, setSelectedReview] = useState(null);
+    const [showReportsModal, setShowReportsModal] = useState(false);
     const [showThanksSent, setShowThanksSent] = useState(false);
 
     // Get the logged-in parent's child
@@ -347,25 +349,37 @@ const ParentDashboard = () => {
     const therapyProgress = [
         {
             name: 'Speech Therapy',
-            val: skillScores.find(s => s.domain.toLowerCase().includes('language'))?.score || 0,
+            val: skillScores.find(s => {
+                const d = s.domain?.toLowerCase() || '';
+                return d.includes('speech') || d.includes('language') || d.includes('oral') || d.includes('communication') || d.includes('voice') || d.includes('expressive');
+            })?.score || 0,
             trend: 'stable',
             color: 'text-violet-500'
         },
         {
             name: 'Occupational Therapy',
-            val: skillScores.find(s => s.domain.toLowerCase().includes('sensory') || s.domain.toLowerCase().includes('interaction'))?.score || 0,
+            val: skillScores.find(s => {
+                const d = s.domain?.toLowerCase() || '';
+                return d.includes('sensory') || d.includes('social') || d.includes('interaction') || d.includes('help') || d.includes('care') || d.includes('occupational') || d.includes('fine') || d.includes('daily');
+            })?.score || 0,
             trend: 'stable',
             color: 'text-orange-500'
         },
         {
             name: 'Physical Therapy',
-            val: skillScores.find(s => s.domain.toLowerCase().includes('motor'))?.score || 0,
+            val: skillScores.find(s => {
+                const d = s.domain?.toLowerCase() || '';
+                return d.includes('physical') || d.includes('motor') || d.includes('gross') || d.includes('movement') || d.includes('body') || d.includes('balance');
+            })?.score || 0,
             trend: 'stable',
             color: 'text-blue-500'
         },
         {
             name: 'Behavioral Therapy',
-            val: skillScores.find(s => s.domain.toLowerCase().includes('emotional') || s.domain.toLowerCase().includes('regulation'))?.score || 0,
+            val: skillScores.find(s => {
+                const d = s.domain?.toLowerCase() || '';
+                return d.includes('behavioral') || d.includes('emotional') || d.includes('regulation') || d.includes('mood') || d.includes('cognition') || d.includes('attention') || d.includes('aba');
+            })?.score || 0,
             trend: 'stable',
             color: 'text-green-500'
         }
@@ -379,7 +393,7 @@ const ParentDashboard = () => {
     const improvingAreas = skillScores.filter(s => s.trend === 'improving').length;
 
     // Simplified labels for parent understanding
-    const overallProgressDisplay = overallProgress;
+    const overallProgressDisplay = child.schoolReadinessScore || overallProgress;
     const improvingCount = improvingAreas;
 
     // Periodic (15-day/Monthly) Clinical Reviews - FETCHED FROM CONTEXT
@@ -433,11 +447,11 @@ const ParentDashboard = () => {
                         <p className="text-3xl font-black text-green-500">{improvingCount}</p>
                     </CardContent>
                 </Card>
-                <Card className={`glass-card border-none ${unreadMessages > 0 ? 'bg-violet-50' : ''}`}>
+                <Card className={`glass-card border-none ${(unreadMessages + todayHighlights.length + periodicReviews.filter(r => r.isNew).length) > 0 ? 'bg-violet-50' : ''}`}>
                     <CardContent className="p-5">
                         <p className="text-neutral-400 text-[10px] font-black uppercase tracking-widest mb-1">Doctor Notes</p>
-                        <p className={`text-3xl font-black ${unreadMessages > 0 ? 'text-violet-600' : 'text-neutral-800'}`}>
-                            {unreadMessages}
+                        <p className={`text-3xl font-black ${(unreadMessages + todayHighlights.length + periodicReviews.filter(r => r.isNew).length) > 0 ? 'text-violet-600' : 'text-neutral-800'}`}>
+                            {unreadMessages + todayHighlights.length + periodicReviews.filter(r => r.isNew).length}
                         </p>
                     </CardContent>
                 </Card>
@@ -503,8 +517,8 @@ const ParentDashboard = () => {
                                                 <Button
                                                     size="sm"
                                                     variant="secondary"
-                                                    className="flex-1 md:flex-none h-11 px-6 rounded-xl font-bold"
-                                                    onClick={() => navigate('/parent/sessions', { state: { activeTab: 'history', sessionId: session.id } })}
+                                                    className="flex-1 md:flex-none h-11 px-6 rounded-xl font-bold bg-secondary-50 hover:bg-secondary-100 text-secondary-700 border-none"
+                                                    onClick={() => setSelectedSession(session)}
                                                 >
                                                     Full Report
                                                 </Button>
@@ -612,18 +626,28 @@ const ParentDashboard = () => {
                 </div>
 
                 {/* Current Mood */}
-                <Card className="border-t-4 border-t-secondary-500">
-                    <CardHeader>
-                        <CardTitle>Current Mood</CardTitle>
+                <Card className="border-t-4 border-t-secondary-500 shadow-sm transition-all duration-300 hover:shadow-md">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-lg font-black text-neutral-800 tracking-tight">Current Mood</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="flex items-center justify-center p-4">
-                            <span className="text-5xl animate-bounce">{child.currentMood ? child.currentMood.split(' ')[0] : '😐'}</span>
+                            <span className="text-5xl animate-float">
+                                {child.currentMood && child.currentMood.match(/\p{Emoji}/u)
+                                    ? child.currentMood.split(' ')[0]
+                                    : (child.currentMood?.toLowerCase().includes('happy') ? '😊' :
+                                        child.currentMood?.toLowerCase().includes('sad') ? '😢' :
+                                            child.currentMood?.toLowerCase().includes('angry') ? '😤' : '😐')}
+                            </span>
                         </div>
-                        <p className="text-center text-lg font-medium text-neutral-800 mt-2">
-                            {child.currentMood ? child.currentMood.split(' ').slice(1).join(' ') : 'Unknown'}
+                        <p className="text-center text-xl font-black text-neutral-800 mt-2">
+                            {child.currentMood && child.currentMood.match(/\p{Emoji}/u)
+                                ? child.currentMood.split(' ').slice(1).join(' ')
+                                : child.currentMood || "Stable"}
                         </p>
-                        <p className="text-center text-sm text-neutral-500 mt-1">{child.moodContext}</p>
+                        <p className="text-center text-[11px] font-bold text-neutral-400 mt-2 uppercase tracking-widest leading-relaxed">
+                            {child.moodContext || "Feeling steady and ready to learn."}
+                        </p>
                     </CardContent>
                 </Card>
 
@@ -643,8 +667,8 @@ const ParentDashboard = () => {
                                 <p className="text-sm text-neutral-500 mt-2">{nextSession.location}</p>
                                 <Button
                                     variant="outline"
-                                    className="w-full mt-6"
-                                    onClick={() => navigate('/parent/sessions', { state: { activeTab: 'upcoming', sessionId: nextSession.id } })}
+                                    className="w-full mt-6 rounded-xl font-bold border-neutral-200 hover:bg-neutral-50"
+                                    onClick={() => setSelectedSession(nextSession)}
                                 >
                                     View Details
                                 </Button>
@@ -658,14 +682,9 @@ const ParentDashboard = () => {
                 {/* Therapy Mastery Overview */}
                 <Card className="col-span-1 md:col-span-2 shadow-sm border-neutral-200/60">
                     <CardHeader className="pb-2">
-                        <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                                <TrendingUp className="h-5 w-5 text-primary-500 shrink-0" />
-                                <span className="text-lg sm:text-xl font-black text-neutral-800 tracking-tight">Therapy Mastery</span>
-                            </div>
-                            <Button variant="ghost" size="sm" className="text-primary-600 font-bold hover:bg-primary-50 w-full sm:w-auto" onClick={() => navigate('/parent/new-learning')}>
-                                View Detailed Roadmap →
-                            </Button>
+                        <CardTitle className="flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5 text-primary-500 shrink-0" />
+                            <span className="text-lg sm:text-xl font-black text-neutral-800 tracking-tight">Therapy Mastery</span>
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -713,6 +732,113 @@ const ParentDashboard = () => {
                     child={child}
                     onClose={() => setSelectedSession(null)}
                 />
+            )}
+
+            {/* Clinical Review Modal */}
+            {selectedReview && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in transition-all">
+                    <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-5 duration-300">
+                        <div className="p-8">
+                            <div className="flex items-center justify-between mb-8">
+                                <span className="px-4 py-1.5 bg-violet-100 text-violet-700 rounded-full text-[10px] font-black uppercase tracking-widest">
+                                    {selectedReview.type}
+                                </span>
+                                <button onClick={() => setSelectedReview(null)} className="p-2 hover:bg-neutral-100 rounded-full transition-colors">
+                                    <X className="h-6 w-6 text-neutral-400" />
+                                </button>
+                            </div>
+
+                            <h2 className="text-3xl font-black text-neutral-800 tracking-tight mb-2">{selectedReview.title}</h2>
+                            <p className="text-neutral-500 font-bold mb-8">Review Period: {selectedReview.period} • {selectedReview.date}</p>
+
+                            <div className="space-y-6">
+                                <div className="p-6 bg-neutral-50 rounded-[2rem] border border-neutral-100">
+                                    <h4 className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-4">Clinical Summary</h4>
+                                    <p className="text-neutral-700 leading-relaxed font-medium">
+                                        {selectedReview.summary}
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-5 bg-green-50 rounded-2xl border border-green-100">
+                                        <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Status</p>
+                                        <p className="text-lg font-black text-green-900 leading-none">Milestone Reached</p>
+                                    </div>
+                                    <div className="p-5 bg-primary-50 rounded-2xl border border-primary-100">
+                                        <p className="text-[10px] font-black text-primary-600 uppercase tracking-widest mb-1">Next Review</p>
+                                        <p className="text-lg font-black text-primary-900 leading-none">In 15 Days</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 flex gap-3">
+                                <Button className="flex-1 bg-neutral-900 text-white rounded-2xl h-14 text-lg font-black" onClick={() => setSelectedReview(null)}>
+                                    Close Review
+                                </Button>
+                                <Button variant="outline" className="h-14 w-14 rounded-2xl border-neutral-200">
+                                    <Download className="h-6 w-6" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Reports Modal (Digital Vault) */}
+            {showReportsModal && (
+                <div className="fixed inset-0 bg-neutral-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-hidden">
+                    <div className="bg-neutral-50 rounded-[2.5rem] max-w-4xl w-full h-[85vh] flex flex-col shadow-2xl ring-1 ring-white/20 animate-in zoom-in-95 duration-500">
+                        {/* Modal Header */}
+                        <div className="p-8 pb-4 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-3xl font-black text-neutral-800 tracking-tight flex items-center gap-3">
+                                    Digital Vault 🛡️
+                                </h2>
+                                <p className="text-neutral-500 font-bold ml-1">Clinical Reports for {child?.name}</p>
+                            </div>
+                            <button onClick={() => setShowReportsModal(false)} className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <X className="h-6 w-6 text-neutral-400" />
+                            </button>
+                        </div>
+
+                        {/* Scrollable Content */}
+                        <div className="flex-1 overflow-y-auto p-8 pt-4">
+                            <div className="space-y-4">
+                                {childDocuments.filter(doc => doc.childId === child.id).map((doc) => (
+                                    <Card key={doc.id} className="group hover:ring-2 hover:ring-primary-400 transition-all border-none bg-white shadow-md rounded-3xl p-6">
+                                        <div className="flex items-center gap-6">
+                                            <div className="h-16 w-16 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center group-hover:bg-primary-600 group-hover:text-white transition-all duration-300">
+                                                <FileText className="h-8 w-8" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <span className="px-2.5 py-1 bg-neutral-100 text-neutral-500 rounded-full text-[9px] font-black uppercase tracking-widest">
+                                                    {doc.category || 'Official'}
+                                                </span>
+                                                <h4 className="text-xl font-black text-neutral-800 mt-1">{doc.title}</h4>
+                                                <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest mt-1">Verified by {doc.uploadedBy} • {doc.date}</p>
+                                            </div>
+                                            <Button className="h-12 px-6 rounded-2xl bg-neutral-900 hover:bg-black text-white font-black flex gap-2">
+                                                <Download className="h-4 w-4" />
+                                                Download
+                                            </Button>
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-8 bg-white/50 border-t border-neutral-100 flex items-center justify-between rounded-b-[2.5rem]">
+                            <div className="flex items-center gap-2 text-green-600 font-black text-[10px] uppercase tracking-widest">
+                                <ShieldCheck className="h-4 w-4" />
+                                HIPAA COMPLIANT & ENCRYPTED
+                            </div>
+                            <Button variant="ghost" className="font-black text-neutral-400" onClick={() => setShowReportsModal(false)}>
+                                Back to Dashboard
+                            </Button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

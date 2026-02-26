@@ -291,42 +291,50 @@ const DailyProgressView = ({ records, onUpdate, role }) => {
 // ============================================================
 // Weekly View Component
 // ============================================================
-const WeeklyProgressView = ({ records, childName, summary }) => {
+const WeeklyProgressView = ({ records, allRecords, childName, summary }) => {
     // Analytics for the week
-    const improvedCount = records.filter(r => r.history?.length > 1 && r.history[0].progress > r.history[1].progress).length;
-    const avgProgress = Math.round(records.reduce((a, b) => a + b.progress, 0) / (records.length || 1));
+    // records here are ONLY those updated in the last 7 days
+    const improvedCount = records.filter(r => {
+        const history = r.history || [];
+        if (history.length < 1) return false;
+        // Check if latest history item is from this week and showed improvement
+        const latestIdx = history.findIndex(h => new Date(h.date) >= (new Date() - 7 * 24 * 60 * 60 * 1000));
+        return latestIdx !== -1 && (history[latestIdx].progress > (history[latestIdx + 1]?.progress || 0));
+    }).length;
+
+    const avgProgress = Math.round(allRecords.reduce((a, b) => a + b.progress, 0) / (allRecords.length || 1));
 
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-gradient-to-br from-primary-500 to-primary-600 border-none text-white shadow-lg">
+                <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 border-none text-white shadow-lg">
                     <CardContent className="p-5">
                         <div className="flex items-center justify-between mb-4">
-                            <Activity className="h-6 w-6 text-primary-100" />
-                            <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">Active</span>
+                            <Activity className="h-6 w-6 text-indigo-100" />
+                            <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">Week</span>
                         </div>
                         <p className="text-4xl font-black mb-1">{records.length}</p>
-                        <p className="text-sm font-medium text-primary-50">Skills Practiced This Week</p>
+                        <p className="text-sm font-medium text-indigo-50">Active Skills Practiced</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-br from-green-500 to-emerald-600 border-none text-white shadow-lg">
+                <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 border-none text-white shadow-lg">
                     <CardContent className="p-5">
                         <div className="flex items-center justify-between mb-4">
-                            <ArrowUpCircle className="h-6 w-6 text-green-100" />
-                            <span className="text-[10px) font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">Growth</span>
+                            <ArrowUpCircle className="h-6 w-6 text-emerald-100" />
+                            <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">Growth</span>
                         </div>
                         <p className="text-4xl font-black mb-1">{improvedCount}</p>
-                        <p className="text-sm font-medium text-green-50">Skills Showing Improvement</p>
+                        <p className="text-sm font-medium text-emerald-50">Recent Improvements</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-br from-indigo-500 to-blue-600 border-none text-white shadow-lg">
+                <Card className="bg-gradient-to-br from-amber-500 to-orange-600 border-none text-white shadow-lg">
                     <CardContent className="p-5">
                         <div className="flex items-center justify-between mb-4">
-                            <TrendingUp className="h-6 w-6 text-indigo-100" />
+                            <TrendingUp className="h-6 w-6 text-amber-100" />
                             <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">Score</span>
                         </div>
                         <p className="text-4xl font-black mb-1">{avgProgress}%</p>
-                        <p className="text-sm font-medium text-indigo-50">Overall Weekly Progress</p>
+                        <p className="text-sm font-medium text-amber-50">Overall Mastery Index</p>
                     </CardContent>
                 </Card>
             </div>
@@ -337,18 +345,24 @@ const WeeklyProgressView = ({ records, childName, summary }) => {
                     Growth Comparison
                 </h3>
                 <div className="space-y-3">
-                    {records.map(record => {
-                        const start = record.history?.[record.history.length - 1]?.progress || 0;
+                    {records.length > 0 ? records.map(record => {
+                        const history = record.history || [];
+                        const lastWeekDate = new Date();
+                        lastWeekDate.setDate(lastWeekDate.getDate() - 7);
+                        const weekStartEntry = history.find(h => new Date(h.date) <= lastWeekDate) ||
+                            history[history.length - 1];
+
+                        const start = weekStartEntry ? weekStartEntry.progress : 0;
                         const growth = record.progress - start;
                         return (
                             <Card key={record.id} className="border-none ring-1 ring-neutral-100 shadow-sm">
                                 <CardContent className="p-4 flex items-center justify-between">
                                     <div className="flex-1">
-                                        <h4 className="font-bold text-neutral-800 mb-2">{record.skillName}</h4>
+                                        <h4 className="font-bold text-neutral-800 mb-1">{record.skillName}</h4>
                                         <div className="flex items-center gap-4">
                                             <div className="flex-1">
                                                 <div className="flex justify-between text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">
-                                                    <span>Start: {start}%</span>
+                                                    <span>Week Start: {start}%</span>
                                                     <span>Now: {record.progress}%</span>
                                                 </div>
                                                 <div className="relative h-2 bg-neutral-100 rounded-full overflow-hidden">
@@ -362,12 +376,16 @@ const WeeklyProgressView = ({ records, childName, summary }) => {
                                         <div className={`text-xl font-black ${growth > 0 ? 'text-green-500' : 'text-neutral-400'}`}>
                                             {growth > 0 ? `+${growth}%` : '0%'}
                                         </div>
-                                        <div className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">Growth</div>
+                                        <div className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">Wk Growth</div>
                                     </div>
                                 </CardContent>
                             </Card>
                         );
-                    })}
+                    }) : (
+                        <div className="py-8 text-center bg-neutral-50 rounded-2xl border-2 border-dashed border-neutral-100 text-neutral-400 text-xs font-bold uppercase tracking-widest">
+                            No Skill Activity This Week
+                        </div>
+                    )}
                 </div>
             </section>
 
@@ -391,13 +409,45 @@ const WeeklyProgressView = ({ records, childName, summary }) => {
 // ============================================================
 // Monthly View Component
 // ============================================================
-const MonthlyProgressView = ({ records }) => {
+const MonthlyProgressView = ({ records, improvedRecords, allRecords }) => {
     const achieved = records.filter(r => r.status === 'Achieved');
-    const inProgress = records.filter(r => r.status === 'In Progress');
+    const inProgress = allRecords.filter(r => r.status !== 'Achieved');
+    const monthlyAverage = Math.round(allRecords.reduce((a, b) => a + b.progress, 0) / (allRecords.length || 1));
+    const improvementCount = improvedRecords.length;
 
     return (
         <div className="space-y-6">
-            <div className="bg-green-50/50 rounded-3xl p-6 border border-green-100">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="bg-white border-none shadow-sm ring-1 ring-neutral-100">
+                    <CardContent className="p-5">
+                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">Monthly Status</p>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-3xl font-black text-neutral-800">{achieved.length}</span>
+                            <span className="text-xs font-bold text-neutral-400">Goals Met</span>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="bg-white border-none shadow-sm ring-1 ring-neutral-100">
+                    <CardContent className="p-5">
+                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">Total Progress</p>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-3xl font-black text-primary-600">{monthlyAverage}%</span>
+                            <span className="text-xs font-bold text-neutral-400">Mastery</span>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="bg-white border-none shadow-sm ring-1 ring-neutral-100">
+                    <CardContent className="p-5">
+                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">Growth Items</p>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-3xl font-black text-emerald-600">{improvementCount}</span>
+                            <span className="text-xs font-bold text-neutral-400">Improved</span>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div className="bg-emerald-50/50 rounded-3xl p-6 border border-emerald-100 shadow-inner">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div>
                         <h3 className="text-2xl font-black text-green-800">Monthly Milestones 🌟</h3>
@@ -477,12 +527,45 @@ const MonthlyProgressView = ({ records }) => {
 // ============================================================
 const ChildProgressTracking = ({ forceChildId = null, role = 'parent' }) => {
     const { currentUser, kids, getChildProgress, updateSkillProgress, getPeriodicReviews } = useApp();
-    const [activeTab, setActiveTab] = useState('weekly'); // weekly, monthly
+    const [activeTab, setActiveTab] = useState('weekly');
     const [selectedSkillForUpdate, setSelectedSkillForUpdate] = useState(null);
 
     const child = kids.find(k => k.id === (forceChildId || currentUser?.childId) || k._id === (forceChildId || currentUser?.childId));
-    const records = getChildProgress(child?.id || child?._id || 'c1')
+    const allRecords = getChildProgress(child?.id || child?._id || 'c1')
         .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    // Refined Dates (Start of Day)
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const lastWeekDate = new Date(todayStart);
+    lastWeekDate.setDate(lastWeekDate.getDate() - 7);
+
+    const lastMonthDate = new Date(todayStart);
+    lastMonthDate.setDate(lastMonthDate.getDate() - 30);
+
+    const weeklyRecords = allRecords.filter(r => {
+        if (!r.lastUpdated) return false;
+        const d = new Date(r.lastUpdated);
+        d.setHours(0, 0, 0, 0);
+        return d >= lastWeekDate;
+    });
+
+    const monthlyRecords = allRecords.filter(r => {
+        if (!r.lastUpdated) return false;
+        const d = new Date(r.lastUpdated);
+        d.setHours(0, 0, 0, 0);
+        return d >= lastMonthDate;
+    });
+
+    const improvedMonthly = allRecords.filter(r => {
+        const history = r.history || [];
+        return history.some(h => {
+            const d = new Date(h.date);
+            d.setHours(0, 0, 0, 0);
+            return d >= lastMonthDate;
+        });
+    });
 
     const reviews = typeof getPeriodicReviews === 'function' ? getPeriodicReviews(child?.id) : [];
     const latestReview = Array.isArray(reviews) && reviews.length > 0
@@ -516,8 +599,21 @@ const ChildProgressTracking = ({ forceChildId = null, role = 'parent' }) => {
 
             {/* View Transitions */}
             <div className="animate-in fade-in slide-in-from-bottom-3 duration-700">
-                {activeTab === 'weekly' && <WeeklyProgressView records={records} childName={child?.name} summary={latestReview?.summary} />}
-                {activeTab === 'monthly' && <MonthlyProgressView records={records} />}
+                {activeTab === 'weekly' && (
+                    <WeeklyProgressView
+                        records={weeklyRecords}
+                        allRecords={allRecords}
+                        childName={child?.name}
+                        summary={latestReview?.summary}
+                    />
+                )}
+                {activeTab === 'monthly' && (
+                    <MonthlyProgressView
+                        records={monthlyRecords}
+                        improvedRecords={improvedMonthly}
+                        allRecords={allRecords}
+                    />
+                )}
             </div>
 
             {/* Update Modal */}

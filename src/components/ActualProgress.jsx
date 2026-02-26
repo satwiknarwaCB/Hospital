@@ -43,6 +43,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
         skillName: '',
         customSkillName: '',
         duration: '1 Month',
+        startDate: new Date().toISOString().split('T')[0],
         deadline: '',
         targets: [25, 50, 75, 100],
         notes: ''
@@ -53,6 +54,57 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
 
     const selectedGoal = goals.find(g => g.id === selectedGoalId);
     const relatedProgress = progressRecords.find(p => p.skillName === selectedGoal?.skillName);
+
+    // Auto-calculate targets based on duration
+    useEffect(() => {
+        if (!newGoalData.startDate || !newGoalData.deadline) return;
+
+        const s = new Date(newGoalData.startDate);
+        const e = new Date(newGoalData.deadline);
+        const diffDays = Math.ceil(Math.abs(e - s) / (1000 * 60 * 60 * 24));
+
+        let weekCount = Math.max(1, Math.ceil(diffDays / 7));
+        if (weekCount > 12) weekCount = 12; // Cap at 12 weeks
+
+        const newTargets = [];
+        for (let i = 1; i <= weekCount; i++) {
+            newTargets.push(Math.min(100, Math.round((i / weekCount) * 100)));
+        }
+
+        // Check if targets actually need updating to avoid infinite loops
+        const currentTargets = newGoalData.targets;
+        const needsUpdate = currentTargets.length !== newTargets.length ||
+            currentTargets.some((t, i) => t !== newTargets[i]);
+
+        if (needsUpdate) {
+            setNewGoalData(prev => ({ ...prev, targets: newTargets }));
+        }
+    }, [newGoalData.startDate, newGoalData.deadline]);
+
+    // Same for edit mode
+    useEffect(() => {
+        if (!isEditing || !editData?.startDate || !editData?.deadline) return;
+
+        const s = new Date(editData.startDate);
+        const e = new Date(editData.deadline);
+        const diffDays = Math.ceil(Math.abs(e - s) / (1000 * 60 * 60 * 24));
+
+        let weekCount = Math.max(1, Math.ceil(diffDays / 7));
+        if (weekCount > 12) weekCount = 12;
+
+        const newTargets = [];
+        for (let i = 1; i <= weekCount; i++) {
+            newTargets.push(Math.min(100, Math.round((i / weekCount) * 100)));
+        }
+
+        const currentTargets = editData.targets || [];
+        const needsUpdate = currentTargets.length !== newTargets.length ||
+            currentTargets.some((t, i) => t !== newTargets[i]);
+
+        if (needsUpdate) {
+            setEditData(prev => ({ ...prev, targets: newTargets }));
+        }
+    }, [isEditing, editData?.startDate, editData?.deadline]);
 
     // Prepare data for the comparison chart
     const chartData = useMemo(() => {
@@ -100,6 +152,19 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
         }));
     }, [selectedGoal, relatedProgress]);
 
+    const yTicks = useMemo(() => {
+        if (!chartData || chartData.length === 0) return [0, 25, 50, 75, 100];
+        const weekCount = chartData.length - 1;
+        // 1 week goal (Start + W1)
+        if (weekCount === 1) return [0, 100];
+        // 2 week goal (Start + W1 + W2)
+        if (weekCount === 2) return [0, 50, 100];
+        // 3 week goal (Start + W1 + W2 + W3)
+        if (weekCount === 3) return [0, 33, 67, 100];
+
+        return [0, 25, 50, 75, 100];
+    }, [chartData.length]);
+
     const getStatusColor = (planned, achieved, status) => {
         if (status === 'Achieved' || achieved >= 100) return 'text-emerald-600 bg-emerald-50 border-emerald-100';
         if (status === 'Backlog' || achieved < (planned * 0.4)) return 'text-rose-600 bg-rose-50 border-rose-100';
@@ -118,7 +183,26 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
     };
 
     const handleSave = () => {
-        updateSkillGoal(selectedGoal.id, editData);
+        const s = new Date(editData.startDate);
+        const e = new Date(editData.deadline);
+        const diffDays = Math.ceil(Math.abs(e - s) / (1000 * 60 * 60 * 24));
+
+        // Re-calculate targets to be safe before saving
+        let weekCount = Math.max(1, Math.ceil(diffDays / 7));
+        if (weekCount > 12) weekCount = 12;
+        const calculatedTargets = [];
+        for (let i = 1; i <= weekCount; i++) {
+            calculatedTargets.push(Math.min(100, Math.round((i / weekCount) * 100)));
+        }
+
+        let duration = `${diffDays} Days`;
+        if (diffDays >= 28 && diffDays <= 32) duration = "1 Month";
+        else if (diffDays >= 20 && diffDays <= 22) duration = "3 Weeks";
+        else if (diffDays >= 13 && diffDays <= 15) duration = "2 Weeks";
+        else if (diffDays >= 6 && diffDays <= 8) duration = "1 Week";
+        else if (diffDays === 1) duration = "1 Day";
+
+        updateSkillGoal(selectedGoal.id, { ...editData, duration, targets: calculatedTargets });
         setIsEditing(false);
     };
 
@@ -153,9 +237,29 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
             status: actualData.status || (finalProgress >= 100 ? 'Achieved' : (finalProgress > 0 ? 'In Progress' : 'Not Started'))
         });
 
-        // Also update goal if deadline was changed
-        if (actualData.deadline && actualData.deadline !== selectedGoal.deadline) {
-            updateSkillGoal(selectedGoal.id, { deadline: actualData.deadline });
+        // Also update goal if deadline or startDate was changed
+        if ((actualData.deadline && actualData.deadline !== selectedGoal.deadline) ||
+            (actualData.startDate && actualData.startDate !== selectedGoal.startDate)) {
+
+            const startDate = actualData.startDate || selectedGoal.startDate;
+            const deadline = actualData.deadline || selectedGoal.deadline;
+
+            // Calculate dynamic duration
+            const s = new Date(startDate);
+            const e = new Date(deadline);
+            const diffDays = Math.ceil(Math.abs(e - s) / (1000 * 60 * 60 * 24));
+            let duration = `${diffDays} Days`;
+            if (diffDays >= 28 && diffDays <= 32) duration = "1 Month";
+            else if (diffDays >= 20 && diffDays <= 22) duration = "3 Weeks";
+            else if (diffDays >= 13 && diffDays <= 15) duration = "2 Weeks";
+            else if (diffDays >= 6 && diffDays <= 8) duration = "1 Week";
+            else if (diffDays === 1) duration = "1 Day";
+
+            updateSkillGoal(selectedGoal.id, {
+                deadline: deadline,
+                startDate: startDate,
+                duration: duration
+            });
         }
 
         setIsUpdatingActual(false);
@@ -177,7 +281,9 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
             progress: relatedProgress?.progress || 0,
             notes: relatedProgress?.therapistNotes || '',
             weeklyActuals: initialActuals,
+            weeks: targetCount,
             status: relatedProgress?.status || 'In Progress',
+            startDate: selectedGoal?.startDate || '',
             deadline: selectedGoal?.deadline || ''
         });
         setIsUpdatingActual(true);
@@ -215,14 +321,37 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
             const skill = progressRecords.find(p => p.skillName === finalSkillName);
 
             // Prepare goal data with only valid fields
+            const startDate = newGoalData.startDate || new Date().toISOString().split('T')[0];
+            const deadline = newGoalData.deadline;
+
+            // Calculate dynamic duration
+            const s = new Date(startDate);
+            const e = new Date(deadline);
+            const diffDays = Math.ceil(Math.abs(e - s) / (1000 * 60 * 60 * 24));
+
+            let weekCount = Math.max(1, Math.ceil(diffDays / 7));
+            if (weekCount > 12) weekCount = 12;
+
+            const calculatedTargets = [];
+            for (let i = 1; i <= weekCount; i++) {
+                calculatedTargets.push(Math.min(100, Math.round((i / weekCount) * 100)));
+            }
+
+            let duration = `${diffDays} Days`;
+            if (diffDays >= 28 && diffDays <= 32) duration = "1 Month";
+            else if (diffDays >= 20 && diffDays <= 22) duration = "3 Weeks";
+            else if (diffDays >= 13 && diffDays <= 15) duration = "2 Weeks";
+            else if (diffDays >= 6 && diffDays <= 8) duration = "1 Week";
+            else if (diffDays === 1) duration = "1 Day";
+
             const goalData = {
                 childId,
                 skillId: skill?.skillId || skill?.id || `custom-${Date.now()}`,
                 skillName: finalSkillName,
-                duration: newGoalData.duration,
-                startDate: new Date().toISOString().split('T')[0],
-                deadline: newGoalData.deadline,
-                targets: newGoalData.targets,
+                duration: duration,
+                startDate: startDate,
+                deadline: deadline,
+                targets: calculatedTargets, // Use calculated to be absolutely sure
                 status: 'In Progress',
                 notes: newGoalData.notes || ''
             };
@@ -238,6 +367,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                 skillName: '',
                 customSkillName: '',
                 duration: '1 Month',
+                startDate: new Date().toISOString().split('T')[0],
                 deadline: '',
                 targets: [25, 50, 75, 100],
                 notes: ''
@@ -286,7 +416,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                     </div>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-6">
                         <div className="space-y-2">
                             <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Clinical Status</label>
                             <select
@@ -300,14 +430,26 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                                 <option value="Backlog">Backlog</option>
                             </select>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Target Deadline</label>
-                            <input
-                                type="date"
-                                value={actualData.deadline || (selectedGoal?.deadline || '')}
-                                onChange={(e) => setActualData({ ...actualData, deadline: e.target.value })}
-                                className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
-                            />
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Starting Date</label>
+                                <input
+                                    type="date"
+                                    value={actualData.startDate || (selectedGoal?.startDate || '')}
+                                    onChange={(e) => setActualData({ ...actualData, startDate: e.target.value })}
+                                    className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Target Deadline</label>
+                                <input
+                                    type="date"
+                                    value={actualData.deadline || (selectedGoal?.deadline || '')}
+                                    onChange={(e) => setActualData({ ...actualData, deadline: e.target.value })}
+                                    className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -371,7 +513,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                     <div className="flex justify-between items-center">
                         <CardTitle className="text-xl flex items-center gap-2">
                             <Target className="h-5 w-5 text-primary-500" />
-                            Define New 1-Month Goal
+                            Define New Development Goal
                         </CardTitle>
                         <button onClick={() => {
                             setIsAddingGoal(false);
@@ -390,7 +532,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-6">
                         <div className="space-y-2">
                             <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Select Skill</label>
                             <select
@@ -414,17 +556,32 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                                 <option value="__custom__">➕ Add Custom Skill</option>
                             </select>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Target Deadline</label>
-                            <input
-                                type="date"
-                                value={newGoalData.deadline}
-                                onChange={(e) => {
-                                    setNewGoalData({ ...newGoalData, deadline: e.target.value });
-                                    setGoalError('');
-                                }}
-                                className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
-                            />
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Starting Date</label>
+                                <input
+                                    type="date"
+                                    value={newGoalData.startDate}
+                                    onChange={(e) => {
+                                        setNewGoalData({ ...newGoalData, startDate: e.target.value });
+                                        setGoalError('');
+                                    }}
+                                    className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Target Deadline</label>
+                                <input
+                                    type="date"
+                                    value={newGoalData.deadline}
+                                    onChange={(e) => {
+                                        setNewGoalData({ ...newGoalData, deadline: e.target.value });
+                                        setGoalError('');
+                                    }}
+                                    className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -641,14 +798,25 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                                                 <option value="Backlog">Backlog</option>
                                             </select>
                                         </div>
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Target Deadline</label>
-                                            <input
-                                                type="date"
-                                                value={editData.deadline}
-                                                onChange={(e) => setEditData({ ...editData, deadline: e.target.value })}
-                                                className="w-full p-2.5 bg-white border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
-                                            />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Starting Date</label>
+                                                <input
+                                                    type="date"
+                                                    value={editData.startDate}
+                                                    onChange={(e) => setEditData({ ...editData, startDate: e.target.value })}
+                                                    className="w-full p-2.5 bg-white border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
+                                                />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Target Deadline</label>
+                                                <input
+                                                    type="date"
+                                                    value={editData.deadline}
+                                                    onChange={(e) => setEditData({ ...editData, deadline: e.target.value })}
+                                                    className="w-full p-2.5 bg-white border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 
@@ -757,7 +925,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                                                 tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }}
                                                 unit="%"
                                                 domain={[0, 100]}
-                                                ticks={[0, 25, 50, 75, 100]}
+                                                ticks={yTicks}
                                             />
                                             <Tooltip
                                                 contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
