@@ -480,9 +480,8 @@ const ChildProgressTracking = ({ forceChildId = null, role = 'parent' }) => {
     const [activeTab, setActiveTab] = useState('weekly'); // weekly, monthly
     const [selectedSkillForUpdate, setSelectedSkillForUpdate] = useState(null);
 
-    const child = kids.find(k => k.id === (forceChildId || currentUser?.childId));
-    const records = getChildProgress(child?.id || 'c1')
-        .filter(r => !r.isGoalOnly && !r.skillId?.startsWith('custom-'))
+    const child = kids.find(k => k.id === (forceChildId || currentUser?.childId) || k._id === (forceChildId || currentUser?.childId));
+    const records = getChildProgress(child?.id || child?._id || 'c1')
         .sort((a, b) => (a.order || 0) - (b.order || 0));
 
     const reviews = typeof getPeriodicReviews === 'function' ? getPeriodicReviews(child?.id) : [];

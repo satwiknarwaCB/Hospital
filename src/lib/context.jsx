@@ -584,9 +584,14 @@ export const AppProvider = ({ children }) => {
                         });
                     }
                 } else if (currentUser.role === 'therapist') {
-                    const therapistKids = kids.filter(k => k.therapistId === currentUser.id);
+                    const therapistKids = kids.filter(k =>
+                        (k.therapistIds || []).includes(currentUser.id) ||
+                        k.therapistId === currentUser.id
+                    );
                     for (const kid of therapistKids) {
-                        const cloudReviews = await progressAPI.getReviewsByChild(kid.id);
+                        const kidId = kid.id || kid._id;
+                        if (!kidId) continue;
+                        const cloudReviews = await progressAPI.getReviewsByChild(kidId);
                         if (cloudReviews.length > 0) {
                             setPeriodicReviews(prev => {
                                 const reviewMap = new Map();
@@ -649,7 +654,8 @@ export const AppProvider = ({ children }) => {
                             ...p,
                             id: p.id || p._id || `${p.childId}-${p.skillId}`,
                             _id: p.id || p._id,
-                            childId: p.childId || p.child_id
+                            childId: p.childId || p.child_id,
+                            isGoalOnly: false // Force visible for dashboard
                         }));
 
                         setSkillProgress(prev => {
@@ -690,12 +696,18 @@ export const AppProvider = ({ children }) => {
 
                 // Therapist View: Fetch for their active caseload
                 if (currentUser.role === 'therapist') {
-                    const therapistKids = kids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(currentUser.id));
+                    const therapistKids = kids.filter(k =>
+                        (k.therapistIds || []).includes(currentUser.id) ||
+                        k.therapistId === currentUser.id
+                    );
                     for (const kid of therapistKids) {
+                        const kidId = kid.id || kid._id;
+                        if (!kidId) continue;
+
                         try {
                             const [goals, progress] = await Promise.all([
-                                progressAPI.getGoalsByChild(kid.id),
-                                progressAPI.getProgressByChild(kid.id)
+                                progressAPI.getGoalsByChild(kidId),
+                                progressAPI.getProgressByChild(kidId)
                             ]);
 
                             if (goals.length > 0) {
@@ -707,8 +719,8 @@ export const AppProvider = ({ children }) => {
                                         dbId: g._id
                                     }));
 
-                                    const others = prev.filter(g => g.childId !== kid.id);
-                                    const kidLegacy = prev.filter(g => g.childId === kid.id);
+                                    const others = prev.filter(g => g.childId !== kidId);
+                                    const kidLegacy = prev.filter(g => g.childId === kidId);
 
                                     // Use a Map to deduplicate by skillName for this child
                                     const goalMap = new Map();
@@ -734,11 +746,12 @@ export const AppProvider = ({ children }) => {
                                         ...p,
                                         id: p.id || p._id || `${p.childId}-${p.skillId}`,
                                         _id: p.id || p._id,
-                                        childId: p.childId || p.child_id
+                                        childId: p.childId || p.child_id,
+                                        isGoalOnly: false // Force visible for dashboard
                                     }));
 
-                                    const others = prev.filter(p => (p.childId || p.child_id) !== kid.id);
-                                    const kidLegacy = prev.filter(p => (p.childId || p.child_id) === kid.id);
+                                    const others = prev.filter(p => (p.childId || p.child_id) !== kidId);
+                                    const kidLegacy = prev.filter(p => (p.childId || p.child_id) === kidId);
 
                                     const skillMap = new Map();
                                     kidLegacy.forEach(mock => skillMap.set(mock.skillName, mock));
@@ -1662,9 +1675,8 @@ export const AppProvider = ({ children }) => {
             engagement: s.engagement || 0
         })).reverse();
     }, [getChildSessions]);
-
     const getChildProgress = useCallback((childId) => {
-        return skillProgress.filter(p => p.childId === childId);
+        return skillProgress.filter(p => p.childId === childId || p.child_id === childId);
     }, [skillProgress]);
 
     const updateSkillProgress = useCallback(async (skillId, updates) => {
@@ -1779,7 +1791,7 @@ export const AppProvider = ({ children }) => {
                     progress: 0,
                     weeklyActuals: [],
                     history: [],
-                    isGoalOnly: true // Hide from Child Progress Tracking cards
+                    isGoalOnly: false // Show in Child Progress Tracking cards
                 };
                 console.log('📝 Creating progress record:', progressData);
                 const savedProgress = await progressAPI.createProgress(progressData);
@@ -1787,11 +1799,16 @@ export const AppProvider = ({ children }) => {
 
                 // Update local state with the new progress record
                 setSkillProgress(prev => {
-                    const exists = prev.some(p => p.childId === savedProgress.childId && (p.skillId === savedProgress.skillId || p.skillName === savedProgress.skillName));
+                    const normalized = {
+                        ...savedProgress,
+                        childId: savedProgress.childId || savedProgress.child_id,
+                        skillId: savedProgress.skillId || savedProgress.skill_id
+                    };
+                    const exists = prev.some(p => p.childId === normalized.childId && (p.skillId === normalized.skillId || p.skillName === normalized.skillName));
                     if (exists) {
-                        return prev.map(p => (p.childId === savedProgress.childId && (p.skillId === savedProgress.skillId || p.skillName === savedProgress.skillName)) ? { ...p, ...savedProgress, id: p.id } : p);
+                        return prev.map(p => (p.childId === normalized.childId && (p.skillId === normalized.skillId || p.skillName === normalized.skillName)) ? { ...p, ...normalized, id: p.id } : p);
                     }
-                    return [...prev, { ...savedProgress, id: `${savedProgress.childId}-${savedProgress.skillId}` }];
+                    return [...prev, { ...normalized, id: `${normalized.childId || 'c1'}-${normalized.skillId || Date.now()}` }];
                 });
             } catch (progressErr) {
                 console.warn('Progress record creation failed (may already exist):', progressErr);
@@ -1807,7 +1824,7 @@ export const AppProvider = ({ children }) => {
                     history: [],
                     therapistNotes: '',
                     lastUpdated: new Date().toISOString().split('T')[0],
-                    isGoalOnly: true
+                    isGoalOnly: false
                 }]);
             }
 
@@ -1926,11 +1943,37 @@ export const AppProvider = ({ children }) => {
                 }
             }
 
-            // Calculate School Ready Score (Avg of latest skills)
+            // 1. Get official clinical category scores
             const latestScores = getLatestSkillScores(childId);
-            const schoolReadinessScore = latestScores.length > 0
-                ? Math.round(latestScores.reduce((a, b) => a + (b.score || 0), 0) / latestScores.length)
-                : 0;
+
+            // 2. Get manually tracked skill progress (fallback)
+            const progressScores = skillProgress.filter(p => (p.childId === childId || p.child_id === childId));
+
+            // 3. Get official goals (newly added fallback)
+            const childGoals = skillGoals.filter(g => g.childId === childId || g.child_id === childId);
+
+            let schoolReadinessScore = 0;
+
+            if (latestScores.length > 0) {
+                schoolReadinessScore = Math.round(latestScores.reduce((a, b) => a + (b.score || 0), 0) / latestScores.length);
+            } else {
+                // Combine manual progress + goal status for a more accurate current score
+                const allPoints = [];
+
+                // Add points from progress records
+                progressScores.forEach(p => allPoints.push(p.progress || 0));
+
+                // Add points from goals (Achieved = 100, In Progress = 50, Not Started = 0)
+                childGoals.forEach(g => {
+                    if (g.status === 'Achieved') allPoints.push(100);
+                    else if (g.status === 'In Progress') allPoints.push(50);
+                    else allPoints.push(0);
+                });
+
+                if (allPoints.length > 0) {
+                    schoolReadinessScore = Math.round(allPoints.reduce((a, b) => a + b, 0) / allPoints.length);
+                }
+            }
 
             return {
                 ...child,

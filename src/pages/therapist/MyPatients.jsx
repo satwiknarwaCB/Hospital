@@ -743,8 +743,10 @@ const MyChildren = () => {
                         <div>
                             <p className="text-2xl font-bold text-neutral-800">
                                 {myChildren.filter(p => {
-                                    const scores = getLatestSkillScores(p.id);
-                                    return scores.filter(s => s.trend === 'improving').length > 2;
+                                    const scores = typeof getLatestSkillScores === 'function' ? getLatestSkillScores(p.id) : [];
+                                    const hasImproving = scores.some(s => s.trend === 'improving');
+                                    const hasHighMastery = (p.schoolReadinessScore || 0) > 60;
+                                    return hasImproving || hasHighMastery;
                                 }).length}
                             </p>
                             <p className="text-sm text-neutral-500">Progressing Well</p>
@@ -759,8 +761,10 @@ const MyChildren = () => {
                         <div>
                             <p className="text-2xl font-bold text-neutral-800">
                                 {myChildren.filter(p => {
-                                    const scores = getLatestSkillScores(p.id);
-                                    return scores.filter(s => s.trend === 'attention').length >= 2;
+                                    const scores = typeof getLatestSkillScores === 'function' ? getLatestSkillScores(p.id) : [];
+                                    const needsAttention = scores.filter(s => s.trend === 'attention').length >= 2;
+                                    const veryLowMastery = (p.schoolReadinessScore || 0) < 20 && (p.schoolReadinessScore || 0) > 0;
+                                    return needsAttention || veryLowMastery;
                                 }).length}
                             </p>
                             <p className="text-sm text-neutral-500">Need Attention</p>
