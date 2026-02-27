@@ -172,76 +172,12 @@ const SkillDomainCard = ({ domain, currentScore, trend, weeklyChange, historical
 
 // Main Progress Analytics Component
 const ProgressAnalytics = () => {
-    const { currentUser, kids, getLatestSkillScores, getSkillHistory } = useApp();
-    const [expandedDomain, setExpandedDomain] = useState(null);
-    const [timeRange, setTimeRange] = useState('month');
-    const [activeView, setActiveView] = useState('analytics'); // 'analytics', 'daily', or 'actual'
+    const { currentUser, kids } = useApp();
+    const [activeView, setActiveView] = useState('daily'); // 'daily' or 'actual'
 
     // Get current child
     const child = kids.find(k => k.id === currentUser?.childId);
     const childId = child?.id || 'c1';
-
-    // Get skill scores
-    const latestScores = getLatestSkillScores(childId);
-
-    // Filter skill history based on time range
-    const getFilteredHistory = (history, range) => {
-        if (!history || history.length === 0) return [];
-
-        const now = new Date();
-        let cutoffDate = new Date();
-
-        switch (range) {
-            case 'week':
-                cutoffDate.setDate(now.getDate() - 7);
-                break;
-            case 'month':
-                cutoffDate.setMonth(now.getMonth() - 1);
-                break;
-            case 'quarter':
-                cutoffDate.setMonth(now.getMonth() - 3);
-                break;
-            default:
-                return history;
-        }
-
-        return history.filter(h => new Date(h.date) >= cutoffDate);
-    };
-
-    // Process skill data with history filtered by time range
-    const skillData = useMemo(() => {
-        return latestScores.map(score => {
-            const allHistory = getSkillHistory(childId, score.domain);
-            const filteredHistory = getFilteredHistory(allHistory, timeRange);
-            const historicalData = filteredHistory.map(h => h.score);
-
-            // Calculate change based on filtered data
-            const weeklyChange = filteredHistory.length >= 2
-                ? filteredHistory[filteredHistory.length - 1].score - filteredHistory[filteredHistory.length - 2].score
-                : allHistory.length >= 2
-                    ? allHistory[allHistory.length - 1].score - allHistory[allHistory.length - 2].score
-                    : 0;
-
-            return {
-                ...score,
-                weeklyChange,
-                historicalData: historicalData.length > 0 ? historicalData : [score.score],
-                filteredHistory
-            };
-        });
-    }, [latestScores, childId, getSkillHistory, timeRange]);
-
-    // Calculate overall stats
-    const overallStats = useMemo(() => {
-        if (skillData.length === 0) return { average: 0, improving: 0, stable: 0, attention: 0 };
-
-        return {
-            average: Math.round(skillData.reduce((a, b) => a + b.score, 0) / skillData.length),
-            improving: skillData.filter(s => s.trend === 'improving').length,
-            stable: skillData.filter(s => s.trend === 'stable').length,
-            attention: skillData.filter(s => s.trend === 'attention').length
-        };
-    }, [skillData]);
 
     if (!child) {
         return <div className="p-8 text-center text-neutral-500">No child profile found.</div>;
@@ -252,22 +188,13 @@ const ProgressAnalytics = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-neutral-800">Progress Analytics</h2>
+                    <h2 className="text-2xl font-bold text-neutral-800">New Learning</h2>
                     <p className="text-neutral-500">Track {child.name}'s development across key skill areas</p>
                 </div>
             </div>
 
             {/* View Selection Buttons */}
             <div className="flex items-center gap-4 p-1 bg-neutral-100 rounded-2xl w-fit">
-                <button
-                    onClick={() => setActiveView('analytics')}
-                    className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeView === 'analytics'
-                        ? 'bg-white text-primary-600 shadow-sm'
-                        : 'text-neutral-500 hover:text-neutral-700'
-                        }`}
-                >
-                    Progress Analytics
-                </button>
                 <button
                     onClick={() => setActiveView('daily')}
                     className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeView === 'daily'
@@ -288,124 +215,7 @@ const ProgressAnalytics = () => {
                 </button>
             </div>
 
-            {activeView === 'analytics' ? (
-                <>
-                    {/* Overall Summary */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <Card className="bg-gradient-to-br from-primary-500 to-primary-600 text-white">
-                            <CardContent className="p-4">
-                                <p className="text-primary-100 text-sm">Overall Score</p>
-                                <p className="text-3xl font-bold mt-1">{overallStats.average}%</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="border-l-4 border-l-green-500">
-                            <CardContent className="p-4">
-                                <p className="text-neutral-500 text-sm">Improving</p>
-                                <p className="text-2xl font-bold text-green-600 mt-1">{overallStats.improving} areas</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="border-l-4 border-l-yellow-500">
-                            <CardContent className="p-4">
-                                <p className="text-neutral-500 text-sm">Stable</p>
-                                <p className="text-2xl font-bold text-yellow-600 mt-1">{overallStats.stable} areas</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="border-l-4 border-l-red-500">
-                            <CardContent className="p-4">
-                                <p className="text-neutral-500 text-sm">Needs Focus</p>
-                                <p className="text-2xl font-bold text-red-600 mt-1">{overallStats.attention} areas</p>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* AI Insight */}
-                    <Card className="bg-gradient-to-r from-violet-50 to-purple-50 border-violet-200">
-                        <CardContent className="p-4 flex items-start gap-3">
-                            <div className="p-2 bg-violet-100 rounded-lg">
-                                <Info className="h-5 w-5 text-violet-600" />
-                            </div>
-                            <div>
-                                <h4 className="font-semibold text-violet-900">AI Insight</h4>
-                                <p className="text-violet-700 text-sm mt-1">
-                                    {overallStats.improving >= 3
-                                        ? `Great progress this ${timeRange}! ${child.name} is showing improvement in ${overallStats.improving} skill areas. Keep up the excellent work with home practice!`
-                                        : overallStats.attention >= 2
-                                            ? `${child.name} may benefit from extra focus on a few areas this ${timeRange}. The therapy team will address these in upcoming sessions.`
-                                            : `${child.name} is making steady progress across most skill areas. Consistency in therapy and home activities is key!`
-                                    }
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Skill Domains */}
-                    <div>
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-neutral-800 flex items-center gap-2">
-                                <Calendar className="h-5 w-5 text-neutral-500" />
-                                Skill Development by Domain
-                            </h3>
-                            {activeView === 'analytics' && (
-                                <div className="flex items-center gap-1 p-1 bg-neutral-100/50 rounded-xl">
-                                    <Button
-                                        variant={timeRange === 'week' ? 'primary' : 'ghost'}
-                                        size="sm"
-                                        onClick={() => setTimeRange('week')}
-                                        className={`h-8 px-4 text-xs font-bold rounded-lg ${timeRange === 'week' ? '' : 'text-neutral-500 hover:text-neutral-700 hover:bg-white'}`}
-                                    >
-                                        Week
-                                    </Button>
-                                    <Button
-                                        variant={timeRange === 'month' ? 'primary' : 'ghost'}
-                                        size="sm"
-                                        onClick={() => setTimeRange('month')}
-                                        className={`h-8 px-4 text-xs font-bold rounded-lg ${timeRange === 'month' ? '' : 'text-neutral-500 hover:text-neutral-700 hover:bg-white'}`}
-                                    >
-                                        Month
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
-                        <div className="space-y-3">
-                            {skillData.map((skill) => (
-                                <SkillDomainCard
-                                    key={skill.id}
-                                    domain={skill.domain}
-                                    currentScore={skill.score}
-                                    trend={skill.trend}
-                                    weeklyChange={skill.weeklyChange}
-                                    historicalData={skill.historicalData}
-                                    isExpanded={expandedDomain === skill.domain}
-                                    onToggle={() => setExpandedDomain(
-                                        expandedDomain === skill.domain ? null : skill.domain
-                                    )}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Legend */}
-                    <Card className="bg-neutral-50">
-                        <CardContent className="p-4">
-                            <h4 className="font-medium text-neutral-700 mb-3">Understanding the Scores</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 rounded-full bg-green-500" />
-                                    <span className="text-neutral-600">70-100%: Mastering</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                                    <span className="text-neutral-600">40-69%: Developing</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 rounded-full bg-red-500" />
-                                    <span className="text-neutral-600">0-39%: Focus Needed</span>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </>
-            ) : activeView === 'daily' ? (
+            {activeView === 'daily' ? (
                 <ChildProgressTracking role="parent" />
             ) : (
                 <ActualProgress childId={childId} role="parent" />

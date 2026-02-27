@@ -394,10 +394,13 @@ const RoadmapEditor = () => {
 
     // Group goals by status
     const groupedGoals = {
-        'in-progress': (Array.isArray(roadmap) ? roadmap : []).filter(g => g && g.status === 'in-progress'),
-        'at-risk': (Array.isArray(roadmap) ? roadmap : []).filter(g => g && g.status === 'at-risk'),
-        'completed': (Array.isArray(roadmap) ? roadmap : []).filter(g => g && g.status === 'completed'),
-        'upcoming': (Array.isArray(roadmap) ? roadmap : []).filter(g => g && g.status === 'upcoming')
+        'in-progress': (Array.isArray(roadmap) ? roadmap : []).filter(g => {
+            const s = g?.status?.toLowerCase();
+            return s === 'in-progress' || s === 'active' || s === 'upcoming' || s === 'not-started';
+        }),
+        'at-risk': (Array.isArray(roadmap) ? roadmap : []).filter(g => g?.status?.toLowerCase() === 'at-risk'),
+        'completed': (Array.isArray(roadmap) ? roadmap : []).filter(g => g?.status?.toLowerCase() === 'completed'),
+        'upcoming': (Array.isArray(roadmap) ? roadmap : []).filter(g => g?.status?.toLowerCase() === 'upcoming')
     };
 
     return (

@@ -358,7 +358,14 @@ const WeeklyProgressView = ({ records, allRecords, childName, summary }) => {
                             <Card key={record.id} className="border-none ring-1 ring-neutral-100 shadow-sm">
                                 <CardContent className="p-4 flex items-center justify-between">
                                     <div className="flex-1">
-                                        <h4 className="font-bold text-neutral-800 mb-1">{record.skillName}</h4>
+                                        <div className="flex flex-col mb-1">
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="font-bold text-neutral-800">{record.skillName}</h4>
+                                                <span className="px-1.5 py-0.5 bg-primary-100 text-[8px] font-black text-primary-700 uppercase rounded">
+                                                    {record.category || 'General'}
+                                                </span>
+                                            </div>
+                                        </div>
                                         <div className="flex items-center gap-4">
                                             <div className="flex-1">
                                                 <div className="flex justify-between text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">
@@ -402,47 +409,92 @@ const WeeklyProgressView = ({ records, allRecords, childName, summary }) => {
                     </p>
                 </CardContent>
             </Card>
-        </div>
+
+            {/* Score Legend */}
+            <Card className="bg-neutral-50 border-none ring-1 ring-neutral-100">
+                <CardContent className="p-4">
+                    <h4 className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] mb-3">Understanding the Scores</h4>
+                    <div className="flex flex-wrap gap-4 text-xs">
+                        <div className="flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                            <span className="text-neutral-600 font-medium">70–100%: Mastering</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+                            <span className="text-neutral-600 font-medium">40–69%: Developing</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                            <span className="text-neutral-600 font-medium">0–39%: Focus Needed</span>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div >
     );
 };
 
 // ============================================================
 // Monthly View Component
 // ============================================================
-const MonthlyProgressView = ({ records, improvedRecords, allRecords }) => {
+const MonthlyProgressView = ({ records, improvedRecords, allRecords, childName, summary }) => {
     const achieved = records.filter(r => r.status === 'Achieved');
-    const inProgress = allRecords.filter(r => r.status !== 'Achieved');
-    const monthlyAverage = Math.round(allRecords.reduce((a, b) => a + b.progress, 0) / (allRecords.length || 1));
+
+    // Calculate Monthly Average based on 4-Week milestones
+    const weeklyMilestones = [];
+    for (let w = 0; w < 4; w++) {
+        // Check snapshots at 0, 7, 14, and 21 days ago (representing 4 weeks)
+        const checkDate = new Date();
+        checkDate.setDate(checkDate.getDate() - (w * 7));
+        const checkDateStr = checkDate.toISOString().split('T')[0];
+
+        let weekAvg = 0;
+        if (allRecords.length > 0) {
+            const sumOnWeekDay = allRecords.reduce((acc, skill) => {
+                const sortedHistory = [...(skill.history || [])].sort((a, b) => new Date(b.date) - new Date(a.date));
+                const entry = sortedHistory.find(h => h.date <= checkDateStr);
+                return acc + (entry ? entry.progress : 0);
+            }, 0);
+            weekAvg = sumOnWeekDay / allRecords.length;
+        }
+        weeklyMilestones.push(weekAvg);
+    }
+
+    const monthlyAverage = Math.round(weeklyMilestones.reduce((a, b) => a + b, 0) / 4);
+
     const improvementCount = improvedRecords.length;
 
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-white border-none shadow-sm ring-1 ring-neutral-100">
+                <Card className="bg-gradient-to-br from-purple-600 to-indigo-700 border-none text-white shadow-lg">
                     <CardContent className="p-5">
-                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">Monthly Status</p>
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-3xl font-black text-neutral-800">{achieved.length}</span>
-                            <span className="text-xs font-bold text-neutral-400">Goals Met</span>
+                        <div className="flex items-center justify-between mb-4">
+                            <Award className="h-6 w-6 text-purple-100" />
+                            <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">Month Status</span>
                         </div>
+                        <p className="text-4xl font-black mb-1">{achieved.length}</p>
+                        <p className="text-sm font-medium text-purple-50">Goals Met</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-white border-none shadow-sm ring-1 ring-neutral-100">
+                <Card className="bg-gradient-to-br from-fuchsia-600 to-purple-700 border-none text-white shadow-lg">
                     <CardContent className="p-5">
-                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">Total Progress</p>
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-3xl font-black text-primary-600">{monthlyAverage}%</span>
-                            <span className="text-xs font-bold text-neutral-400">Mastery</span>
+                        <div className="flex items-center justify-between mb-4">
+                            <Activity className="h-6 w-6 text-fuchsia-100" />
+                            <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">Progress</span>
                         </div>
+                        <p className="text-4xl font-black mb-1">{monthlyAverage}%</p>
+                        <p className="text-sm font-medium text-fuchsia-50">Overall Mastery Index</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-white border-none shadow-sm ring-1 ring-neutral-100">
+                <Card className="bg-gradient-to-br from-violet-600 to-indigo-800 border-none text-white shadow-lg">
                     <CardContent className="p-5">
-                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">Growth Items</p>
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-3xl font-black text-emerald-600">{improvementCount}</span>
-                            <span className="text-xs font-bold text-neutral-400">Improved</span>
+                        <div className="flex items-center justify-between mb-4">
+                            <ArrowUpCircle className="h-6 w-6 text-violet-100" />
+                            <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">Growth</span>
                         </div>
+                        <p className="text-4xl font-black mb-1">{improvementCount}</p>
+                        <p className="text-sm font-medium text-violet-50">Improved Skills</p>
                     </CardContent>
                 </Card>
             </div>
@@ -453,10 +505,6 @@ const MonthlyProgressView = ({ records, improvedRecords, allRecords }) => {
                         <h3 className="text-2xl font-black text-green-800">Monthly Milestones 🌟</h3>
                         <p className="text-green-600 font-medium">You've mastered {achieved.length} new functional skills this month.</p>
                     </div>
-                    <Button variant="outline" className="bg-white border-green-200 text-green-700 hover:bg-green-50 font-bold gap-2">
-                        <Download className="h-4 w-4" />
-                        Download Report
-                    </Button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -466,54 +514,64 @@ const MonthlyProgressView = ({ records, improvedRecords, allRecords }) => {
                                 <CheckCircle2 className="h-5 w-5 text-green-500" />
                             </div>
                             <div>
-                                <h4 className="font-bold text-neutral-800">{skill.skillName}</h4>
-                                <p className="text-[10px] font-bold text-green-600 uppercase tracking-widest">Achieved on {new Date(skill.lastUpdated).toLocaleDateString()}</p>
+                                <div className="flex flex-col">
+                                    <h4 className="font-bold text-neutral-800">{skill.skillName}</h4>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <p className="text-[9px] font-bold text-green-600 uppercase tracking-widest">Achieved {new Date(skill.lastUpdated).toLocaleDateString()}</p>
+                                        <span className="px-1.5 py-0.5 bg-green-100 text-[8px] font-black text-green-700 uppercase rounded">
+                                            {skill.category || 'General'}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ))}
+                    {achieved.length === 0 && (
+                        <p className="text-sm text-neutral-400 italic py-4">No goals achieved in the last 30 days.</p>
+                    )}
                 </div>
             </div>
 
-            <section>
-                <h3 className="text-lg font-bold text-neutral-800 mb-4">Continuing Development</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {inProgress.map(skill => (
-                        <Card key={skill.id} className="border-none ring-1 ring-neutral-100 shadow-sm overflow-hidden">
-                            <CardContent className="p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h4 className="font-bold text-neutral-800">{skill.skillName}</h4>
-                                    <span className="text-sm font-black text-primary-600">{skill.progress}%</span>
-                                </div>
-                                <ProgressBar progress={skill.progress} status={skill.status} />
-                                <p className="mt-3 text-[11px] font-bold text-neutral-400 capitalize bg-neutral-50 w-fit px-2 py-0.5 rounded-full">
-                                    Target Level: 100%
-                                </p>
-                            </CardContent>
-                        </Card>
-                    ))}
+            {/* Monthly Therapist Summary */}
+            <div className="bg-indigo-50/50 rounded-3xl p-6 border border-indigo-100 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <MessageCircle className="h-24 w-24 text-indigo-600 -rotate-12" />
                 </div>
-            </section>
 
-            <Card className="border-none ring-1 ring-primary-100 bg-primary-50/30 overflow-hidden">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-lg text-primary-900 flex items-center gap-2">
-                        <Target className="h-5 w-5 text-primary-600" />
-                        Therapist Recommendations for Next Month
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex gap-4">
-                        <div className="h-6 w-6 rounded-full bg-primary-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200">
+                            <MessageCircle className="h-5 w-5 text-white" />
+                        </div>
                         <div>
-                            <p className="font-bold text-neutral-800 text-sm">Advanced Fine Motor Control</p>
-                            <p className="text-xs text-neutral-600 mt-1">Focusing on smaller buttons and complex kitchen utensil handling.</p>
+                            <h4 className="font-black text-indigo-900 leading-tight">Monthly Clinical Progress Update</h4>
                         </div>
                     </div>
-                    <div className="flex gap-4">
-                        <div className="h-6 w-6 rounded-full bg-primary-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</div>
-                        <div>
-                            <p className="font-bold text-neutral-800 text-sm">Multi-step Sequencing</p>
-                            <p className="text-xs text-neutral-600 mt-1">Introducing 3-step commands and memory-based tasks.</p>
+
+                    <div className="bg-white/80 backdrop-blur-sm p-5 rounded-2xl border border-white shadow-sm">
+                        <p className="text-neutral-700 leading-relaxed italic text-sm">
+                            "{summary || `Over the past month, ${childName} has demonstrated significant growth in core functional markers. We have observed increased initiative in social interactions and improved self-regulation during structured tasks. Our focus for the next month will shift towards complex skill generalization.`}"
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Score Legend */}
+            <Card className="bg-neutral-50 border-none ring-1 ring-neutral-100">
+                <CardContent className="p-4">
+                    <h4 className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] mb-3">Understanding the Scores</h4>
+                    <div className="flex flex-wrap gap-4 text-xs">
+                        <div className="flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                            <span className="text-neutral-600 font-medium">70–100%: Mastering</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+                            <span className="text-neutral-600 font-medium">40–69%: Developing</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                            <span className="text-neutral-600 font-medium">0–39%: Focus Needed</span>
                         </div>
                     </div>
                 </CardContent>
@@ -612,6 +670,8 @@ const ChildProgressTracking = ({ forceChildId = null, role = 'parent' }) => {
                         records={monthlyRecords}
                         improvedRecords={improvedMonthly}
                         allRecords={allRecords}
+                        childName={child?.name}
+                        summary={latestReview?.summary}
                     />
                 )}
             </div>
@@ -626,21 +686,6 @@ const ChildProgressTracking = ({ forceChildId = null, role = 'parent' }) => {
                 />
             )}
 
-            {/* Help Disclaimer */}
-            <div className="p-6 bg-primary-50/30 rounded-3xl border border-primary-100 flex items-start gap-4">
-                <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-primary-100">
-                    <Activity className="h-6 w-6 text-primary-500" />
-                </div>
-                <div>
-                    <h5 className="font-bold text-neutral-800 text-base mb-1">Collaboration Protocol</h5>
-                    <p className="text-xs text-neutral-600 leading-relaxed max-w-2xl">
-                        {role === 'parent'
-                            ? "Updates shared here inform your therapist of home progress. Official clinical validation is provided after each session."
-                            : "Provide clinical validation here. Parent home observations are highlighted for your consideration in treatment planning."
-                        }
-                    </p>
-                </div>
-            </div>
         </div>
     );
 };

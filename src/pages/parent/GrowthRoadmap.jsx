@@ -245,9 +245,12 @@ const GrowthRoadmap = () => {
     // Calculate summary stats
     const stats = {
         total: roadmapData.length,
-        completed: roadmapData.filter(r => r.status === 'completed').length,
-        inProgress: roadmapData.filter(r => r.status === 'in-progress').length,
-        atRisk: roadmapData.filter(r => r.status === 'at-risk').length
+        completed: roadmapData.filter(r => r.status?.toLowerCase() === 'completed').length,
+        inProgress: roadmapData.filter(r => {
+            const s = r.status?.toLowerCase();
+            return s === 'in-progress' || s === 'active' || s === 'upcoming' || s === 'not-started' || (!s && r.progress < 100);
+        }).length,
+        atRisk: roadmapData.filter(r => r.status?.toLowerCase() === 'at-risk').length
     };
 
     if (!child) {

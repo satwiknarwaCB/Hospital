@@ -30,6 +30,7 @@ class ChildResponse(BaseModel):
     schoolReadinessScore: int = 0
     status: str = "active"
     is_active: bool = True
+    gamesUnlocked: bool = False
     documents: List[dict] = []
     therapy_start_date: Optional[str] = None
     therapy_type: Optional[str] = None

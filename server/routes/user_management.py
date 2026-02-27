@@ -435,6 +435,7 @@ async def list_children(current_user: dict = Depends(get_current_user)):
             status=c.get("status", "active"),
             documents=c.get("documents", []),
             is_active=c.get("is_active", True),
+            gamesUnlocked=c.get("gamesUnlocked", False),
             therapy_start_date=c.get("therapy_start_date") or c.get("enrollmentDate") or (c.get("created_at").isoformat() if hasattr(c.get("created_at"), 'isoformat') else str(c.get("created_at")) if c.get("created_at") else None),
             therapy_type=c.get("therapy_type") or (c.get("program")[0] if c.get("program") and isinstance(c.get("program"), list) else "Speech Therapy"),
             therapy_start_dates=c.get("therapy_start_dates", {}),
@@ -506,6 +507,7 @@ async def create_child(
         therapistId=None,
         therapistIds=[],
         is_active=True,
+        gamesUnlocked=False,
         therapy_start_date=child.therapy_start_date,
         therapy_type=child.therapy_type,
         created_at=current_time
@@ -526,7 +528,7 @@ async def update_child(
     
     # Prepare update fields
     update_fields = {}
-    allowed_fields = ["name", "age", "gender", "condition", "school_name", "therapy_start_date", "therapy_type"]
+    allowed_fields = ["name", "age", "gender", "condition", "school_name", "therapy_start_date", "therapy_type", "gamesUnlocked"]
     
     for field in allowed_fields:
         if field in child_update and child_update[field] is not None:

@@ -168,7 +168,7 @@ const MagicPictureTalk = ({ onComplete, onExit, lang = 'en', speak }) => {
 
             <div className="relative group">
                 <div className="absolute -inset-4 bg-gradient-to-r from-primary-100 to-violet-100 rounded-[2rem] blur-xl opacity-50 transition duration-1000"></div>
-                <div className="relative bg-white p-3 rounded-[2rem] shadow-xl border border-white overflow-hidden w-60 h-60 flex items-center justify-center">
+                <div className="relative bg-white p-3 rounded-[2rem] shadow-xl border border-white overflow-hidden w-44 h-44 md:w-60 md:h-60 flex items-center justify-center">
                     <img
                         src={currentItem.image}
                         alt={currentItem.name.en}

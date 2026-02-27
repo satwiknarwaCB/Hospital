@@ -142,11 +142,11 @@ const ActivityCard = ({ activity, onComplete, onViewDetails, onLaunchGame }) => 
         }, 500);
     };
 
-    // Lock logic: Lock games for the first 20 days
+    // Lock logic: Strictly controlled by therapist unlock flag
+    const isLocked = !isCompletedToday && activity.gameType && !activity.gamesUnlocked;
     const enrollmentDate = new Date(activity.childEnrollmentDate || '2025-01-01');
     const todayDate = new Date();
     const daysSinceEnrollment = Math.floor((todayDate - enrollmentDate) / (1000 * 60 * 60 * 24));
-    const isLocked = !isCompletedToday && activity.gameType && daysSinceEnrollment < 20;
     const daysRemaining = 20 - daysSinceEnrollment;
 
     return (
@@ -349,8 +349,8 @@ const HomeActivities = () => {
     const [showResults, setShowResults] = useState(false);
 
     // Get current child
-    const child = kids.find(k => k.id === currentUser?.childId);
-    const childId = child?.id || 'c1';
+    const child = kids.find(k => k.id === currentUser?.childId) || kids.find(k => k.name === 'wfini') || { id: 'c1', name: 'wfini', enrollmentDate: '2025-01-01', gamesUnlocked: false };
+    const childId = child.id;
 
     // Get home activities
     const activities = getChildHomeActivities(childId);
@@ -536,7 +536,8 @@ const HomeActivities = () => {
                                 key={activity.id}
                                 activity={{
                                     ...activity,
-                                    childEnrollmentDate: child.enrollmentDate
+                                    childEnrollmentDate: child.enrollmentDate,
+                                    gamesUnlocked: child.gamesUnlocked
                                 }}
                                 onComplete={handleCompleteActivity}
                                 onLaunchGame={handleLaunchGame}

@@ -6,7 +6,7 @@ import { Button } from '../ui/Button';
 // Gajju Character Component
 export const Gajju = ({ mood = 'happy', className = '' }) => {
     return (
-        <div className={`relative w-48 h-48 mx-auto filter drop-shadow-md transition-all duration-700 ${className}`}>
+        <div className={`relative w-32 h-32 md:w-48 md:h-48 mx-auto filter drop-shadow-md transition-all duration-700 ${className}`}>
             {/* 
         In a real app, this would be an SVG or an Rive/Lottie animation.
         For now, we'll use a friendly stylized representation.
@@ -195,14 +195,18 @@ export const GameEngine = ({ title, children, onExit }) => {
             </div>
 
             {/* Game Stage */}
-            <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
-                {/* Pass language and speak function down to children via cloneElement or provide context */}
-                {React.Children.map(children, child => {
-                    if (React.isValidElement(child)) {
-                        return React.cloneElement(child, { lang, speak });
-                    }
-                    return child;
-                })}
+            <div className="flex-1 overflow-y-auto relative scroll-smooth">
+                <div className="min-h-full flex flex-col items-center py-8 px-4 md:py-12 relative">
+                    <div className="my-auto w-full flex flex-col items-center">
+                        {/* Pass language and speak function down to children via cloneElement or provide context */}
+                        {React.Children.map(children, child => {
+                            if (React.isValidElement(child)) {
+                                return React.cloneElement(child, { lang, speak });
+                            }
+                            return child;
+                        })}
+                    </div>
+                </div>
             </div>
 
             {/* Footer / Branding */}

@@ -27,16 +27,16 @@ const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
     // ============ Core State ============
-    const [users] = useState([]);
+    const [users] = useState(USERS);
     const [realChildren, setRealChildren] = useState([]);
-    const [kids, setKids] = useState([]);
+    const [kids, setKids] = useState(CHILDREN);
     const [sessions, setSessions] = useState([]);
     const [skillScores, setSkillScores] = useState([]);
     const [roadmap, setRoadmap] = useState(() => {
         const saved = localStorage.getItem('neurobridge_roadmap');
         return saved ? JSON.parse(saved) : [];
     });
-    const [homeActivities, setHomeActivities] = useState([]);
+    const [homeActivities, setHomeActivities] = useState(HOME_ACTIVITIES);
     const [messages, setMessages] = useState([]);
     const [consentRecords] = useState([]);
     const [auditLogs, setAuditLogs] = useState([]);
@@ -102,6 +102,24 @@ export const AppProvider = ({ children }) => {
     useEffect(() => {
         localStorage.setItem('neurobridge_quick_test_progress', JSON.stringify(quickTestProgress));
     }, [quickTestProgress]);
+
+    useEffect(() => {
+        const junkSkill = 'kjnskv';
+        const goalToRemove = skillGoals.find(g => g.skillName === junkSkill);
+        const progressToRemove = skillProgress.find(p => p.skillName === junkSkill);
+
+        if (goalToRemove || progressToRemove) {
+            console.log('🧹 Cleaning up junk skill:', junkSkill);
+            if (goalToRemove) {
+                setSkillGoals(prev => prev.filter(g => g.skillName !== junkSkill));
+                progressAPI.deleteGoal(goalToRemove.id).catch(err => console.error("Failed to delete junk goal:", err));
+            }
+            if (progressToRemove) {
+                setSkillProgress(prev => prev.filter(p => p.skillName !== junkSkill));
+                progressAPI.deleteProgress(progressToRemove.id).catch(err => console.error("Failed to delete junk progress:", err));
+            }
+        }
+    }, [skillGoals, skillProgress]);
 
     useEffect(() => {
         localStorage.setItem('neurobridge_roadmap', JSON.stringify(roadmap));
@@ -1045,6 +1063,27 @@ export const AppProvider = ({ children }) => {
         ));
     }, []);
 
+    const toggleGamesUnlock = useCallback(async (childId) => {
+        const child = kids.find(k => k.id === childId);
+        if (!child) return;
+
+        const newStatus = !child.gamesUnlocked;
+
+        console.log(`[AppProvider] Toggling games lock for ${childId} to ${newStatus}`);
+
+        // 1. Optimistic Update
+        setKids(prev => prev.map(k => k.id === childId ? { ...k, gamesUnlocked: newStatus } : k));
+
+        try {
+            // 2. API Call
+            await userManagementAPI.updateChild(childId, { gamesUnlocked: newStatus });
+        } catch (error) {
+            console.error('[AppProvider] Failed to toggle games unlock:', error);
+            // 3. Revert on failure
+            setKids(prev => prev.map(k => k.id === childId ? { ...k, gamesUnlocked: !newStatus } : k));
+        }
+    }, [kids]);
+
     const assignChildToTherapist = useCallback(async (childId, therapistId) => {
         console.log(`[AppProvider] Assigning child ${childId} to therapist ${therapistId}`);
         // 1. Optimistic Update
@@ -1312,11 +1351,14 @@ export const AppProvider = ({ children }) => {
                 today.setHours(0, 0, 0, 0);
                 const isOverdue = targetDate && targetDate < today && progress < 100;
 
-                let status = r.status;
-                if (progress === 100 && total > 0) {
+                let status = (r.status || 'in-progress').toLowerCase();
+                if (progress === 100) {
                     status = 'completed';
                 } else if (isOverdue) {
                     status = 'at-risk';
+                } else if (status === 'at-risk') {
+                    // Reset status to in-progress if it's no longer overdue (e.g. target date was extended)
+                    status = 'in-progress';
                 }
 
                 return {
@@ -1370,7 +1412,12 @@ export const AppProvider = ({ children }) => {
                 const completedCount = updatedMilestones.filter(m => m.completed).length;
                 const progress = Math.round((completedCount / updatedMilestones.length) * 100);
 
-                const status = progress === 100 ? 'completed' : r.status;
+                const targetDate = r.targetDate ? new Date(r.targetDate) : null;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const isOverdue = targetDate && targetDate < today && progress < 100;
+
+                let status = progress === 100 ? 'completed' : (isOverdue ? 'at-risk' : (r.status === 'at-risk' ? 'in-progress' : r.status));
                 updatedGoal = { ...r, milestones: updatedMilestones, progress, status };
                 return updatedGoal;
             }
@@ -1435,7 +1482,12 @@ export const AppProvider = ({ children }) => {
 
     // ============ Home Activity Actions ============
     const getChildHomeActivities = useCallback((childId) => {
-        return homeActivities.filter(a => a.childId === childId);
+        const filtered = homeActivities.filter(a => a.childId === childId);
+        if (filtered.length === 0) {
+            // Return demo/fallback activities if none are specifically assigned to this child
+            return homeActivities.filter(a => !a.childId || a.childId === 'c1' || a.id?.startsWith('ha'));
+        }
+        return filtered;
     }, [homeActivities]);
 
     const getPeriodicReviews = useCallback((childId) => {
@@ -1818,6 +1870,7 @@ export const AppProvider = ({ children }) => {
                     childId: newGoal.childId,
                     skillId: newGoal.skillId,
                     skillName: newGoal.skillName,
+                    category: newGoal.category,
                     status: 'In Progress',
                     progress: 0,
                     weeklyActuals: [],
@@ -2095,6 +2148,7 @@ export const AppProvider = ({ children }) => {
         getChildrenByParent,
         updateChildMood,
         assignChildToTherapist,
+        toggleGamesUnlock,
         addChild,
         unassignChildFromTherapist,
 
@@ -2199,7 +2253,7 @@ export const AppProvider = ({ children }) => {
         consentRecords, auditLogs, cdcMetrics, adminStats, refreshAdminStats, currentUser, isAuthenticated,
         notifications, isLoading, login, logout, getChildSessions, getRecentSessions,
         addSession, getSessionsByTherapist, getTodaysSessions, getChildById,
-        getChildrenByTherapist, getChildrenByParent, updateChildMood, assignChildToTherapist, unassignChildFromTherapist, getChildSkillScores,
+        getChildrenByTherapist, getChildrenByParent, updateChildMood, assignChildToTherapist, toggleGamesUnlock, unassignChildFromTherapist, getChildSkillScores,
         refreshRoadmap, getChildRoadmap, updateRoadmapProgress, completeMilestone, addRoadmapGoal, deleteRoadmapGoal,
         getPeriodicReviews, addPeriodicReview,
         getActivityAdherence20Days, completeQuickTestGame, getLatestQuickTestResult,

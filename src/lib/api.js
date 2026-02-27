@@ -797,6 +797,14 @@ export const userManagementAPI = {
     },
 
     /**
+     * Update child record details
+     */
+    updateChild: async (id, data) => {
+        const response = await apiClient.put(`/api/admin/users/child/${id}`, data);
+        return response.data;
+    },
+
+    /**
      * Unassign a child from a therapist (removes from list)
      */
     unassignTherapist: async (childId, therapistId) => {

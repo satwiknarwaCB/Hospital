@@ -26,7 +26,9 @@ import {
     Download,
     Eye,
     PlusCircle,
-    Trash2
+    Trash2,
+    ShieldCheck,
+    Target
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -152,7 +154,7 @@ const ChildCard = ({ child, sessions = [], skillScores = [], onSelect }) => {
 // Child Detail Modal
 const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
     const navigate = useNavigate();
-    const { getChildDocuments, addDocument, deleteDocument, addNotification } = useApp();
+    const { getChildDocuments, addDocument, deleteDocument, addNotification, toggleGamesUnlock } = useApp();
     const [activeTab, setActiveTab] = useState('summary');
     const fileInputRef = React.useRef(null);
     const documents = getChildDocuments(child.id);
@@ -284,6 +286,36 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
 
                     {activeTab === 'summary' && (
                         <>
+                            {/* Game Access Control (Therapist Only) */}
+                            <div className="mb-6 p-4 bg-primary-50 rounded-2xl border border-primary-100 animate-in slide-in-from-right duration-500">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-lg ${child.gamesUnlocked ? 'bg-primary-500 text-white' : 'bg-neutral-200 text-neutral-500'}`}>
+                                            <Play className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-black text-neutral-800 tracking-tight uppercase">Daily Play Games</h4>
+                                            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">
+                                                Status: {child.gamesUnlocked ? 'Unlocked' : 'Locked'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => toggleGamesUnlock(child.id)}
+                                        className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${child.gamesUnlocked
+                                            ? 'bg-red-50 text-red-600 border border-red-100 hover:bg-red-100'
+                                            : 'bg-primary-600 text-white shadow-lg shadow-primary-200 hover:bg-primary-700'
+                                            }`}
+                                    >
+                                        {child.gamesUnlocked ? 'Lock Games' : 'Unlock Games'}
+                                    </button>
+                                </div>
+                                <p className="text-[9px] text-neutral-400 mt-3 italic">
+                                    {child.gamesUnlocked
+                                        ? 'Child can play all daily games in their Parent Portal.'
+                                        : 'Games are currently locked. Unlock them once the child is ready for independent play.'}
+                                </p>
+                            </div>
                             {/* Stats Grid */}
                             <div className="grid grid-cols-4 gap-4 mb-6">
                                 <div className="p-4 bg-neutral-50 rounded-xl text-center">
@@ -362,26 +394,66 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
                     )}
 
                     {activeTab === 'skills' && (
-                        <div className="mb-6 animate-in fade-in duration-300">
-                            <h3 className="font-semibold text-neutral-800 mb-3">Skill Domains Overview</h3>
-                            <div className="space-y-4">
-                                {skillScores.map(skill => (
-                                    <div key={skill.id} className="space-y-1.5">
-                                        <div className="flex justify-between items-center text-xs">
-                                            <span className="font-bold text-neutral-700">{skill.domain}</span>
-                                            <span className="font-black text-primary-600">{skill.score}%</span>
-                                        </div>
-                                        <div className="h-2.5 bg-neutral-100 rounded-full overflow-hidden">
-                                            <div
-                                                className={`h-full rounded-full transition-all duration-1000 ${skill.score >= 70 ? 'bg-green-500' :
-                                                    skill.score >= 40 ? 'bg-yellow-500' : 'bg-red-500'
-                                                    }`}
-                                                style={{ width: `${skill.score}%` }}
-                                            />
+                        <div className="mb-6 animate-in fade-in duration-300 space-y-6">
+                            {(() => {
+                                const allProgress = useApp().getChildProgress(child.id);
+                                if (allProgress.length === 0) return <p className="text-xs text-neutral-400 italic">No specific goals tracked yet.</p>;
+
+                                // Group goals by category
+                                const grouped = allProgress.reduce((acc, curr) => {
+                                    const cat = curr.category || 'General';
+                                    if (!acc[cat]) acc[cat] = [];
+                                    acc[cat].push(curr);
+                                    return acc;
+                                }, {});
+
+                                return Object.entries(grouped).map(([category, items]) => (
+                                    <div key={category} className="space-y-3">
+                                        <h4 className="text-[11px] font-black text-neutral-400 uppercase tracking-[0.2em] px-1 border-b border-neutral-100 pb-1">{category}</h4>
+                                        <div className="space-y-2">
+                                            {items.sort((a, b) => (a.order || 0) - (b.order || 0)).map(record => (
+                                                <div key={record.id} className={`p-4 rounded-2xl border transition-all ${record.status === 'Achieved'
+                                                    ? 'bg-emerald-50/50 border-emerald-100'
+                                                    : 'bg-white border-neutral-100 hover:border-primary-200 hover:shadow-sm'
+                                                    }`}>
+                                                    <div className="flex items-start justify-between gap-4 mb-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`p-2 rounded-lg ${record.status === 'Achieved' ? 'bg-emerald-100 text-emerald-600' :
+                                                                record.status === 'In Progress' ? 'bg-amber-100 text-amber-600' : 'bg-neutral-100 text-neutral-400'
+                                                                }`}>
+                                                                {record.status === 'Achieved' ? <ShieldCheck className="h-4 w-4" /> : <Target className="h-4 w-4" />}
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-bold text-neutral-800 text-sm leading-tight">{record.skillName}</h4>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${record.status === 'Achieved' ? 'bg-emerald-100 text-emerald-700' :
+                                                                        record.status === 'In Progress' ? 'bg-amber-100 text-amber-700' : 'bg-neutral-100 text-neutral-500'
+                                                                        }`}>
+                                                                        {record.status}
+                                                                    </span>
+                                                                    <span className="text-[9px] text-neutral-400 font-medium">Updated {record.lastUpdated}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className="text-lg font-black text-neutral-800">{record.progress}%</span>
+                                                            <p className="text-[8px] font-bold text-neutral-400 uppercase tracking-tighter">Mastery</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="relative h-2 bg-neutral-100 rounded-full overflow-hidden">
+                                                        <div
+                                                            className={`absolute inset-0 transition-all duration-1000 ${record.status === 'Achieved' ? 'bg-emerald-500' :
+                                                                record.status === 'In Progress' ? 'bg-amber-500' : 'bg-neutral-300'
+                                                                }`}
+                                                            style={{ width: `${record.progress}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                ));
+                            })()}
                         </div>
                     )}
 
@@ -505,7 +577,7 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
                         <div className="animate-in fade-in duration-300">
                             <h3 className="font-black text-neutral-800 mb-3 tracking-tight uppercase text-xs">Full Session History</h3>
                             <div className="space-y-2">
-                                {sessions.map(session => (
+                                {sessions.filter(s => s.engagement || s.aiSummary).map(session => (
                                     <div key={session.id} className="p-3 bg-neutral-50 rounded-xl flex items-center justify-between border border-neutral-100/50 hover:bg-white hover:shadow-sm transition-all">
                                         <div>
                                             <p className="font-bold text-neutral-800 text-sm">{session.type}</p>

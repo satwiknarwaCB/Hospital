@@ -10,6 +10,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { Button } from './ui/Button';
 import { useApp } from '../lib/context';
+import { THERAPY_TYPES } from '../data/mockData';
 
 const ActualProgress = ({ childId, role = 'parent' }) => {
     const { getChildGoals, getChildProgress, updateSkillGoal, updateSkillProgress, addSkillGoal, deleteSkillGoal, deleteSkillProgress, kids } = useApp();
@@ -42,6 +43,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
     const [newGoalData, setNewGoalData] = useState({
         skillName: '',
         customSkillName: '',
+        category: 'Speech Therapy',
         duration: '1 Month',
         startDate: new Date().toISOString().split('T')[0],
         deadline: '',
@@ -223,44 +225,43 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
         // Progress is the latest non-zero value or the last week recorded
         const weeklyValues = actualData.weeklyActuals.map(Number);
         let finalProgress = 0;
-        for (let i = 3; i >= 0; i--) {
+        for (let i = actualData.weeklyActuals.length - 1; i >= 0; i--) {
             if (weeklyValues[i] > 0) {
                 finalProgress = weeklyValues[i];
                 break;
             }
         }
 
+        const newStatus = actualData.status || (finalProgress >= 100 ? 'Achieved' : (finalProgress > 0 ? 'In Progress' : 'Not Started'));
+
         updateSkillProgress(relatedProgress.id, {
             progress: finalProgress,
             weeklyActuals: weeklyValues,
             therapistNotes: actualData.notes || relatedProgress.therapistNotes,
-            status: actualData.status || (finalProgress >= 100 ? 'Achieved' : (finalProgress > 0 ? 'In Progress' : 'Not Started'))
+            status: newStatus
         });
 
-        // Also update goal if deadline or startDate was changed
-        if ((actualData.deadline && actualData.deadline !== selectedGoal.deadline) ||
-            (actualData.startDate && actualData.startDate !== selectedGoal.startDate)) {
+        // Always sync the goal status and other metadata if changed
+        const startDate = actualData.startDate || selectedGoal.startDate;
+        const deadline = actualData.deadline || selectedGoal.deadline;
 
-            const startDate = actualData.startDate || selectedGoal.startDate;
-            const deadline = actualData.deadline || selectedGoal.deadline;
+        // Calculate dynamic duration
+        const s = new Date(startDate);
+        const e = new Date(deadline);
+        const diffDays = Math.ceil(Math.abs(e - s) / (1000 * 60 * 60 * 24));
+        let duration = `${diffDays} Days`;
+        if (diffDays >= 28 && diffDays <= 32) duration = "1 Month";
+        else if (diffDays >= 20 && diffDays <= 22) duration = "3 Weeks";
+        else if (diffDays >= 13 && diffDays <= 15) duration = "2 Weeks";
+        else if (diffDays >= 6 && diffDays <= 8) duration = "1 Week";
+        else if (diffDays === 1) duration = "1 Day";
 
-            // Calculate dynamic duration
-            const s = new Date(startDate);
-            const e = new Date(deadline);
-            const diffDays = Math.ceil(Math.abs(e - s) / (1000 * 60 * 60 * 24));
-            let duration = `${diffDays} Days`;
-            if (diffDays >= 28 && diffDays <= 32) duration = "1 Month";
-            else if (diffDays >= 20 && diffDays <= 22) duration = "3 Weeks";
-            else if (diffDays >= 13 && diffDays <= 15) duration = "2 Weeks";
-            else if (diffDays >= 6 && diffDays <= 8) duration = "1 Week";
-            else if (diffDays === 1) duration = "1 Day";
-
-            updateSkillGoal(selectedGoal.id, {
-                deadline: deadline,
-                startDate: startDate,
-                duration: duration
-            });
-        }
+        updateSkillGoal(selectedGoal.id, {
+            deadline: deadline,
+            startDate: startDate,
+            duration: duration,
+            status: newStatus // Sync status to the goal record as well
+        });
 
         setIsUpdatingActual(false);
     };
@@ -348,6 +349,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                 childId,
                 skillId: skill?.skillId || skill?.id || `custom-${Date.now()}`,
                 skillName: finalSkillName,
+                category: newGoalData.category,
                 duration: duration,
                 startDate: startDate,
                 deadline: deadline,
@@ -366,6 +368,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
             setNewGoalData({
                 skillName: '',
                 customSkillName: '',
+                category: 'Speech Therapy',
                 duration: '1 Month',
                 startDate: new Date().toISOString().split('T')[0],
                 deadline: '',
@@ -461,10 +464,11 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                                     <span className="text-[10px] text-neutral-400 font-bold">W{i + 1}</span>
                                     <input
                                         type="number"
-                                        value={val}
+                                        value={val === 0 ? '' : val}
+                                        onFocus={(e) => e.target.select()}
                                         onChange={(e) => {
                                             const weeklyActuals = [...actualData.weeklyActuals];
-                                            weeklyActuals[i] = Number(e.target.value);
+                                            weeklyActuals[i] = e.target.value === '' ? 0 : Number(e.target.value);
                                             setActualData({ ...actualData, weeklyActuals });
                                         }}
                                         className="w-full h-12 bg-white border border-neutral-200 rounded-2xl text-lg font-black text-center text-neutral-900 focus:ring-2 focus:ring-primary-500 outline-none shadow-sm"
@@ -533,6 +537,19 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                     )}
 
                     <div className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Therapy Type</label>
+                            <select
+                                value={newGoalData.category}
+                                onChange={(e) => setNewGoalData({ ...newGoalData, category: e.target.value })}
+                                className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary-500 outline-none"
+                            >
+                                {THERAPY_TYPES.map(type => (
+                                    <option key={type.id} value={type.name}>{type.icon} {type.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
                         <div className="space-y-2">
                             <label className="text-xs font-black text-neutral-500 uppercase tracking-widest">Select Skill</label>
                             <select
@@ -636,10 +653,11 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
                                     <span className="text-[10px] text-neutral-400 font-bold">W{i + 1}</span>
                                     <input
                                         type="number"
-                                        value={t}
+                                        value={t === 0 ? '' : t}
+                                        onFocus={(e) => e.target.select()}
                                         onChange={(e) => {
                                             const targets = [...newGoalData.targets];
-                                            targets[i] = Number(e.target.value);
+                                            targets[i] = e.target.value === '' ? 0 : Number(e.target.value);
                                             setNewGoalData({ ...newGoalData, targets });
                                         }}
                                         className="w-full h-12 bg-white border border-neutral-200 rounded-2xl text-lg font-black text-center text-neutral-900 focus:ring-2 focus:ring-primary-500 outline-none shadow-sm"
