@@ -234,6 +234,15 @@ export const sessionAPI = {
      * Log a new therapy session record
      * @param {Object} sessionData - Validated session inputs
      */
+    listAll: async () => {
+        try {
+            const response = await apiClient.get('/api/sessions');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     create: async (sessionData) => {
         try {
             console.log('📡 POST /api/sessions', sessionData);
@@ -801,6 +810,42 @@ export const userManagementAPI = {
      */
     unassignTherapist: async (childId, therapistId) => {
         const response = await apiClient.delete(`/api/admin/users/child/${childId}/assign/${therapistId}`);
+        return response.data;
+    },
+
+    /**
+     * Update therapist details
+     */
+    updateTherapist: async (userId, data) => {
+        const response = await apiClient.put(`/api/admin/users/therapist/${userId}`, data);
+        return response.data;
+    },
+
+    /**
+     * Update parent details
+     */
+    updateParent: async (userId, data) => {
+        const response = await apiClient.put(`/api/admin/users/parent/${userId}`, data);
+        return response.data;
+    },
+
+    /**
+     * Update child details
+     */
+    updateChild: async (childId, data) => {
+        const response = await apiClient.put(`/api/admin/users/child/${childId}`, data);
+        return response.data;
+    },
+
+    /**
+     * Reset user password
+     */
+    resetPassword: async (role, userId, newPassword) => {
+        const response = await apiClient.post('/api/admin/users/reset-password', {
+            role,
+            user_id: userId,
+            new_password: newPassword
+        });
         return response.data;
     },
 

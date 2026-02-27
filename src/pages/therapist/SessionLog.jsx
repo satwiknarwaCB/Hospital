@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Save, X, Activity, Frown, Meh, Smile, Sparkles, CheckCircle, Loader2, FileText, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -15,13 +15,31 @@ const SessionLog = () => {
   const childIdFromState = location.state?.childId;
 
   // Filter kids assigned to this therapist or all if admin
-  const myKids = kids.filter(k =>
-    (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(currentUser?.id || 't1')
-  );
+  const myKids = useMemo(() => {
+    const safeKids = Array.isArray(kids) ? kids : [];
+    const tId = currentUser?.id;
+
+    const filtered = safeKids.filter(k => {
+      const tIds = k.therapistIds || [];
+      const ktId = k.therapistId || k.therapist_id;
+      const allIds = [...tIds, ktId].filter(Boolean);
+      return allIds.includes(tId || 't1') || (currentUser?.role === 'admin');
+    });
+
+    // Fallback: If therapist has no specific kids, show all to prevent empty dropdown
+    return filtered.length > 0 ? filtered : safeKids;
+  }, [kids, currentUser]);
 
   const [selectedChild, setSelectedChild] = useState(
     childIdFromState || (myKids && myKids[0] ? myKids[0].id : '')
   );
+
+  // Auto-select first child if none selected and myKids becomes available
+  useEffect(() => {
+    if (!selectedChild && myKids.length > 0) {
+      setSelectedChild(myKids[0].id || myKids[0]._id);
+    }
+  }, [myKids, selectedChild]);
 
   const baselineDocs = getChildDocuments(selectedChild);
 
@@ -109,6 +127,7 @@ const SessionLog = () => {
       const originalSessionId = location.state?.sessionId;
       const originalDate = location.state?.sessionDate;
       const originalDuration = location.state?.sessionDuration || 45;
+      const originalLocation = location.state?.sessionLocation || '';
 
       for (const type of typesToSave) {
         const summary = aiSummary[type];
@@ -126,7 +145,8 @@ const SessionLog = () => {
           emotionalState: mood,
           status: 'completed',
           duration: Math.floor(originalDuration / typesToSave.length), // Split original duration
-          date: originalDate || new Date().toISOString() // Keep original date!
+          date: originalDate || new Date().toISOString(), // Keep original date!
+          location: originalLocation || undefined // Carry over room location for utilization tracking
         };
 
         const savedSession = await sessionAPI.create(sessionData);

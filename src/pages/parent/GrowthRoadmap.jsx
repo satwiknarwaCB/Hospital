@@ -3,7 +3,7 @@
 // Parent Portal - Milestone Tracking & AI Predictions
 // ============================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Target,
     CheckCircle2,
@@ -222,7 +222,7 @@ const GoalCard = ({ goal, isExpanded, onToggle }) => {
 
 // Main Roadmap Component
 const GrowthRoadmap = () => {
-    const { currentUser, kids, getChildRoadmap } = useApp();
+    const { currentUser, kids, getChildRoadmap, refreshRoadmap } = useApp();
     const [expandedGoal, setExpandedGoal] = useState(null);
     const [viewMode, setViewMode] = useState('3-month'); // 3-month or 6-month
     const [filterDomain, setFilterDomain] = useState('all');
@@ -231,8 +231,16 @@ const GrowthRoadmap = () => {
     const child = kids.find(k => k.id === currentUser?.childId);
     const childId = child?.id || 'c1';
 
+    // Refresh roadmap on mount or when child changes
+    useEffect(() => {
+        if (childId) {
+            refreshRoadmap(childId);
+        }
+    }, [childId, refreshRoadmap]);
+
     // Get roadmap data
     const roadmapData = getChildRoadmap(childId);
+
 
     // Filter by domain
     const filteredRoadmap = filterDomain === 'all'
@@ -326,7 +334,7 @@ const GrowthRoadmap = () => {
                             </p>
                             <div className="mt-4 flex items-center gap-4">
                                 <div className="text-sm">
-                                    <span className="text-violet-200">School Readiness Score:</span>
+                                    <span className="text-violet-200">Percentage:</span>
                                     <span className="ml-2 font-bold">{child.schoolReadinessScore}%</span>
                                 </div>
                                 <div className="text-sm">

@@ -26,7 +26,9 @@ import {
     Download,
     Eye,
     PlusCircle,
-    Trash2
+    Trash2,
+    Sparkles,
+    Undo2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -94,7 +96,7 @@ const ChildCard = ({ child, sessions = [], skillScores = [], onSelect }) => {
                         <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-neutral-100">
                             <div className="text-center">
                                 <p className="text-lg font-bold text-neutral-800">{avgScore}%</p>
-                                <p className="text-xs text-neutral-500">School Ready</p>
+                                <p className="text-xs text-neutral-500">Percentage</p>
                             </div>
                             <div className="text-center">
                                 <p className="text-lg font-bold text-neutral-800">{sessions.length}</p>
@@ -148,6 +150,7 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
     const [activeTab, setActiveTab] = useState('summary');
     const fileInputRef = React.useRef(null);
     const documents = getChildDocuments(child.id);
+    const [selectedSessionReport, setSelectedSessionReport] = useState(null);
 
     if (!child) return null;
 
@@ -274,260 +277,336 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
                         ))}
                     </div>
 
-                    {activeTab === 'summary' && (
-                        <>
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-4 gap-4 mb-6">
-                                <div className="p-4 bg-neutral-50 rounded-xl text-center">
-                                    <p className="text-2xl font-bold text-neutral-800">{child.schoolReadinessScore}%</p>
-                                    <p className="text-xs text-neutral-500">School Ready</p>
-                                </div>
-                                <div className="p-4 bg-neutral-50 rounded-xl text-center">
-                                    <p className="text-2xl font-bold text-neutral-800">{child.streak}</p>
-                                    <p className="text-xs text-neutral-500">Day Streak</p>
-                                </div>
-                                <div className="p-4 bg-neutral-50 rounded-xl text-center">
-                                    <p className="text-2xl font-bold text-neutral-800">{sessions.filter(s => s.status === 'completed').length}</p>
-                                    <p className="text-xs text-neutral-500">Sessions</p>
-                                </div>
-                                <div className="p-4 bg-neutral-50 rounded-xl text-center">
-                                    <p className="text-2xl font-bold text-neutral-800">
-                                        {Math.round(sessions.reduce((a, b) => a + (b.engagement || 0), 0) / sessions.filter(s => s.engagement).length || 0)}%
-                                    </p>
-                                    <p className="text-xs text-neutral-500">Avg Engage</p>
+                    {selectedSessionReport ? (
+                        <div className="animate-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center justify-between mb-6">
+                                <button
+                                    onClick={() => setSelectedSessionReport(null)}
+                                    className="flex items-center gap-2 text-primary-600 font-black text-[10px] uppercase tracking-widest hover:bg-primary-50 px-3 py-1.5 rounded-full transition-all"
+                                >
+                                    <Undo2 className="h-3.5 w-3.5" /> Back to History
+                                </button>
+                                <div className="text-right">
+                                    <h4 className="font-black text-neutral-800 text-sm uppercase">{selectedSessionReport.type} Report</h4>
+                                    <p className="text-[10px] text-neutral-400 font-bold uppercase">{new Date(selectedSessionReport.date).toLocaleDateString()}</p>
                                 </div>
                             </div>
 
-                            {/* Recent Wins */}
-                            <div className="mb-6">
-                                <div className="flex items-center justify-between mb-3">
-                                    <h3 className="font-black text-neutral-800 tracking-tight uppercase text-xs">Recent Wins from Home 💝</h3>
-                                    <span className="text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">New Unseen</span>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="relative aspect-video bg-neutral-100 rounded-2xl overflow-hidden border border-neutral-100 group">
-                                        <img src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&q=80&w=200" className="w-full h-full object-cover" alt="Win" />
-                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Play className="h-6 w-6 text-white fill-white" />
-                                        </div>
-                                        <div className="absolute bottom-2 left-2 right-2">
-                                            <p className="text-[9px] font-bold text-white truncate">"First full sentence!"</p>
-                                        </div>
-                                    </div>
-                                    <div className="relative aspect-video bg-neutral-100 rounded-2xl overflow-hidden border border-neutral-100 group">
-                                        <img src="https://images.unsplash.com/photo-1544126592-807daa215a05?auto=format&fit=crop&q=80&w=400" className="w-full h-full object-cover" alt="Win" />
-                                        <div className="absolute bottom-2 left-2 right-2">
-                                            <p className="text-[9px] font-bold text-white truncate">"Self-feeding success"</p>
-                                        </div>
+                            <div className="space-y-6">
+                                <div className="p-5 bg-violet-50/50 rounded-2xl border border-violet-100 flex items-start gap-3">
+                                    <Sparkles className="h-5 w-5 text-violet-500 shrink-0 mt-0.5" />
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black text-violet-500 uppercase tracking-widest">Clinical AI Narrative</p>
+                                        <p className="text-sm text-neutral-700 leading-relaxed italic">"{selectedSessionReport.aiSummary || 'Summary not available.'}"</p>
                                     </div>
                                 </div>
-                                <Button variant="ghost" className="w-full mt-2 text-[10px] font-black uppercase tracking-widest text-primary-600 hover:bg-primary-50" onClick={handleViewFullProfile}>
-                                    See Full Memory Box →
-                                </Button>
-                            </div>
 
-                            {/* Key Clinical Reports (Direct Preview in Summary) */}
-                            {documents.length > 0 && (
-                                <div className="animate-in slide-in-from-top-4 duration-500">
-                                    <h3 className="font-black text-neutral-800 tracking-tight uppercase text-xs mb-3">Key Clinical Reports</h3>
+                                <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        {documents.slice(0, 2).map(doc => (
-                                            <button
-                                                key={doc.id}
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleViewDocument(doc);
-                                                }}
-                                                className={`flex items-center justify-between p-3 bg-violet-50/50 rounded-xl border border-violet-100/50 hover:bg-violet-100/50 transition-colors ${doc.url && doc.url !== '#' ? 'cursor-pointer' : 'cursor-default'}`}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <FileText className="h-4 w-4 text-violet-600" />
-                                                    <span className="text-xs font-bold text-neutral-700">{doc.title}</span>
+                                        <p className="text-[10px] font-black text-green-600 uppercase tracking-widest px-1">Measurable Wins</p>
+                                        <div className="space-y-2">
+                                            {(Array.isArray(selectedSessionReport.measurableOutcomes) ? selectedSessionReport.measurableOutcomes : []).map((o, i) => (
+                                                <div key={i} className="p-2.5 bg-green-50/50 border border-green-100 rounded-xl text-[11px] font-bold text-neutral-700 flex items-center gap-2">
+                                                    <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> {o}
                                                 </div>
-                                                <span className="text-[9px] font-black text-violet-400 uppercase tracking-tighter">{doc.category}</span>
-                                            </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest px-1">Contextual Info</p>
+                                        <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-xl space-y-2">
+                                            <div className="flex justify-between text-[10px]">
+                                                <span className="text-neutral-400 font-bold uppercase">Engagement</span>
+                                                <span className="font-black text-blue-600">{selectedSessionReport.engagement}%</span>
+                                            </div>
+                                            <div className="flex justify-between text-[10px]">
+                                                <span className="text-neutral-400 font-bold uppercase">Duration</span>
+                                                <span className="font-black text-blue-600">{selectedSessionReport.duration}m</span>
+                                            </div>
+                                            <div className="flex justify-between text-[10px]">
+                                                <span className="text-neutral-400 font-bold uppercase">Status</span>
+                                                <span className="font-black text-green-600 uppercase tracking-tighter">Completed</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Internal Note Archive</p>
+                                    <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-100 text-[11px] text-neutral-600 leading-relaxed">
+                                        {selectedSessionReport.notes || 'No manual notes recorded.'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {activeTab === 'summary' && (
+                                <>
+                                    {/* Stats Grid */}
+                                    <div className="grid grid-cols-4 gap-4 mb-6">
+                                        <div className="p-4 bg-neutral-50 rounded-xl text-center">
+                                            <p className="text-2xl font-bold text-neutral-800">{child.schoolReadinessScore}%</p>
+                                            <p className="text-xs text-neutral-500">Percentage</p>
+                                        </div>
+                                        <div className="p-4 bg-neutral-50 rounded-xl text-center">
+                                            <p className="text-2xl font-bold text-neutral-800">{child.streak}</p>
+                                            <p className="text-xs text-neutral-500">Day Streak</p>
+                                        </div>
+                                        <div className="p-4 bg-neutral-50 rounded-xl text-center">
+                                            <p className="text-2xl font-bold text-neutral-800">{sessions.filter(s => s.status === 'completed').length}</p>
+                                            <p className="text-xs text-neutral-500">Sessions</p>
+                                        </div>
+                                        <div className="p-4 bg-neutral-50 rounded-xl text-center">
+                                            <p className="text-2xl font-bold text-neutral-800">
+                                                {Math.round(sessions.reduce((a, b) => a + (b.engagement || 0), 0) / sessions.filter(s => s.engagement).length || 0)}%
+                                            </p>
+                                            <p className="text-xs text-neutral-500">Avg Engage</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Recent Wins */}
+                                    <div className="mb-6">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h3 className="font-black text-neutral-800 tracking-tight uppercase text-xs">Recent Wins from Home 💝</h3>
+                                            <span className="text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">New Unseen</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="relative aspect-video bg-neutral-100 rounded-2xl overflow-hidden border border-neutral-100 group">
+                                                <img src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&q=80&w=200" className="w-full h-full object-cover" alt="Win" />
+                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Play className="h-6 w-6 text-white fill-white" />
+                                                </div>
+                                                <div className="absolute bottom-2 left-2 right-2">
+                                                    <p className="text-[9px] font-bold text-white truncate">"First full sentence!"</p>
+                                                </div>
+                                            </div>
+                                            <div className="relative aspect-video bg-neutral-100 rounded-2xl overflow-hidden border border-neutral-100 group">
+                                                <img src="https://images.unsplash.com/photo-1544126592-807daa215a05?auto=format&fit=crop&q=80&w=400" className="w-full h-full object-cover" alt="Win" />
+                                                <div className="absolute bottom-2 left-2 right-2">
+                                                    <p className="text-[9px] font-bold text-white truncate">"Self-feeding success"</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <Button variant="ghost" className="w-full mt-2 text-[10px] font-black uppercase tracking-widest text-primary-600 hover:bg-primary-50" onClick={handleViewFullProfile}>
+                                            See Full Memory Box →
+                                        </Button>
+                                    </div>
+
+                                    {/* Key Clinical Reports (Direct Preview in Summary) */}
+                                    {documents.length > 0 && (
+                                        <div className="animate-in slide-in-from-top-4 duration-500">
+                                            <h3 className="font-black text-neutral-800 tracking-tight uppercase text-xs mb-3">Key Clinical Reports</h3>
+                                            <div className="space-y-2">
+                                                {documents.slice(0, 2).map(doc => (
+                                                    <button
+                                                        key={doc.id}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            handleViewDocument(doc);
+                                                        }}
+                                                        className={`flex items-center justify-between p-3 bg-violet-50/50 rounded-xl border border-violet-100/50 hover:bg-violet-100/50 transition-colors ${doc.url && doc.url !== '#' ? 'cursor-pointer' : 'cursor-default'}`}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <FileText className="h-4 w-4 text-violet-600" />
+                                                            <span className="text-xs font-bold text-neutral-700">{doc.title}</span>
+                                                        </div>
+                                                        <span className="text-[9px] font-black text-violet-400 uppercase tracking-tighter">{doc.category}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {activeTab === 'skills' && (
+                                <div className="mb-6 animate-in fade-in duration-300">
+                                    <h3 className="font-semibold text-neutral-800 mb-3">Skill Domains Overview</h3>
+                                    <div className="space-y-4">
+                                        {skillScores.map(skill => (
+                                            <div key={skill.id} className="space-y-1.5">
+                                                <div className="flex justify-between items-center text-xs">
+                                                    <span className="font-bold text-neutral-700">{skill.domain}</span>
+                                                    <span className="font-black text-primary-600">{skill.score}%</span>
+                                                </div>
+                                                <div className="h-2.5 bg-neutral-100 rounded-full overflow-hidden">
+                                                    <div
+                                                        className={`h-full rounded-full transition-all duration-1000 ${skill.score >= 70 ? 'bg-green-500' :
+                                                            skill.score >= 40 ? 'bg-yellow-500' : 'bg-red-500'
+                                                            }`}
+                                                        style={{ width: `${skill.score}%` }}
+                                                    />
+                                                </div>
+                                            </div>
                                         ))}
                                     </div>
                                 </div>
                             )}
-                        </>
-                    )}
 
-                    {activeTab === 'skills' && (
-                        <div className="mb-6 animate-in fade-in duration-300">
-                            <h3 className="font-semibold text-neutral-800 mb-3">Skill Domains Overview</h3>
-                            <div className="space-y-4">
-                                {skillScores.map(skill => (
-                                    <div key={skill.id} className="space-y-1.5">
-                                        <div className="flex justify-between items-center text-xs">
-                                            <span className="font-bold text-neutral-700">{skill.domain}</span>
-                                            <span className="font-black text-primary-600">{skill.score}%</span>
-                                        </div>
-                                        <div className="h-2.5 bg-neutral-100 rounded-full overflow-hidden">
+                            {activeTab === 'documents' && (
+                                <div className="mb-6 animate-in fade-in duration-300">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="font-black text-neutral-800 tracking-tight uppercase text-xs">Clinical & Baseline Archive</h3>
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    const reader = new FileReader();
+                                                    reader.onload = (event) => {
+                                                        addDocument({
+                                                            childId: child.id,
+                                                            title: file.name.replace(/\.[^/.]+$/, ""),
+                                                            type: 'Other',
+                                                            category: 'Clinical',
+                                                            format: file.type.split('/')[1] || 'pdf',
+                                                            uploadedBy: 'Therapist',
+                                                            fileSize: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+                                                            url: event.target.result // Persistent DataURL
+                                                        });
+                                                        addNotification({
+                                                            type: 'success',
+                                                            title: 'Document Archived',
+                                                            message: `${file.name} added to dossier.`
+                                                        });
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }
+
+                                            }}
+                                        />
+                                        <Button size="sm" variant="outline" className="h-8 text-[10px] font-black uppercase tracking-widest gap-2"
+                                            onClick={() => fileInputRef.current?.click()}
+                                        >
+                                            <Upload className="h-3.5 w-3.5" /> Upload File
+                                        </Button>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        {documents.length > 0 ? documents.map(doc => (
                                             <div
-                                                className={`h-full rounded-full transition-all duration-1000 ${skill.score >= 70 ? 'bg-green-500' :
-                                                    skill.score >= 40 ? 'bg-yellow-500' : 'bg-red-500'
-                                                    }`}
-                                                style={{ width: `${skill.score}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'documents' && (
-                        <div className="mb-6 animate-in fade-in duration-300">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-black text-neutral-800 tracking-tight uppercase text-xs">Clinical & Baseline Archive</h3>
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    className="hidden"
-                                    onChange={(e) => {
-                                        const file = e.target.files[0];
-                                        if (file) {
-                                            const reader = new FileReader();
-                                            reader.onload = (event) => {
-                                                addDocument({
-                                                    childId: child.id,
-                                                    title: file.name.replace(/\.[^/.]+$/, ""),
-                                                    type: 'Other',
-                                                    category: 'Clinical',
-                                                    format: file.type.split('/')[1] || 'pdf',
-                                                    uploadedBy: 'Therapist',
-                                                    fileSize: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
-                                                    url: event.target.result // Persistent DataURL
-                                                });
-                                                addNotification({
-                                                    type: 'success',
-                                                    title: 'Document Archived',
-                                                    message: `${file.name} added to dossier.`
-                                                });
-                                            };
-                                            reader.readAsDataURL(file);
-                                        }
-
-                                    }}
-                                />
-                                <Button size="sm" variant="outline" className="h-8 text-[10px] font-black uppercase tracking-widest gap-2"
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    <Upload className="h-3.5 w-3.5" /> Upload File
-                                </Button>
-                            </div>
-
-                            <div className="space-y-3">
-                                {documents.length > 0 ? documents.map(doc => (
-                                    <div
-                                        key={doc.id}
-                                        onClick={() => handleViewDocument(doc)}
-                                        className={`p-4 bg-neutral-50 rounded-2xl border border-neutral-100 flex items-center gap-4 hover:bg-white hover:shadow-md transition-all group ${doc.url && doc.url !== '#' ? 'cursor-pointer' : 'cursor-default'}`}
-                                    >
-                                        <div className="p-3 bg-white rounded-xl shadow-sm group-hover:bg-primary-50 transition-colors">
-                                            <FileText className="h-6 w-6 text-primary-600" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <p className="font-bold text-neutral-800 text-sm">{doc.title}</p>
-                                                <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter ${doc.category === 'Baseline' ? 'bg-violet-100 text-violet-700' : 'bg-blue-100 text-blue-700'
-                                                    }`}>
-                                                    {doc.category}
-                                                </span>
+                                                key={doc.id}
+                                                onClick={() => handleViewDocument(doc)}
+                                                className={`p-4 bg-neutral-50 rounded-2xl border border-neutral-100 flex items-center gap-4 hover:bg-white hover:shadow-md transition-all group ${doc.url && doc.url !== '#' ? 'cursor-pointer' : 'cursor-default'}`}
+                                            >
+                                                <div className="p-3 bg-white rounded-xl shadow-sm group-hover:bg-primary-50 transition-colors">
+                                                    <FileText className="h-6 w-6 text-primary-600" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-bold text-neutral-800 text-sm">{doc.title}</p>
+                                                        <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter ${doc.category === 'Baseline' ? 'bg-violet-100 text-violet-700' : 'bg-blue-100 text-blue-700'
+                                                            }`}>
+                                                            {doc.category}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-[10px] font-medium text-neutral-400 mt-0.5">
+                                                        Added {new Date(doc.date).toLocaleDateString()} • {doc.fileSize} • By {doc.uploadedBy}
+                                                    </p>
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    {doc.url && doc.url !== '#' && (
+                                                        <>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleViewDocument(doc); }}
+                                                                className="p-2 text-primary-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all"
+                                                                title="View Report"
+                                                            >
+                                                                <Eye className="h-5 w-5" />
+                                                            </button>
+                                                            <a
+                                                                href={doc.url}
+                                                                download={`${doc.title}.${doc.format || 'pdf'}`}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                className="p-2 text-secondary-400 hover:text-secondary-600 hover:bg-secondary-50 rounded-lg transition-all"
+                                                                title="Download"
+                                                            >
+                                                                <Download className="h-5 w-5" />
+                                                            </a>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    if (window.confirm('Are you sure you want to delete this report?')) {
+                                                                        deleteDocument(doc.id);
+                                                                        addNotification({
+                                                                            type: 'success',
+                                                                            title: 'Report Removed',
+                                                                            message: 'The report has been deleted from the profile.'
+                                                                        });
+                                                                    }
+                                                                }}
+                                                                className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                                title="Delete Report"
+                                                            >
+                                                                <Trash2 className="h-5 w-5" />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {(doc.url === '#' || !doc.url) && (
+                                                        <span className="text-[10px] font-bold text-neutral-400 uppercase italic">Archive Only</span>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <p className="text-[10px] font-medium text-neutral-400 mt-0.5">
-                                                Added {new Date(doc.date).toLocaleDateString()} • {doc.fileSize} • By {doc.uploadedBy}
-                                            </p>
-                                        </div>
-                                        <div className="flex gap-1">
-                                            {doc.url && doc.url !== '#' && (
-                                                <>
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleViewDocument(doc); }}
-                                                        className="p-2 text-primary-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all"
-                                                        title="View Report"
-                                                    >
-                                                        <Eye className="h-5 w-5" />
-                                                    </button>
-                                                    <a
-                                                        href={doc.url}
-                                                        download={`${doc.title}.${doc.format || 'pdf'}`}
-                                                        onClick={(e) => e.stopPropagation()}
-                                                        className="p-2 text-secondary-400 hover:text-secondary-600 hover:bg-secondary-50 rounded-lg transition-all"
-                                                        title="Download"
-                                                    >
-                                                        <Download className="h-5 w-5" />
-                                                    </a>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            if (window.confirm('Are you sure you want to delete this report?')) {
-                                                                deleteDocument(doc.id);
-                                                                addNotification({
-                                                                    type: 'success',
-                                                                    title: 'Report Removed',
-                                                                    message: 'The report has been deleted from the profile.'
-                                                                });
-                                                            }
-                                                        }}
-                                                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                                        title="Delete Report"
-                                                    >
-                                                        <Trash2 className="h-5 w-5" />
-                                                    </button>
-                                                </>
-                                            )}
-                                            {(doc.url === '#' || !doc.url) && (
-                                                <span className="text-[10px] font-bold text-neutral-400 uppercase italic">Archive Only</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                )) : (
-                                    <div className="py-8 text-center bg-neutral-50 rounded-2xl border-2 border-dashed border-neutral-200">
-                                        <FileText className="h-10 w-10 text-neutral-300 mx-auto mb-2" />
-                                        <p className="text-xs text-neutral-500 font-medium">No documents archived yet.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'sessions' && (
-                        <div className="animate-in fade-in duration-300">
-                            <h3 className="font-black text-neutral-800 mb-3 tracking-tight uppercase text-xs">Full Session History</h3>
-                            <div className="space-y-2">
-                                {sessions.map(session => (
-                                    <div key={session.id} className="p-3 bg-neutral-50 rounded-xl flex items-center justify-between border border-neutral-100/50 hover:bg-white hover:shadow-sm transition-all">
-                                        <div>
-                                            <p className="font-bold text-neutral-800 text-sm">{session.type}</p>
-                                            <p className="text-[10px] font-medium text-neutral-400">
-                                                {new Date(session.date).toLocaleDateString()} • {session.duration}min
-                                            </p>
-                                            {session.aiSummary && <p className="text-[9px] text-neutral-500 mt-1 line-clamp-1 italic">"{session.aiSummary}"</p>}
-                                        </div>
-                                        {session.engagement && (
-                                            <span className={`text-[11px] font-black ${session.engagement >= 80 ? 'text-green-600' :
-                                                session.engagement >= 40 ? 'text-yellow-600' : 'text-red-600'
-                                                }`}>
-                                                {session.engagement}%
-                                            </span>
+                                        )) : (
+                                            <div className="py-8 text-center bg-neutral-50 rounded-2xl border-2 border-dashed border-neutral-200">
+                                                <FileText className="h-10 w-10 text-neutral-300 mx-auto mb-2" />
+                                                <p className="text-xs text-neutral-500 font-medium">No documents archived yet.</p>
+                                            </div>
                                         )}
                                     </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                                </div>
+                            )}
 
-                    {/* Footer Actions */}
-                    <div className="flex gap-3 mt-8 pt-6 border-t border-neutral-100">
-                        <Button className="flex-2 h-12 shadow-lg shadow-primary-200" onClick={handleLogNewSession}>
-                            <PlusCircle className="h-4 w-4 mr-2" /> Start New Session
-                        </Button>
-                        <Button variant="outline" className="flex-1 h-12" onClick={onClose}>
-                            Close
-                        </Button>
-                    </div>
+                            {activeTab === 'sessions' && (
+                                <div className="animate-in fade-in duration-300">
+                                    <h3 className="font-black text-neutral-800 mb-3 tracking-tight uppercase text-xs">Full Session History</h3>
+                                    <div className="space-y-2">
+                                        {sessions.map(session => (
+                                            <div key={session.id} className="p-3 bg-neutral-50 rounded-xl flex items-center justify-between border border-neutral-100/50 hover:bg-white hover:shadow-sm transition-all">
+                                                <div>
+                                                    <p className="font-bold text-neutral-800 text-sm">{session.type}</p>
+                                                    <p className="text-[10px] font-medium text-neutral-400">
+                                                        {new Date(session.date).toLocaleDateString()} • {session.duration}min
+                                                    </p>
+                                                    {session.aiSummary && <p className="text-[9px] text-neutral-500 mt-1 line-clamp-1 italic">"{session.aiSummary}"</p>}
+                                                </div>
+                                                {session.engagement && (
+                                                    <div className="flex items-center gap-3">
+                                                        <span className={`text-[11px] font-black ${session.engagement >= 80 ? 'text-green-600' :
+                                                            session.engagement >= 40 ? 'text-yellow-600' : 'text-red-600'
+                                                            }`}>
+                                                            {session.engagement}%
+                                                        </span>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            className="h-8 w-8 p-0 text-neutral-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg group"
+                                                            onClick={() => setSelectedSessionReport(session)}
+                                                        >
+                                                            <FileText className="h-4 w-4 transition-transform group-hover:scale-110" />
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Footer Actions */}
+                            <div className="flex gap-3 mt-8 pt-6 border-t border-neutral-100">
+                                <Button className="flex-2 h-12 shadow-lg shadow-primary-200" onClick={handleLogNewSession}>
+                                    <PlusCircle className="h-4 w-4 mr-2" /> Start New Session
+                                </Button>
+                                <Button variant="outline" className="flex-1 h-12" onClick={onClose}>
+                                    Close
+                                </Button>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

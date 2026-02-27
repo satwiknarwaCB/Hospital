@@ -284,6 +284,7 @@ export const AppProvider = ({ children }) => {
         return {
             ...u,
             id: u.id || u._id,
+            childId: u.childId || u.child_id,
             avatar: u.avatar || u.avatarUrl || u.photoUrl || u.profile_photo || u.profilePhoto || u.image || u.photo || u.avatar_url || u.profile_image || u.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name || 'User'}`,
         };
     }, []);
@@ -423,7 +424,8 @@ export const AppProvider = ({ children }) => {
                 const [stats] = await Promise.all([
                     userManagementAPI.getStats(),
                     refreshUsers(),
-                    refreshChildren()
+                    refreshChildren(),
+                    refreshSessions()
                 ]);
                 setAdminStats(stats);
             }
@@ -517,9 +519,11 @@ export const AppProvider = ({ children }) => {
                 cloudSessions = await sessionAPI.getByChild(currentUser.childId);
             } else if (currentUser.role === 'therapist') {
                 cloudSessions = await sessionAPI.getByTherapist(currentUser.id);
+            } else if (currentUser.role === 'admin') {
+                cloudSessions = await sessionAPI.listAll();
             }
 
-            if (cloudSessions.length > 0) {
+            if (cloudSessions) {
                 const normalizedSessions = cloudSessions.map(s => ({
                     ...s,
                     id: s.id || s._id,
@@ -537,7 +541,7 @@ export const AppProvider = ({ children }) => {
                         const sId = s.id || s._id;
                         if (!sessionMap.has(sId)) {
                             const isDuplicate = Array.from(sessionMap.values()).some(existing =>
-                                existing.childId === s.childId &&
+                                existing.childId === (s.childId || s.child_id) &&
                                 existing.date === s.date &&
                                 existing.type === s.type
                             );
@@ -939,7 +943,7 @@ export const AppProvider = ({ children }) => {
     // ============ Session Actions ============
     const getChildSessions = useCallback((childId) => {
         return sessions
-            .filter(s => s.childId === childId)
+            .filter(s => (s.childId === childId || s.child_id === childId))
             .sort((a, b) => new Date(b.date) - new Date(a.date));
     }, [sessions]);
 
@@ -1006,7 +1010,7 @@ export const AppProvider = ({ children }) => {
     const getTodaysSessions = useCallback((therapistId) => {
         const today = new Date().toISOString().split('T')[0];
         return sessions.filter(s =>
-            s.therapistId === therapistId &&
+            (s.therapistId === therapistId || s.therapist_id === therapistId) &&
             s.date.startsWith(today)
         );
     }, [sessions]);
@@ -1215,10 +1219,10 @@ export const AppProvider = ({ children }) => {
             const data = await roadmapAPI.getByChild(childId);
             setRoadmap(prev => {
                 // Keep other kids
-                const otherKids = prev.filter(r => r.childId !== childId);
+                const otherKids = prev.filter(r => (r.childId || r.child_id) !== childId);
 
                 // Keep local items for THIS child that aren't on the server yet (those without _id)
-                const localUnsaved = prev.filter(r => r.childId === childId && !r._id && !r.isMigrated);
+                const localUnsaved = prev.filter(r => (r.childId === childId || r.child_id === childId) && !r._id && !r.isMigrated);
 
                 // Deduplicate server data against localUnsaved by title/domain to be extra safe
                 const serverData = data.map(item => ({ ...item, id: item._id || item.id }));
@@ -1246,7 +1250,7 @@ export const AppProvider = ({ children }) => {
     }, []);
 
     const getChildRoadmap = useCallback((childId) => {
-        const childRoadmap = roadmap.filter(r => r.childId === childId);
+        const childRoadmap = roadmap.filter(r => r.childId === childId || r.child_id === childId);
 
         // Deduplicate items with the same title and domain to prevent "double double" display
         const uniqueGoalsMap = new Map();
@@ -1926,7 +1930,7 @@ export const AppProvider = ({ children }) => {
                 }
             }
 
-            // Calculate School Ready Score (Avg of latest skills)
+            // Calculate Percentage Score (Avg of latest skills)
             const latestScores = getLatestSkillScores(childId);
             const schoolReadinessScore = latestScores.length > 0
                 ? Math.round(latestScores.reduce((a, b) => a + (b.score || 0), 0) / latestScores.length)
@@ -1961,13 +1965,9 @@ export const AppProvider = ({ children }) => {
         auditLogs,
         cdcMetrics,
         adminStats,
-        refreshAdminStats,
-        realParents,
-<<<<<<< HEAD
         realTherapists,
         refreshUsers,
-=======
->>>>>>> f01dc3b2a8652e75c00d95c6c2546e3c221f38af
+        realParents,
         currentUser,
         isAuthenticated,
         notifications,
@@ -2110,11 +2110,7 @@ export const AppProvider = ({ children }) => {
         periodicReviews, addPeriodicReview,
         roadmap, addRoadmapGoal,
         skillGoals, getChildGoals, updateSkillGoal, addSkillGoal, deleteSkillGoal, deleteSkillProgress,
-<<<<<<< HEAD
-        childDocuments, addChild, realParents, realTherapists
-=======
-        childDocuments, addChild, realParents, deleteDocument
->>>>>>> f01dc3b2a8652e75c00d95c6c2546e3c221f38af
+        childDocuments, addChild, realParents, realTherapists, deleteDocument
     ]);
 
     return (

@@ -37,6 +37,7 @@ import ParentSessions from './ParentSessions';
 import Messages from './Messages';
 import MemoryBox from './MemoryBox';
 import Reports from './Reports';
+import CareTeam from './CareTeam';
 
 
 // ============================================================
@@ -663,7 +664,7 @@ const ParentDashboard = () => {
                                 <TrendingUp className="h-5 w-5 text-primary-500 shrink-0" />
                                 <span className="text-lg sm:text-xl font-black text-neutral-800 tracking-tight">Therapy Mastery</span>
                             </div>
-                            <Button variant="ghost" size="sm" className="text-primary-600 font-bold hover:bg-primary-50 w-full sm:w-auto" onClick={() => navigate('/parent/new-learning')}>
+                            <Button variant="ghost" size="sm" className="text-primary-600 font-bold hover:bg-primary-50 w-full sm:w-auto" onClick={() => navigate('/parent/our-goals')}>
                                 View Detailed Roadmap →
                             </Button>
                         </CardTitle>
@@ -739,6 +740,7 @@ const ParentPortal = () => {
         { label: 'Sessions', path: '/parent/sessions', icon: Calendar },
         { label: 'Reports', path: '/parent/reports', icon: FileText },
         { label: 'Memory Box', path: '/parent/memory-box', icon: History },
+        { label: 'Care Team', path: '/parent/care-team', icon: Users },
         { label: 'Messages', path: '/parent/messages', icon: MessageCircle, badge: totalMessagesUnread },
     ];
 
@@ -753,6 +755,7 @@ const ParentPortal = () => {
                 <Route path="reports" element={<Reports />} />
                 <Route path="messages" element={<Messages />} />
                 <Route path="memory-box" element={<MemoryBox />} />
+                <Route path="care-team" element={<CareTeam />} />
                 <Route path="*" element={<Navigate to="today" replace />} />
             </Route>
         </Routes>

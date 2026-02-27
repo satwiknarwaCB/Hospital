@@ -37,63 +37,7 @@ const Login = () => {
         }
     }, [location.state]);
 
-<<<<<<< HEAD
-    React.useEffect(() => {
-        const fetchDemoUsers = async () => {
-            try {
-                const data = await publicAPI.getDemoUsers();
-                setDemoUsers(data);
-            } catch (error) {
-                console.error('Failed to fetch demo users:', error);
-            }
-        };
-        fetchDemoUsers();
-    }, []);
 
-    // Demo Credentials - Show only DB-registered users
-    const getDemoAccounts = () => {
-        // Only use users fetched from the database (no static/hardcoded users)
-        const allParents = (demoUsers.parents || []).map(p => ({
-            ...p,
-            password: localStorage.getItem(`demo_pwd_${p.email}`) || 'Parent@123'
-        }));
-
-        const allTherapists = (demoUsers.therapists || []).map(t => ({
-            ...t,
-            password: localStorage.getItem(`demo_pwd_${t.email}`) || 'Therapist@123'
-        }));
-
-        return [
-            {
-                role: 'Parent',
-                icon: Heart,
-                color: 'text-pink-500',
-                bg: 'bg-pink-50',
-                users: allParents
-            },
-            {
-                role: 'Therapist',
-                icon: Briefcase,
-                color: 'text-blue-500',
-                bg: 'bg-blue-50',
-                users: allTherapists
-            },
-            {
-                role: 'Admin',
-                icon: ShieldCheck,
-                color: 'text-slate-700',
-                bg: 'bg-slate-100',
-                users: [
-                    { name: 'Director Anjali Sharma', email: 'anjali.sharma@neurobridge.com', password: 'Admin@123' }
-                ]
-            }
-        ];
-    };
-
-    const demoAccounts = getDemoAccounts();
-
-=======
->>>>>>> f01dc3b2a8652e75c00d95c6c2546e3c221f38af
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
@@ -193,57 +137,7 @@ const Login = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-<<<<<<< HEAD
-            <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-neutral-100">
-
-                {/* Demo Credentials Sidebar */}
-                <div className="w-full md:w-80 bg-slate-50 p-8 border-r border-neutral-100 overflow-y-auto max-h-[400px] md:max-h-none">
-                    <div className="mb-6">
-                        <h3 className="text-lg font-bold text-neutral-800 flex items-center gap-2">
-                            <Activity className="w-5 h-5 text-primary-600" />
-                            Demo Access
-                        </h3>
-                        <p className="text-sm text-neutral-500">Quickly test any role</p>
-                    </div>
-
-                    <div className="space-y-6">
-                        {demoAccounts.map((section) => (
-                            <div key={section.role}>
-                                <div className="flex items-center gap-2 mb-3">
-                                    <section.icon className={`w-4 h-4 ${section.color}`} />
-                                    <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-                                        {section.role} Accounts
-                                    </span>
-                                </div>
-                                <div className="space-y-2">
-                                    {section.users.map((u) => (
-                                        <button
-                                            key={u.email}
-                                            onClick={() => fillDemo(u.email, u.password)}
-                                            className="w-full text-left p-4 rounded-xl bg-white border border-neutral-100 hover:border-primary-300 hover:shadow-md transition-all group relative"
-                                        >
-                                            <div className="flex items-center justify-between mb-1">
-                                                <p className="text-sm font-bold text-neutral-700 group-hover:text-primary-600">{u.name}</p>
-                                                <span className="text-[9px] text-emerald-500 bg-emerald-50 px-1 rounded uppercase font-bold">
-                                                    {u.email.includes('@neurobridge.com') ? 'Admin' : 'DB'}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-1.5 text-primary-500 font-bold text-[10px]">
-                                                <Activity className="w-3 h-3" />
-                                                Quick Fill Access
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Login Form Section */}
-=======
             <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex border border-neutral-100">
->>>>>>> f01dc3b2a8652e75c00d95c6c2546e3c221f38af
                 <div className="flex-1 p-8 md:p-12">
                     <div className="max-w-md mx-auto">
                         <div className="text-center mb-10">

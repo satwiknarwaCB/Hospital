@@ -3,7 +3,7 @@
 // Therapist Console - Session Calendar & Scheduling
 // ============================================================
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Calendar,
@@ -22,7 +22,7 @@ import { Button } from '../../components/ui/Button';
 import { useApp } from '../../lib/context';
 import { THERAPY_TYPES } from '../../data/mockData';
 import { sessionAPI } from '../../lib/api';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileText, Sparkles, Download, Undo2, ChevronLeft as LeftIcon } from 'lucide-react';
 
 // Time Slot Component
 const TimeSlot = ({ session, child, onClick }) => {
@@ -102,9 +102,100 @@ const CalendarDay = ({ date, sessions, kids, isToday, isSelected, onClick }) => 
 
 // Session Detail Modal
 const SessionDetailModal = ({ session, child, onClose, onStatusChange }) => {
+    const [view, setView] = useState('detail');
+
     if (!session) return null;
 
     const therapyType = THERAPY_TYPES.find(t => t.name === session.type);
+
+    if (view === 'report') {
+        return (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+                <div className="bg-white rounded-[2.5rem] max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-neutral-100 flex flex-col scale-in-center">
+                    {/* Report Header */}
+                    <div className="p-8 pb-6 bg-gradient-to-br from-neutral-50 to-white flex items-center justify-between border-b border-neutral-100">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => setView('detail')}
+                                className="h-10 w-10 rounded-full bg-white border border-neutral-200 flex items-center justify-center text-neutral-400 hover:text-primary-600 hover:border-primary-100 transition-all shadow-sm"
+                            >
+                                <Undo2 className="h-5 w-5" />
+                            </button>
+                            <div>
+                                <h3 className="text-xl font-black text-neutral-800 tracking-tight flex items-center gap-2 uppercase">
+                                    Clinical Insight Report
+                                    <Sparkles className="h-4 w-4 text-primary-500" />
+                                </h3>
+                                <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">{session.type} • {new Date(session.date).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => window.print()}
+                            className="h-10 px-4 rounded-xl bg-primary-100 text-primary-700 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-primary-200 transition-colors"
+                        >
+                            <Download className="h-4 w-4" /> Export PDF
+                        </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                        {/* Parent Facing Summary */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-primary-600 px-1">
+                                <FileText className="h-4 w-4" />
+                                <h4 className="text-[11px] font-black uppercase tracking-widest">Parent-Facing Narrative</h4>
+                            </div>
+                            <div className="p-6 bg-primary-50/30 rounded-3xl border border-primary-100 leading-relaxed text-neutral-700 text-sm font-medium italic">
+                                "{session.aiSummary || 'No AI summary available for this record.'}"
+                            </div>
+                        </div>
+
+                        {/* Outcomes Grid */}
+                        <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-3">
+                                <h4 className="text-[10px] font-black text-green-600 uppercase tracking-widest px-1">Measurable Wins</h4>
+                                <div className="space-y-2">
+                                    {(Array.isArray(session.measurableOutcomes) ? session.measurableOutcomes : []).map((outcome, i) => (
+                                        <div key={i} className="flex items-start gap-2 text-xs font-bold text-neutral-600 bg-neutral-50 p-3 rounded-xl border border-neutral-100">
+                                            <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
+                                            {outcome}
+                                        </div>
+                                    ))}
+                                    {!session.measurableOutcomes?.length && <p className="text-[10px] text-neutral-400 italic px-1">No metrics recorded.</p>}
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest px-1">Qualitative Focus</h4>
+                                <div className="space-y-2">
+                                    {(Array.isArray(session.nonMeasurableOutcomes) ? session.nonMeasurableOutcomes : []).map((outcome, i) => (
+                                        <div key={i} className="flex items-start gap-2 text-xs font-bold text-neutral-600 bg-neutral-50 p-3 rounded-xl border border-neutral-100">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0 mt-1.5" />
+                                            {outcome}
+                                        </div>
+                                    ))}
+                                    {!session.nonMeasurableOutcomes?.length && <p className="text-[10px] text-neutral-400 italic px-1">No observations recorded.</p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Clinical Notes */}
+                        <div className="space-y-3">
+                            <h4 className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Internal Clinical Notes</h4>
+                            <div className="p-6 bg-neutral-50 rounded-3xl border border-neutral-200 text-neutral-600 text-xs font-medium whitespace-pre-wrap leading-relaxed">
+                                {session.notes || 'No internal notes provided.'}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="p-6 bg-neutral-50 border-t border-neutral-100 flex justify-center">
+                        <Button variant="ghost" onClick={onClose} className="font-black text-[10px] uppercase tracking-widest text-neutral-400">
+                            Close Report Archive
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -188,7 +279,12 @@ const SessionDetailModal = ({ session, child, onClose, onStatusChange }) => {
                             </>
                         )}
                         {session.status === 'completed' && (
-                            <Button variant="outline" className="flex-1">
+                            <Button
+                                variant="outline"
+                                className="flex-1 bg-violet-50 border-violet-200 text-violet-700 hover:bg-violet-100"
+                                onClick={() => setView('report')}
+                            >
+                                <FileText className="h-4 w-4 mr-2" />
                                 View Report
                             </Button>
                         )}
@@ -209,6 +305,13 @@ const NewSessionModal = ({ kidsList = [], onSave, onClose, isLoading, initialDat
         duration: 45,
         location: ''
     });
+
+    // Auto-select first child if not selected and list becomes available
+    useEffect(() => {
+        if (!formData.childId && kidsList.length > 0) {
+            setFormData(prev => ({ ...prev, childId: kidsList[0].id }));
+        }
+    }, [kidsList, formData.childId]);
 
     const handleSave = () => {
         // Validation
@@ -326,13 +429,18 @@ const NewSessionModal = ({ kidsList = [], onSave, onClose, isLoading, initialDat
                         {/* Location */}
                         <div>
                             <label className="text-sm font-medium text-neutral-700">Location</label>
-                            <input
-                                type="text"
-                                className="w-full mt-1 p-2 border border-neutral-200 rounded-lg"
-                                placeholder="e.g., Therapy Room A"
+                            <select
+                                className="w-full mt-1 p-2 border border-neutral-200 rounded-lg bg-white text-neutral-900"
                                 value={formData.location}
                                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                            />
+                            >
+                                <option value="" disabled>Select a room</option>
+                                <option value="Therapy Room A">Therapy Room A</option>
+                                <option value="Therapy Room B">Therapy Room B</option>
+                                <option value="Sensory Room">Sensory Room</option>
+                                <option value="Group Room">Group Room</option>
+                                <option value="Virtual Session">Virtual Session</option>
+                            </select>
                         </div>
                     </div>
 
@@ -375,7 +483,7 @@ const ScheduleManagement = () => {
     // SHOW ALL CHILDREN: Allow all therapists to see all children for scheduling
     const myChildren = safeKids;
 
-    const mySessions = safeSessions.filter(s => s.therapistId === therapistId);
+    const mySessions = safeSessions.filter(s => (s.therapistId === therapistId || s.therapist_id === therapistId));
 
     // Calendar navigation
     const navigateCalendar = (direction) => {
@@ -407,8 +515,14 @@ const ScheduleManagement = () => {
         if (!date) return [];
         try {
             const dateStr = date.toISOString().split('T')[0];
-            return mySessions.filter(s => s && s.date && String(s.date).startsWith(dateStr));
+            return mySessions.filter(s => {
+                if (!s || !s.date) return false;
+                // Handle both ISO strings and other date formats
+                const sDate = typeof s.date === 'string' ? s.date : new Date(s.date).toISOString();
+                return sDate.startsWith(dateStr);
+            });
         } catch (err) {
+            console.error('Error filtering sessions for date:', err);
             return [];
         }
     };
@@ -492,7 +606,8 @@ const ScheduleManagement = () => {
                         sessionId: session.id,
                         sessionType: session.type,
                         sessionDate: session.date,
-                        sessionDuration: session.duration
+                        sessionDuration: session.duration,
+                        sessionLocation: session.location
                     }
                 });
             }

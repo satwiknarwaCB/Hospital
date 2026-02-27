@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Users,
     Search,
@@ -27,6 +28,7 @@ const CareTeam = () => {
         refreshChildren,
         addNotification
     } = useApp();
+    const navigate = useNavigate();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [isAssigning, setIsAssigning] = useState(false);
@@ -153,7 +155,10 @@ const CareTeam = () => {
                                     </div>
 
                                     <div className="flex flex-col w-full gap-2">
-                                        <Button className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-primary-200">
+                                        <Button
+                                            onClick={() => navigate('/parent/messages')}
+                                            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-primary-200"
+                                        >
                                             <MessageCircle className="h-5 w-5 mr-2" />
                                             Direct Message
                                         </Button>
