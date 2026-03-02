@@ -590,11 +590,21 @@ async def assign_child_to_therapist(
     Supports multiple therapists per child
     """
     # Authorization: Admin can do anything. Therapist can only assign to themselves.
+    # Parents can assign a therapist to their own child.
     if current_user["role"] != "admin":
-        if current_user["role"] != "therapist":
-             raise HTTPException(status_code=403, detail="Not authorized")
-        if therapist_id.lower() != "none" and current_user["id"] != therapist_id:
-             raise HTTPException(status_code=403, detail="Can only assign to yourself")
+        if current_user["role"] == "parent":
+            # Parents can only assign therapists to their own children
+            parent = db_manager.parents.find_one({"_id": current_user["id"]})
+            if not parent:
+                raise HTTPException(status_code=403, detail="Parent account not found")
+            parent_children = parent.get("children_ids", [])
+            if child_id not in parent_children:
+                raise HTTPException(status_code=403, detail="You can only assign therapists to your own child")
+        elif current_user["role"] == "therapist":
+            if therapist_id.lower() != "none" and current_user["id"] != therapist_id:
+                raise HTTPException(status_code=403, detail="Can only assign to yourself")
+        else:
+            raise HTTPException(status_code=403, detail="Not authorized")
 
     print(f"[ASSIGN] Assigning {child_id} to {therapist_id}")
     

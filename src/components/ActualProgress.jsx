@@ -13,7 +13,7 @@ import { useApp } from '../lib/context';
 import { THERAPY_TYPES } from '../data/mockData';
 
 const ActualProgress = ({ childId, role = 'parent' }) => {
-    const { getChildGoals, getChildProgress, updateSkillGoal, updateSkillProgress, addSkillGoal, deleteSkillGoal, deleteSkillProgress, kids } = useApp();
+    const { getChildGoals, getChildProgress, updateSkillGoal, updateSkillProgress, addSkillGoal, deleteSkillGoal, deleteSkillProgress, kids, sessions } = useApp();
     const goals = getChildGoals(childId);
     const progressRecords = getChildProgress(childId);
     const child = kids.find(k => k.id === childId);
@@ -118,9 +118,28 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
         const startItem = { name: 'Start', planned: 0, achieving: 0 };
         const weekItems = selectedGoal.targets.map((target, idx) => {
             const weekNum = idx + 1;
-            let actual = weeklyActuals[idx] || null;
+            let actual = weeklyActuals[idx] > 0 ? weeklyActuals[idx] : null;
 
-            // Fallback to history for demo if needed
+            // DYNAMIC PERFORMANCE ENGINE: If no manual data exists, pull from session engagement
+            if (!actual && sessions) {
+                const goalStart = new Date(selectedGoal.startDate || child?.enrollmentDate || new Date());
+                const weekStart = new Date(goalStart);
+                weekStart.setDate(goalStart.getDate() + (idx * 7));
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 7);
+
+                const weeklySessions = sessions.filter(s => {
+                    const sDate = new Date(s.date);
+                    return (s.childId === childId || s.child_id === childId) && sDate >= weekStart && sDate < weekEnd && s.status === 'completed';
+                });
+
+                if (weeklySessions.length > 0) {
+                    const avgEngagement = weeklySessions.reduce((acc, s) => acc + (s.engagement || 0), 0) / weeklySessions.length;
+                    actual = Math.round(avgEngagement);
+                }
+            }
+
+            // Tertiary Fallback: History
             if (!actual && actual !== 0) {
                 const hist = history.find(h => h.date.includes(`-${7 * weekNum < 10 ? '0' : ''}${7 * weekNum}`));
                 actual = hist ? hist.progress : null;
@@ -152,7 +171,7 @@ const ActualProgress = ({ childId, role = 'parent' }) => {
             ...d,
             achieving: i <= lastIndex ? Math.round(Number(d.achieving)) : null
         }));
-    }, [selectedGoal, relatedProgress]);
+    }, [selectedGoal, relatedProgress, sessions, childId]);
 
     const yTicks = useMemo(() => {
         if (!chartData || chartData.length === 0) return [0, 25, 50, 75, 100];

@@ -3,7 +3,7 @@
 // Clinical View for Child Progress Tracking
 // ============================================================
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../../lib/context';
 import ChildProgressTracking from '../parent/ChildProgressTracking';
 import {
@@ -23,15 +23,31 @@ const TherapistProgressTracking = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeView, setActiveView] = useState('clinical'); // 'clinical' or 'actual'
 
-    // Filter kids assigned to this therapist or all if admin (demo logic)
-    const therapistId = currentUser?.id || 't1';
-    const safeKids = Array.isArray(kids) ? kids : [];
-    const therapistKids = safeKids.filter(k =>
-        (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId) &&
-        (k.name || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const safeKids = useMemo(() => Array.isArray(kids) ? kids : [], [kids]);
 
-    const selectedChild = safeKids.find(k => k && k.id === selectedChildId);
+    // Filter kids assigned to this therapist or all if admin (demo logic)
+    const therapistKids = useMemo(() => {
+        const therapistId = currentUser?.id || 't1';
+
+        const filtered = safeKids.filter(k =>
+            (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId) &&
+            (k.name || '').toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
+        // Fallback: If no assigned kids match search, show assigned kids, if none assigned show all
+        if (filtered.length > 0) return filtered;
+        const allAssigned = safeKids.filter(k => (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(therapistId));
+        return allAssigned.length > 0 ? allAssigned : safeKids;
+    }, [safeKids, currentUser, searchQuery]);
+
+    // Auto-select first kid if none selected
+    useEffect(() => {
+        if (!selectedChildId && therapistKids.length > 0) {
+            setSelectedChildId(therapistKids[0].id || therapistKids[0]._id);
+        }
+    }, [therapistKids, selectedChildId]);
+
+    const selectedChild = safeKids.find(k => k && (k.id === selectedChildId || k._id === selectedChildId));
 
     return (
         <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">

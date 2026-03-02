@@ -256,6 +256,8 @@ const MessageBubble = ({ message, isOwn, currentUserId, onDeleteForMe, onDeleteF
 // ─── ThreadItem ───────────────────────────────────────────────────────────────
 const ThreadItem = ({ thread, isActive, onClick, myIds = [] }) => {
     const latestMessage = thread.messages[thread.messages.length - 1];
+    // Guard: skip rendering if the thread has no messages yet
+    if (!latestMessage) return null;
     const isOwn = myIds.includes(latestMessage.senderId);
     const unreadCount = thread.messages.filter(m => myIds.includes(m.recipientId) && !m.read).length;
 
@@ -370,17 +372,32 @@ const Messages = () => {
     const threads = useMemo(() => {
         const threadMap = {};
 
+        // 1. Initialise with assigned therapist(s) to ensure parents can start a chat
+        const assignedTherapistId = child?.therapistId || child?.therapist_id;
+        const therapistUser = users?.find(u => u.id === assignedTherapistId || u.mockId === assignedTherapistId);
+
+        if (assignedTherapistId) {
+            threadMap[childId] = {
+                id: childId,
+                messages: [],
+                type: 'message',
+                participantId: assignedTherapistId,
+                participantName: therapistUser?.name || 'Assigned Therapist',
+                participantAvatar: therapistUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=Therapist`,
+                participantRole: 'therapist'
+            };
+        }
+
         allMessages
             .filter(m => m.childId === childId && (myIds.includes(m.senderId) || myIds.includes(m.recipientId)))
             .forEach(message => {
-                const groupKey = message.childId || 'c1';
+                const groupKey = message.childId || childId;
                 if (!threadMap[groupKey]) {
                     const isMessageFromMe = myIds.includes(message.senderId);
                     const otherUserId = isMessageFromMe ? message.recipientId : message.senderId;
 
                     // Priority Lookup: 
                     // 1. Try to find the user in the merged global list (includes mock & real data)
-                    // 2. If it's a therapist and we're in the parent portal, cross-check with the child's assigned therapist
                     let otherUser = users?.find(u => u.id === otherUserId || u.mockId === otherUserId);
 
                     // Fallback search by name if ID search fails (common for mock data consistency)
@@ -388,13 +405,8 @@ const Messages = () => {
                         otherUser = users?.find(u => u.name?.toLowerCase() === message.senderName.toLowerCase());
                     }
 
-                    // Special resolution for assigned therapists to ensure their real portal photo is used
-                    const assignedTherapistId = child?.therapistId || child?.therapist_id;
-                    const isAssignedTherapist = otherUserId === assignedTherapistId ||
-                        (assignedTherapistId && otherUser && (otherUser.id === assignedTherapistId || otherUser.mockId === assignedTherapistId));
-
                     const participantAvatar = otherUser?.avatar ||
-                        (assignedTherapistId ? users?.find(u => u.id === assignedTherapistId || u.mockId === assignedTherapistId)?.avatar : null) ||
+                        (assignedTherapistId === otherUserId ? (therapistUser?.avatar) : null) ||
                         message.senderAvatar ||
                         (message.type === 'weekly-summary' ? null : `https://api.dicebear.com/7.x/avataaars/svg?seed=${message.senderName || 'User'}`);
 
@@ -402,6 +414,7 @@ const Messages = () => {
                         id: groupKey,
                         messages: [],
                         type: message.type,
+                        participantId: otherUserId,
                         participantName: otherUser ? otherUser.name :
                             (message.type === 'weekly-summary' ? 'NeuroBridge AI' : (message.senderName || 'Therapist')),
                         participantAvatar,
@@ -415,10 +428,12 @@ const Messages = () => {
             thread.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         });
 
-        return Object.values(threadMap).sort((a, b) =>
-            new Date(b.messages[b.messages.length - 1].timestamp) -
-            new Date(a.messages[a.messages.length - 1].timestamp)
-        );
+        return Object.values(threadMap)
+            .filter(t => t.messages.length > 0)
+            .sort((a, b) =>
+                new Date(b.messages[b.messages.length - 1].timestamp) -
+                new Date(a.messages[a.messages.length - 1].timestamp)
+            );
     }, [allMessages, childId, userId, users]);
 
     // Filter threads by search
@@ -436,7 +451,14 @@ const Messages = () => {
     // Scroll to bottom on new messages
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [currentThread?.messages]);
+    }, [currentThread?.messages?.length]);
+
+    // Auto-select the first thread if none is active
+    useEffect(() => {
+        if (!activeThread && threads.length > 0) {
+            setActiveThread(threads[0].id);
+        }
+    }, [threads, activeThread]);
 
     // Mark messages as read when viewing thread
     useEffect(() => {
@@ -452,7 +474,8 @@ const Messages = () => {
     const handleSend = () => {
         if (!newMessage.trim() || !currentThread) return;
 
-        const recipientId = currentThread.messages.find(m => m.senderId !== userId)?.senderId;
+        const recipientId = currentThread.messages.find(m => !myIds.includes(m.senderId))?.senderId
+            || currentThread.participantId;
 
         sendMessage({
             threadId: currentThread.id,

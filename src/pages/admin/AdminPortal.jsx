@@ -40,12 +40,12 @@ import Modal from '../../components/ui/Modal';
 // Admin Dashboard - Main Overview
 // ============================================================
 const AdminDashboard = () => {
-    const { cdcMetrics, kids, sessions, users, adminStats } = useApp();
+    const { cdcMetrics, kids, sessions, users, adminStats, realTherapists, realParents } = useApp();
 
-    // Calculate real metrics
+    // Calculate real metrics - use only DB therapists/parents
     const MAX_CASELOAD = 15;
     const activeChildren = kids.filter(k => k.status === 'active').length;
-    const therapists = users.filter(u => u.role === 'therapist');
+    const therapists = (realTherapists && realTherapists.length > 0) ? realTherapists.map(t => ({ ...t, id: t.id || t._id, role: 'therapist' })) : users.filter(u => u.role === 'therapist');
 
     // Dynamic Therapist Performance Data
     const therapistPerformance = therapists.map(t => {
@@ -172,6 +172,83 @@ const AdminDashboard = () => {
                 </Card>
             </div>
 
+            {/* Parents & Therapists Directory */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Therapists List */}
+                <Card className="glass-card border-none rounded-xl md:rounded-2xl overflow-hidden">
+                    <CardHeader className="bg-violet-50/50 border-b border-violet-100/50 pb-3">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm md:text-base font-black text-neutral-800 uppercase tracking-tight flex items-center gap-2">
+                                <Building2 className="h-4 w-4 text-violet-500" />
+                                Therapists
+                            </CardTitle>
+                            <span className="text-[10px] font-black text-violet-600 bg-violet-100 px-2 py-1 rounded-lg uppercase tracking-widest">
+                                {(realTherapists && realTherapists.length > 0) ? realTherapists.length : 0} registered
+                            </span>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="max-h-[320px] overflow-y-auto divide-y divide-neutral-100">
+                            {(realTherapists && realTherapists.length > 0) ? realTherapists.map((t, idx) => (
+                                <div key={t.id || t._id || idx} className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 transition-colors">
+                                    <div className="h-9 w-9 rounded-xl bg-violet-100 flex items-center justify-center text-violet-600 font-black text-sm shrink-0">
+                                        {(t.name || 'T').charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-neutral-800 truncate">{t.name}</p>
+                                        <p className="text-[10px] text-neutral-400 truncate">{t.email || t.specialization || 'Therapist'}</p>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tight shrink-0 ${t.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+                                        {t.is_active !== false ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+                            )) : (
+                                <div className="py-8 text-center text-neutral-400 text-xs">
+                                    No therapists registered in database yet
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Parents List */}
+                <Card className="glass-card border-none rounded-xl md:rounded-2xl overflow-hidden">
+                    <CardHeader className="bg-pink-50/50 border-b border-pink-100/50 pb-3">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm md:text-base font-black text-neutral-800 uppercase tracking-tight flex items-center gap-2">
+                                <Heart className="h-4 w-4 text-pink-500" />
+                                Parents
+                            </CardTitle>
+                            <span className="text-[10px] font-black text-pink-600 bg-pink-100 px-2 py-1 rounded-lg uppercase tracking-widest">
+                                {(realParents && realParents.length > 0) ? realParents.length : 0} registered
+                            </span>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="max-h-[320px] overflow-y-auto divide-y divide-neutral-100">
+                            {(realParents && realParents.length > 0) ? realParents.map((p, idx) => (
+                                <div key={p.id || p._id || idx} className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 transition-colors">
+                                    <div className="h-9 w-9 rounded-xl bg-pink-100 flex items-center justify-center text-pink-600 font-black text-sm shrink-0">
+                                        {(p.name || 'P').charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-neutral-800 truncate">{p.name}</p>
+                                        <p className="text-[10px] text-neutral-400 truncate">{p.email || p.relationship || 'Parent'}</p>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tight shrink-0 ${p.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+                                        {p.is_active !== false ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+                            )) : (
+                                <div className="py-8 text-center text-neutral-400 text-xs">
+                                    No parents registered in database yet
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
             {/* Therapist & Child Progress Graphs */}
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-full overflow-hidden">
                 <TherapistProgressOverview />
@@ -180,7 +257,7 @@ const AdminDashboard = () => {
             {/* Dashboard Statistics & Trends removed as requested */}
 
             {/* Therapist Performance */}
-            <Card>
+            <Card className="glass-card border-none">
                 <CardHeader>
                     <CardTitle>Therapist Performance</CardTitle>
                 </CardHeader>
@@ -265,6 +342,7 @@ const AdminDashboard = () => {
                     </div>
                 </CardContent>
             </Card>
+
         </div>
     );
 };
@@ -297,8 +375,41 @@ const OperationsPage = () => {
         return users.reduce((acc, u) => ({ ...acc, [u.id]: u }), {});
     }, [users]);
 
+    const roomStats = useMemo(() => {
+        const rooms = ['Therapy Room A', 'Therapy Room B', 'Sensory Room', 'Group Room', 'Virtual Session'];
+        // Use local date (YYYY-MM-DD) instead of UTC to avoid off-by-one errors in different timezones
+        const today = new Date().toLocaleDateString('en-CA');
+        const workDayMinutes = 8 * 60; // 8 hours total capacity per day
+
+        return rooms.map(roomName => {
+            const occupiedMinutes = sessions
+                .filter(s => {
+                    if (!s.location || !s.date) return false;
+                    const sessionLoc = s.location.toLowerCase().trim();
+                    const targetLoc = roomName.toLowerCase().trim();
+
+                    // Robust date match: convert UTC to local date string (en-CA: YYYY-MM-DD)
+                    const sessionDateLocal = new Date(s.date).toLocaleDateString('en-CA');
+
+                    // Match if locations are exact or if one contains the other (e.g. "Room A" matches "Therapy Room A")
+                    const isRoomMatch = sessionLoc === targetLoc ||
+                        sessionLoc.includes(targetLoc) ||
+                        targetLoc.includes(sessionLoc);
+
+                    return isRoomMatch && sessionDateLocal === today;
+                })
+                .reduce((total, s) => total + (parseInt(s.duration) || 45), 0);
+
+            const utilization = Math.round((occupiedMinutes / workDayMinutes) * 100);
+            return {
+                name: roomName,
+                usage: Math.min(utilization, 100)
+            };
+        });
+    }, [sessions]);
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-8 pb-safe-nav animate-slide-up">
             <div>
                 <h2 className="text-2xl font-bold text-neutral-800">Operations Management</h2>
                 <p className="text-neutral-500">Monitor and manage center operations</p>
@@ -306,7 +417,7 @@ const OperationsPage = () => {
 
             {/* Operational Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
+                <Card className="glass-card rounded-2xl md:rounded-[2rem] border-none">
                     <CardContent className="p-4 md:p-6 text-center md:text-left">
                         <div className="h-10 w-10 bg-primary-50 rounded-xl flex items-center justify-center mb-3 mx-auto md:mx-0">
                             <Users className="h-5 w-5 text-primary-500" />
@@ -315,16 +426,18 @@ const OperationsPage = () => {
                         <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-2 px-1">Active Kids</p>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
+                <Card className="glass-card rounded-2xl md:rounded-[2rem] border-none">
                     <CardContent className="p-4 md:p-6 text-center md:text-left">
                         <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center mb-3 mx-auto md:mx-0">
                             <Activity className="h-5 w-5 text-emerald-500" />
                         </div>
-                        <p className="text-2xl md:text-3xl font-black text-neutral-800 leading-none">0</p>
+                        <p className="text-2xl md:text-3xl font-black text-neutral-800 leading-none">
+                            {Math.round(sessions.length / 4) || 0}
+                        </p>
                         <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-2 px-1">Sess / Week</p>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
+                <Card className="glass-card rounded-2xl md:rounded-[2rem] border-none">
                     <CardContent className="p-4 md:p-6 text-center md:text-left">
                         <div className="h-10 w-10 bg-violet-50 rounded-xl flex items-center justify-center mb-3 mx-auto md:mx-0">
                             <Building2 className="h-5 w-5 text-violet-500" />
@@ -333,19 +446,21 @@ const OperationsPage = () => {
                         <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-2 px-1">Team Size</p>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
+                <Card className="glass-card rounded-2xl md:rounded-[2rem] border-none">
                     <CardContent className="p-4 md:p-6 text-center md:text-left">
                         <div className="h-10 w-10 bg-amber-50 rounded-xl flex items-center justify-center mb-3 mx-auto md:mx-0">
                             <Clock className="h-5 w-5 text-amber-500" />
                         </div>
-                        <p className="text-2xl md:text-3xl font-black text-neutral-800 leading-none">0</p>
+                        <p className="text-2xl md:text-3xl font-black text-neutral-800 leading-none">
+                            {kids.filter(k => !k.therapistId && (!k.therapistIds || k.therapistIds.length === 0)).length}
+                        </p>
                         <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-2 px-1">Waitlist</p>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Therapist Allocation */}
-            <Card className="rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200">
+            <Card className="glass-card rounded-[2rem] border-none">
                 <CardHeader>
                     <CardTitle className="text-xl font-black text-neutral-800 uppercase tracking-tight">Therapist Allocation</CardTitle>
                 </CardHeader>
@@ -500,10 +615,10 @@ const OperationsPage = () => {
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {['Therapy Room A', 'Therapy Room B', 'Sensory Room', 'Group Room'].map((room, idx) => (
+                        {roomStats.map((room, idx) => (
                             <div key={idx} className="p-4 border border-neutral-200 rounded-xl text-center">
-                                <p className="font-medium text-neutral-800">{room}</p>
-                                <p className="text-2xl font-bold text-primary-600 mt-2">0%</p>
+                                <p className="font-medium text-neutral-800">{room.name}</p>
+                                <p className="text-2xl font-bold text-primary-600 mt-2">{room.usage}%</p>
                                 <p className="text-xs text-neutral-500">Today's usage</p>
                             </div>
                         ))}
@@ -518,9 +633,97 @@ const OperationsPage = () => {
 // Reports Page
 // ============================================================
 const ReportsPage = () => {
+    const { sessions, kids, addNotification } = useApp();
     const [selectedReport, setSelectedReport] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const reports = [];
+    // Build reports dynamically from real session data
+    const reports = useMemo(() => {
+        const safeSessions = Array.isArray(sessions) ? sessions : [];
+        const safeKids = Array.isArray(kids) ? kids : [];
+
+        return safeSessions
+            .filter(s => s.status === 'completed' || s.aiSummary)
+            .map(session => {
+                const child = safeKids.find(k => k.id === (session.childId || session.child_id));
+                const childName = child?.name || 'Unknown Child';
+                const hasAiSummary = !!session.aiSummary;
+
+                return {
+                    id: session.id || session._id,
+                    name: `${childName} — ${session.type || 'Therapy'} Report`,
+                    type: session.type || 'General',
+                    date: session.date || new Date().toISOString(),
+                    status: hasAiSummary ? 'ready' : 'pending',
+                    childName,
+                    childId: session.childId || session.child_id,
+                    engagement: session.engagement || 0,
+                    aiSummary: session.aiSummary || null,
+                    measurableOutcomes: session.measurableOutcomes || [],
+                    nonMeasurableOutcomes: session.nonMeasurableOutcomes || [],
+                    duration: session.duration || 0
+                };
+            })
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+    }, [sessions, kids]);
+
+    // Filter reports by search query
+    const filteredReports = useMemo(() => {
+        if (!searchQuery.trim()) return reports;
+        const q = searchQuery.toLowerCase();
+        return reports.filter(r =>
+            r.name.toLowerCase().includes(q) ||
+            r.type.toLowerCase().includes(q) ||
+            r.childName.toLowerCase().includes(q)
+        );
+    }, [reports, searchQuery]);
+
+    const handleGenerateReport = () => {
+        addNotification({
+            type: 'info',
+            title: 'Report Generation',
+            message: `There are currently ${reports.length} reports derived from completed sessions. Log new sessions to generate more reports.`
+        });
+    };
+
+    const handleViewReport = (report) => {
+        setSelectedReport(report);
+    };
+
+    const handleDownloadReport = (report) => {
+        // Create a text-based report for download
+        const content = [
+            `CLINICAL REPORT — ${report.name}`,
+            `Date: ${new Date(report.date).toLocaleDateString()}`,
+            `Type: ${report.type}`,
+            `Engagement: ${report.engagement}%`,
+            `Duration: ${report.duration} min`,
+            `Status: ${report.status.toUpperCase()}`,
+            '',
+            '--- AI CLINICAL SUMMARY ---',
+            report.aiSummary || 'No AI summary available.',
+            '',
+            '--- MEASURABLE OUTCOMES ---',
+            ...(report.measurableOutcomes?.length > 0 ? report.measurableOutcomes : ['None recorded.']),
+            '',
+            '--- NON-MEASURABLE OUTCOMES ---',
+            ...(report.nonMeasurableOutcomes?.length > 0 ? report.nonMeasurableOutcomes : ['None recorded.']),
+        ].join('\n');
+
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${report.name.replace(/[^a-zA-Z0-9]/g, '_')}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        addNotification({
+            type: 'success',
+            title: 'Report Downloaded',
+            message: `"${report.name}" has been exported.`
+        });
+    };
 
     return (
         <div className="space-y-6">
@@ -529,7 +732,10 @@ const ReportsPage = () => {
                     <h2 className="text-2xl md:text-3xl font-black text-neutral-900 uppercase tracking-tight">Clinical Reports</h2>
                     <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Generate and distribute clinical records</p>
                 </div>
-                <Button className="bg-primary-600 hover:bg-primary-700 shadow-xl shadow-primary-100 rounded-xl h-12 md:h-14 px-6 font-black text-[11px] uppercase tracking-widest">
+                <Button
+                    className="bg-primary-600 hover:bg-primary-700 shadow-xl shadow-primary-100 rounded-xl h-12 md:h-14 px-6 font-black text-[11px] uppercase tracking-widest"
+                    onClick={handleGenerateReport}
+                >
                     <FileBarChart className="h-5 w-5 mr-3" />
                     Generate New Report
                 </Button>
@@ -557,6 +763,86 @@ const ReportsPage = () => {
                 </Card>
             </div>
 
+            {/* Report Detail Modal */}
+            {selectedReport && (
+                <Card className="rounded-[2rem] border-none shadow-xl ring-2 ring-primary-200 overflow-hidden animate-in zoom-in-95 duration-200">
+                    <CardHeader className="bg-gradient-to-r from-primary-600 to-primary-700 text-white">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-base font-black uppercase tracking-tight">{selectedReport.name}</CardTitle>
+                            <button onClick={() => setSelectedReport(null)} className="text-white/70 hover:text-white text-xl font-bold">✕</button>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-6 space-y-5">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div className="p-3 bg-neutral-50 rounded-xl text-center">
+                                <p className="text-lg font-black text-neutral-800">{selectedReport.engagement}%</p>
+                                <p className="text-[10px] font-black text-neutral-400 uppercase">Engagement</p>
+                            </div>
+                            <div className="p-3 bg-neutral-50 rounded-xl text-center">
+                                <p className="text-lg font-black text-neutral-800">{selectedReport.duration}m</p>
+                                <p className="text-[10px] font-black text-neutral-400 uppercase">Duration</p>
+                            </div>
+                            <div className="p-3 bg-neutral-50 rounded-xl text-center">
+                                <p className="text-lg font-black text-neutral-800">{selectedReport.type}</p>
+                                <p className="text-[10px] font-black text-neutral-400 uppercase">Type</p>
+                            </div>
+                            <div className="p-3 bg-neutral-50 rounded-xl text-center">
+                                <p className="text-lg font-black text-neutral-800">{new Date(selectedReport.date).toLocaleDateString()}</p>
+                                <p className="text-[10px] font-black text-neutral-400 uppercase">Date</p>
+                            </div>
+                        </div>
+
+                        {selectedReport.aiSummary && (
+                            <div className="p-4 bg-violet-50 rounded-2xl border border-violet-100">
+                                <p className="text-[10px] font-black text-violet-500 uppercase tracking-widest mb-2">AI Clinical Summary</p>
+                                <p className="text-sm text-violet-800 leading-relaxed italic">"{selectedReport.aiSummary}"</p>
+                            </div>
+                        )}
+
+                        {selectedReport.measurableOutcomes?.length > 0 && (
+                            <div className="p-4 bg-primary-50 rounded-2xl border border-primary-100">
+                                <p className="text-[10px] font-black text-primary-500 uppercase tracking-widest mb-2">Measurable Outcomes</p>
+                                <ul className="space-y-1">
+                                    {selectedReport.measurableOutcomes.map((m, i) => (
+                                        <li key={i} className="text-sm text-primary-800 flex items-start gap-2">
+                                            <CheckCircle2 className="h-4 w-4 text-primary-500 mt-0.5 shrink-0" />
+                                            {m}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {selectedReport.nonMeasurableOutcomes?.length > 0 && (
+                            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2">Qualitative Wins</p>
+                                <ul className="space-y-1">
+                                    {selectedReport.nonMeasurableOutcomes.map((nm, i) => (
+                                        <li key={i} className="text-sm text-emerald-800 flex items-start gap-2">
+                                            <Heart className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                                            {nm}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        <div className="flex gap-3 pt-2">
+                            <Button
+                                className="flex-1 bg-primary-600 hover:bg-primary-700 font-black text-[11px] uppercase tracking-widest h-12 rounded-xl shadow-lg shadow-primary-100"
+                                onClick={() => handleDownloadReport(selectedReport)}
+                            >
+                                <Download className="h-4 w-4 mr-2" />
+                                Export Report
+                            </Button>
+                            <Button variant="outline" className="flex-1 font-black text-[11px] uppercase tracking-widest h-12 rounded-xl" onClick={() => setSelectedReport(null)}>
+                                Close
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Reports List */}
             <Card className="rounded-[2rem] border-none shadow-sm ring-1 ring-neutral-200 overflow-hidden">
                 <CardHeader className="bg-neutral-50/50 border-b border-neutral-100">
@@ -568,6 +854,8 @@ const ReportsPage = () => {
                                 <input
                                     type="text"
                                     placeholder="Search reports..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-xs font-black uppercase tracking-tight focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                                 />
                             </div>
@@ -580,20 +868,22 @@ const ReportsPage = () => {
                 </CardHeader>
                 <CardContent className="p-4 md:p-6">
                     <div className="grid grid-cols-1 gap-4">
-                        {reports.length > 0 ? reports.map(report => (
+                        {filteredReports.length > 0 ? filteredReports.map(report => (
                             <div
                                 key={report.id}
                                 className="flex flex-col sm:flex-row sm:items-center justify-between p-5 md:p-6 border border-neutral-100 rounded-[1.5rem] hover:bg-neutral-50 transition-all gap-6 shadow-sm hover:shadow-md"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className="h-12 w-12 bg-primary-100/50 rounded-2xl flex items-center justify-center shrink-0">
-                                        <FileBarChart className="h-6 w-6 text-primary-600" />
+                                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 ${report.status === 'ready' ? 'bg-emerald-100/50' : 'bg-amber-100/50'}`}>
+                                        <FileBarChart className={`h-6 w-6 ${report.status === 'ready' ? 'text-emerald-600' : 'text-amber-600'}`} />
                                     </div>
                                     <div className="min-w-0">
                                         <p className="font-black text-neutral-900 uppercase text-sm tracking-tight leading-tight">{report.name}</p>
                                         <div className="flex items-center gap-3 mt-1.5 overflow-hidden">
                                             <span className="text-[10px] font-black text-primary-600 bg-primary-50 px-2 py-0.5 rounded uppercase">{report.type}</span>
                                             <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest truncate">{new Date(report.date).toLocaleDateString()}</span>
+                                            <span className="text-[10px] font-bold text-neutral-400">•</span>
+                                            <span className="text-[10px] font-black text-neutral-400 uppercase">{report.engagement}% Eng</span>
                                         </div>
                                     </div>
                                 </div>
@@ -603,11 +893,11 @@ const ReportsPage = () => {
                                         {report.status}
                                     </span>
                                     <div className="flex gap-2">
-                                        <Button variant="ghost" size="sm" className="font-black text-[10px] uppercase tracking-widest hover:bg-white rounded-xl">
+                                        <Button variant="ghost" size="sm" className="font-black text-[10px] uppercase tracking-widest hover:bg-white rounded-xl" onClick={() => handleViewReport(report)}>
                                             <Eye className="h-4 w-4" />
                                         </Button>
                                         {report.status === 'ready' && (
-                                            <Button size="sm" className="bg-primary-600 hover:bg-primary-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-primary-50">
+                                            <Button size="sm" className="bg-primary-600 hover:bg-primary-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-primary-50" onClick={() => handleDownloadReport(report)}>
                                                 <Download className="h-4 w-4 mr-2" />
                                                 Download
                                             </Button>
@@ -618,7 +908,8 @@ const ReportsPage = () => {
                         )) : (
                             <div className="text-center py-12 text-neutral-400">
                                 <FileBarChart className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                                <p className="font-black uppercase tracking-widest text-[10px]">No clinical reports available</p>
+                                <p className="font-black uppercase tracking-widest text-[10px]">{searchQuery ? 'No reports match your search' : 'No clinical reports available'}</p>
+                                <p className="text-[10px] text-neutral-300 mt-2">Reports are generated from completed therapy sessions with AI summaries</p>
                             </div>
                         )}
                     </div>
@@ -650,7 +941,7 @@ const AdminPortal = () => {
 
     return (
         <Routes>
-            <Route element={<DashboardLayout title="CDC Admin" sidebarItems={sidebarItems} roleColor="bg-neutral-800" onLogout={handleLogout} />}>
+            <Route element={<DashboardLayout title="CDC Admin" sidebarItems={sidebarItems} roleColor="bg-primary-600" onLogout={handleLogout} />}>
                 <Route path="overview" element={<AdminDashboard />} />
                 <Route path="operations" element={<OperationsPage />} />
                 <Route path="users" element={<UserManagement />} />

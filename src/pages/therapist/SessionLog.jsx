@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Save, X, Activity, Frown, Meh, Smile, Sparkles, CheckCircle, Loader2, FileText, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -9,19 +9,59 @@ import { THERAPY_TYPES } from '../../data/mockData';
 import { sessionAPI } from '../../lib/api';
 
 const SessionLog = () => {
-  const { kids, addSession, getChildDocuments, currentUser, refreshSessions } = useApp();
+  const { kids, sessions, addSession, getChildDocuments, currentUser, refreshSessions } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const childIdFromState = location.state?.childId;
 
   // Filter kids assigned to this therapist or all if admin
-  const myKids = kids.filter(k =>
-    (k.therapistIds?.length > 0 ? k.therapistIds : (k.therapistId ? [k.therapistId] : [])).includes(currentUser?.id || 't1')
-  );
+  const myKids = useMemo(() => {
+    const safeKids = Array.isArray(kids) ? kids : [];
+    const tId = currentUser?.id || currentUser?._id;
+
+    // Admin sees all children
+    if (currentUser?.role === 'admin') {
+      return safeKids;
+    }
+
+    // Build a set of child IDs that have sessions with this therapist
+    const safeSessions = Array.isArray(sessions) ? sessions : [];
+    const sessionChildIds = new Set(
+      safeSessions
+        .filter(s => (s.therapistId === tId || s.therapist_id === tId))
+        .map(s => s.childId || s.child_id)
+        .filter(Boolean)
+    );
+
+    const filtered = safeKids.filter(k => {
+      const childId = k.id || k._id;
+
+      // Check if child is directly assigned to this therapist
+      const tIds = Array.isArray(k.therapistIds) ? k.therapistIds : [];
+      const ktId = k.therapistId || k.therapist_id;
+      const allIds = [...new Set([...tIds, ktId].filter(Boolean))];
+      const isAssigned = tId && allIds.includes(tId);
+
+      // Also check if this child has sessions with the therapist
+      const hasSessionsWithTherapist = sessionChildIds.has(childId);
+
+      return isAssigned || hasSessionsWithTherapist;
+    });
+
+    // Fallback: If therapist has no specific kids, show all to prevent empty dropdown
+    return filtered.length > 0 ? filtered : safeKids;
+  }, [kids, sessions, currentUser]);
 
   const [selectedChild, setSelectedChild] = useState(
     childIdFromState || (myKids && myKids[0] ? myKids[0].id : '')
   );
+
+  // Auto-select first child if none selected and myKids becomes available
+  useEffect(() => {
+    if (!selectedChild && myKids.length > 0) {
+      setSelectedChild(myKids[0].id || myKids[0]._id);
+    }
+  }, [myKids, selectedChild]);
 
   const baselineDocs = getChildDocuments(selectedChild);
 
@@ -109,6 +149,7 @@ const SessionLog = () => {
       const originalSessionId = location.state?.sessionId;
       const originalDate = location.state?.sessionDate;
       const originalDuration = location.state?.sessionDuration || 45;
+      const originalLocation = location.state?.sessionLocation || '';
 
       for (const type of typesToSave) {
         const summary = aiSummary[type];
@@ -126,7 +167,8 @@ const SessionLog = () => {
           emotionalState: mood,
           status: 'completed',
           duration: Math.floor(originalDuration / typesToSave.length), // Split original duration
-          date: originalDate || new Date().toISOString() // Keep original date!
+          date: originalDate || new Date().toISOString(), // Keep original date!
+          location: originalLocation || undefined // Carry over room location for utilization tracking
         };
 
         const savedSession = await sessionAPI.create(sessionData);
