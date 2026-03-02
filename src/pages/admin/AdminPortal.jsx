@@ -23,7 +23,9 @@ import {
     Eye,
     Calendar,
     DollarSign,
-    Heart
+    Heart,
+    FileBarChart,
+    FileText
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -585,7 +587,7 @@ const OperationsPage = () => {
 // Reports Page
 // ============================================================
 const ReportsPage = () => {
-    const { sessions, kids } = useApp();
+    const { sessions, kids, childDocuments, addNotification } = useApp();
     const [selectedReport, setSelectedReport] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -593,8 +595,9 @@ const ReportsPage = () => {
     const reports = useMemo(() => {
         const safeSessions = Array.isArray(sessions) ? sessions : [];
         const safeKids = Array.isArray(kids) ? kids : [];
+        const safeDocs = Array.isArray(childDocuments) ? childDocuments : [];
 
-        return safeSessions
+        const sessionReports = safeSessions
             .filter(s => !!s.aiSummary)
             .map(session => {
                 const child = safeKids.find(k => k.id === (session.childId || session.child_id));
@@ -615,9 +618,32 @@ const ReportsPage = () => {
                     nonMeasurableOutcomes: session.nonMeasurableOutcomes || [],
                     duration: session.duration || 0
                 };
-            })
+            });
+
+        const docReports = safeDocs
+            .filter(doc => doc.category === 'Clinical' || doc.category === 'Baseline')
+            .map(doc => {
+                const child = safeKids.find(k => k.id === doc.childId);
+                const childName = child?.name || 'Unknown Child';
+                return {
+                    id: doc.id,
+                    name: `${childName} — ${doc.title}`,
+                    type: doc.category || 'Clinical Document',
+                    date: doc.date || new Date().toISOString(),
+                    status: 'ready',
+                    childName,
+                    childId: doc.childId,
+                    isDocument: true,
+                    url: doc.url,
+                    category: doc.category,
+                    engagement: 100,
+                    duration: 0
+                };
+            });
+
+        return [...sessionReports, ...docReports]
             .sort((a, b) => new Date(b.date) - new Date(a.date));
-    }, [sessions, kids]);
+    }, [sessions, kids, childDocuments]);
 
     // Filter reports by search query
     const filteredReports = useMemo(() => {
@@ -632,10 +658,70 @@ const ReportsPage = () => {
 
 
     const handleViewReport = (report) => {
-        setSelectedReport(report);
+        if (report.isDocument) {
+            if (!report.url || report.url === '#') {
+                addNotification({
+                    type: 'error',
+                    title: 'View Failed',
+                    message: 'This document has no viewable content.'
+                });
+                return;
+            }
+
+            try {
+                if (report.url.startsWith('data:')) {
+                    // For PDF/Images, blob approach is most reliable for window.open
+                    const parts = report.url.split(',');
+                    const mime = parts[0].match(/:(.*?);/)[1];
+                    const bstr = atob(parts[1]);
+                    let n = bstr.length;
+                    const u8arr = new Uint8Array(n);
+                    while (n--) {
+                        u8arr[n] = bstr.charCodeAt(n);
+                    }
+                    const blob = new Blob([u8arr], { type: mime });
+                    const blobUrl = URL.createObjectURL(blob);
+
+                    const newWindow = window.open(blobUrl, '_blank');
+                    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                        addNotification({
+                            type: 'error',
+                            title: 'Pop-up Blocked',
+                            message: 'Please allow pop-ups for this site to view reports.'
+                        });
+                    }
+                } else {
+                    const newWindow = window.open(report.url, '_blank');
+                    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                        addNotification({
+                            type: 'error',
+                            title: 'Pop-up Blocked',
+                            message: 'Please allow pop-ups for this site to view reports.'
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error('❌ Error viewing report:', err);
+                // Fallback for simple link
+                const link = document.createElement('a');
+                link.href = report.url;
+                link.target = '_blank';
+                link.click();
+            }
+        } else {
+            setSelectedReport(report);
+        }
     };
 
     const handleDownloadReport = (report) => {
+        if (report.isDocument) {
+            const link = document.createElement('a');
+            link.href = report.url;
+            link.download = report.name;
+            link.click();
+            return;
+        }
+
         // Create a text-based report for download
         const content = [
             `CLINICAL REPORT — ${report.name}`,
@@ -813,7 +899,11 @@ const ReportsPage = () => {
                             >
                                 <div className="flex items-center gap-4">
                                     <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 ${report.status === 'ready' ? 'bg-emerald-100/50' : 'bg-amber-100/50'}`}>
-                                        <FileBarChart className={`h-6 w-6 ${report.status === 'ready' ? 'text-emerald-600' : 'text-amber-600'}`} />
+                                        {report.isDocument ? (
+                                            <FileText className={`h-6 w-6 ${report.category === 'Baseline' ? 'text-violet-600' : 'text-primary-600'}`} />
+                                        ) : (
+                                            <FileBarChart className={`h-6 w-6 ${report.status === 'ready' ? 'text-emerald-600' : 'text-amber-600'}`} />
+                                        )}
                                     </div>
                                     <div className="min-w-0">
                                         <p className="font-black text-neutral-900 uppercase text-sm tracking-tight leading-tight">{report.name}</p>
