@@ -436,6 +436,7 @@ async def list_children(current_user: dict = Depends(get_current_user)):
             documents=c.get("documents", []),
             is_active=c.get("is_active", True),
             gamesUnlocked=c.get("gamesUnlocked", False),
+            unlockedGames=c.get("unlockedGames", []),
             therapy_start_date=c.get("therapy_start_date") or c.get("enrollmentDate") or (c.get("created_at").isoformat() if hasattr(c.get("created_at"), 'isoformat') else str(c.get("created_at")) if c.get("created_at") else None),
             therapy_type=c.get("therapy_type") or (c.get("program")[0] if c.get("program") and isinstance(c.get("program"), list) else "Speech Therapy"),
             therapy_start_dates=c.get("therapy_start_dates", {}),
@@ -508,27 +509,31 @@ async def create_child(
         therapistIds=[],
         is_active=True,
         gamesUnlocked=False,
+        unlockedGames=[],
         therapy_start_date=child.therapy_start_date,
         therapy_type=child.therapy_type,
         created_at=current_time
     )
 
-@router.put("/child/{child_id}")
+@router.put("/child/{child_id}", response_model=dict)
 async def update_child(
     child_id: str,
     child_update: dict,
-    current_admin: AdminResponse = Depends(get_current_admin)
+    current_user: dict = Depends(get_current_user)
 ):
     """
-    Update child details (name, age, gender, condition, school_name)
+    Update child details (name, age, gender, condition, school_name, gamesUnlocked)
+    Allows Admins and Therapists
     """
+    if current_user["role"] not in ["admin", "therapist"]:
+        raise HTTPException(status_code=403, detail="Not authorized to update child records")
     child = db_manager.children.find_one({"_id": child_id})
     if not child:
         raise HTTPException(status_code=404, detail="Child not found")
     
     # Prepare update fields
     update_fields = {}
-    allowed_fields = ["name", "age", "gender", "condition", "school_name", "therapy_start_date", "therapy_type", "gamesUnlocked"]
+    allowed_fields = ["name", "age", "gender", "condition", "school_name", "therapy_start_date", "therapy_type", "gamesUnlocked", "unlockedGames"]
     
     for field in allowed_fields:
         if field in child_update and child_update[field] is not None:

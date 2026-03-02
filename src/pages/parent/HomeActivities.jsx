@@ -142,12 +142,13 @@ const ActivityCard = ({ activity, onComplete, onViewDetails, onLaunchGame }) => 
         }, 500);
     };
 
-    // Lock logic: Strictly controlled by therapist unlock flag
-    const isLocked = !isCompletedToday && activity.gameType && !activity.gamesUnlocked;
+    // Lock logic: Controlled by therapist unlock flag (either global or per-game)
+    const isUnlockedByTherapist = activity.gamesUnlocked || (activity.unlockedGames && activity.unlockedGames.includes(activity.id));
+    const isLocked = !isCompletedToday && activity.gameType && !isUnlockedByTherapist;
     const enrollmentDate = new Date(activity.childEnrollmentDate || '2025-01-01');
     const todayDate = new Date();
     const daysSinceEnrollment = Math.floor((todayDate - enrollmentDate) / (1000 * 60 * 60 * 24));
-    const daysRemaining = 20 - daysSinceEnrollment;
+    const daysRemaining = 7 - daysSinceEnrollment;
 
     return (
         <Card className={`transition-all duration-300 ${isCompletedToday ? 'bg-green-50 border-green-200' : ''}`}>
@@ -197,7 +198,7 @@ const ActivityCard = ({ activity, onComplete, onViewDetails, onLaunchGame }) => 
                                         <div className="text-right">
                                             <Button size="sm" variant="outline" disabled className="bg-neutral-50 cursor-not-allowed opacity-60">
                                                 <Lock className="h-4 w-4 mr-1 text-neutral-400" />
-                                                Unlocks in {daysRemaining} days
+                                                Unlocks in {Math.max(7, daysRemaining)} days
                                             </Button>
                                             <p className="text-[10px] text-neutral-400 mt-1 italic">Consistent daily therapy required</p>
                                         </div>
@@ -537,7 +538,8 @@ const HomeActivities = () => {
                                 activity={{
                                     ...activity,
                                     childEnrollmentDate: child.enrollmentDate,
-                                    gamesUnlocked: child.gamesUnlocked
+                                    gamesUnlocked: child.gamesUnlocked,
+                                    unlockedGames: child.unlockedGames || []
                                 }}
                                 onComplete={handleCompleteActivity}
                                 onLaunchGame={handleLaunchGame}

@@ -29,7 +29,17 @@ export const AppProvider = ({ children }) => {
     // ============ Core State ============
     const [users] = useState(USERS);
     const [realChildren, setRealChildren] = useState([]);
-    const [kids, setKids] = useState(CHILDREN);
+    const [kids, setKids] = useState(() => {
+        const saved = localStorage.getItem('neurobridge_kids');
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch (e) {
+                console.error('Failed to parse kids from localStorage', e);
+            }
+        }
+        return CHILDREN;
+    });
     const [sessions, setSessions] = useState([]);
     const [skillScores, setSkillScores] = useState([]);
     const [roadmap, setRoadmap] = useState(() => {
@@ -86,6 +96,10 @@ export const AppProvider = ({ children }) => {
     useEffect(() => {
         localStorage.setItem('neurobridge_skill_progress', JSON.stringify(skillProgress));
     }, [skillProgress]);
+
+    useEffect(() => {
+        localStorage.setItem('neurobridge_kids', JSON.stringify(kids));
+    }, [kids]);
 
     useEffect(() => {
         localStorage.setItem('neurobridge_skill_goals', JSON.stringify(skillGoals));
@@ -1081,6 +1095,31 @@ export const AppProvider = ({ children }) => {
             console.error('[AppProvider] Failed to toggle games unlock:', error);
             // 3. Revert on failure
             setKids(prev => prev.map(k => k.id === childId ? { ...k, gamesUnlocked: !newStatus } : k));
+        }
+    }, [kids]);
+
+    const toggleSpecificGameUnlock = useCallback(async (childId, gameId) => {
+        const child = kids.find(k => k.id === childId);
+        if (!child) return;
+
+        const currentUnlocked = child.unlockedGames || [];
+        const isUnlocked = currentUnlocked.includes(gameId);
+        const newUnlocked = isUnlocked
+            ? currentUnlocked.filter(id => id !== gameId)
+            : [...currentUnlocked, gameId];
+
+        console.log(`[AppProvider] Toggling unlock for game ${gameId} for child ${childId}`);
+
+        // 1. Optimistic Update
+        setKids(prev => prev.map(k => k.id === childId ? { ...k, unlockedGames: newUnlocked } : k));
+
+        try {
+            // 2. API Call
+            await userManagementAPI.updateChild(childId, { unlockedGames: newUnlocked });
+        } catch (error) {
+            console.error('[AppProvider] Failed to toggle game unlock:', error);
+            // 3. Revert on failure
+            setKids(prev => prev.map(k => k.id === childId ? { ...k, unlockedGames: currentUnlocked } : k));
         }
     }, [kids]);
 
@@ -2149,6 +2188,7 @@ export const AppProvider = ({ children }) => {
         updateChildMood,
         assignChildToTherapist,
         toggleGamesUnlock,
+        toggleSpecificGameUnlock,
         addChild,
         unassignChildFromTherapist,
 
@@ -2253,7 +2293,7 @@ export const AppProvider = ({ children }) => {
         consentRecords, auditLogs, cdcMetrics, adminStats, refreshAdminStats, currentUser, isAuthenticated,
         notifications, isLoading, login, logout, getChildSessions, getRecentSessions,
         addSession, getSessionsByTherapist, getTodaysSessions, getChildById,
-        getChildrenByTherapist, getChildrenByParent, updateChildMood, assignChildToTherapist, toggleGamesUnlock, unassignChildFromTherapist, getChildSkillScores,
+        getChildrenByTherapist, getChildrenByParent, updateChildMood, assignChildToTherapist, toggleGamesUnlock, toggleSpecificGameUnlock, unassignChildFromTherapist, getChildSkillScores,
         refreshRoadmap, getChildRoadmap, updateRoadmapProgress, completeMilestone, addRoadmapGoal, deleteRoadmapGoal,
         getPeriodicReviews, addPeriodicReview,
         getActivityAdherence20Days, completeQuickTestGame, getLatestQuickTestResult,

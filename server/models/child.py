@@ -31,6 +31,7 @@ class ChildResponse(BaseModel):
     status: str = "active"
     is_active: bool = True
     gamesUnlocked: bool = False
+    unlockedGames: List[str] = []
     documents: List[dict] = []
     therapy_start_date: Optional[str] = None
     therapy_type: Optional[str] = None

@@ -10,12 +10,6 @@ export const USERS = [
         email: 'parent@example.com',
         role: 'parent',
         childId: 'c1'
-    },
-    {
-        id: 't1',
-        name: 'Dr. Smith',
-        email: 'doctor@example.com',
-        role: 'therapist'
     }
 ];
 export const CHILDREN = [
@@ -26,7 +20,7 @@ export const CHILDREN = [
         age: 6,
         gender: 'Male',
         parent_id: 'p1',
-        therapist_id: 't1',
+        therapist_id: null,
         photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=wfini',
         program: ["Speech Therapy", "Occupational Therapy"],
         streak: 7,

@@ -28,7 +28,8 @@ import {
     PlusCircle,
     Trash2,
     ShieldCheck,
-    Target
+    Target,
+    Sparkles
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -154,7 +155,7 @@ const ChildCard = ({ child, sessions = [], skillScores = [], onSelect }) => {
 // Child Detail Modal
 const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
     const navigate = useNavigate();
-    const { getChildDocuments, addDocument, deleteDocument, addNotification, toggleGamesUnlock } = useApp();
+    const { getChildDocuments, addDocument, deleteDocument, addNotification, toggleGamesUnlock, toggleSpecificGameUnlock } = useApp();
     const [activeTab, setActiveTab] = useState('summary');
     const fileInputRef = React.useRef(null);
     const documents = getChildDocuments(child.id);
@@ -286,34 +287,46 @@ const ChildDetailModal = ({ child, sessions, skillScores, onClose }) => {
 
                     {activeTab === 'summary' && (
                         <>
-                            {/* Game Access Control (Therapist Only) */}
+                            {/* Granular Game Access Control (Therapist Only) */}
                             <div className="mb-6 p-4 bg-primary-50 rounded-2xl border border-primary-100 animate-in slide-in-from-right duration-500">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg ${child.gamesUnlocked ? 'bg-primary-500 text-white' : 'bg-neutral-200 text-neutral-500'}`}>
-                                            <Play className="h-5 w-5" />
-                                        </div>
-                                        <div>
-                                            <h4 className="text-sm font-black text-neutral-800 tracking-tight uppercase">Daily Play Games</h4>
-                                            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">
-                                                Status: {child.gamesUnlocked ? 'Unlocked' : 'Locked'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => toggleGamesUnlock(child.id)}
-                                        className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${child.gamesUnlocked
-                                            ? 'bg-red-50 text-red-600 border border-red-100 hover:bg-red-100'
-                                            : 'bg-primary-600 text-white shadow-lg shadow-primary-200 hover:bg-primary-700'
-                                            }`}
-                                    >
-                                        {child.gamesUnlocked ? 'Lock Games' : 'Unlock Games'}
-                                    </button>
+                                <h4 className="text-xs font-black text-neutral-800 tracking-tight uppercase mb-4 flex items-center gap-2">
+                                    <Sparkles className="h-4 w-4 text-primary-600" />
+                                    Daily Play Game Access
+                                </h4>
+                                <div className="space-y-3">
+                                    {[
+                                        { id: 'ha1', title: 'Magic Picture Talk', type: 'Communication' },
+                                        { id: 'ha2', title: 'Calm Bubble World', type: 'Sensory' },
+                                        { id: 'ha3', title: 'Good Choice City', type: 'Social' },
+                                        { id: 'ha4', title: 'Sound Pop Adventure', type: 'Motor' }
+                                    ].map((game) => {
+                                        const isUnlocked = (child.unlockedGames || []).includes(game.id);
+                                        return (
+                                            <div key={game.id} className="flex items-center justify-between bg-white p-3 rounded-xl border border-primary-100 shadow-sm transition-all hover:shadow-md">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-lg ${isUnlocked ? 'bg-primary-500 text-white shadow-md' : 'bg-neutral-100 text-neutral-400'}`}>
+                                                        <Play className="h-4 w-4" />
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="text-xs font-bold text-neutral-800">{game.title}</h5>
+                                                        <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider">{game.type}</p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => toggleSpecificGameUnlock(child.id, game.id)}
+                                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${isUnlocked
+                                                        ? 'bg-red-50 text-red-600 border border-red-100 hover:bg-red-100'
+                                                        : 'bg-primary-600 text-white shadow-md hover:bg-primary-700'
+                                                        }`}
+                                                >
+                                                    {isUnlocked ? 'Lock' : 'Unlock'}
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                                <p className="text-[9px] text-neutral-400 mt-3 italic">
-                                    {child.gamesUnlocked
-                                        ? 'Child can play all daily games in their Parent Portal.'
-                                        : 'Games are currently locked. Unlock them once the child is ready for independent play.'}
+                                <p className="text-[9px] text-neutral-400 mt-4 italic text-center">
+                                    Unlock individual games once the child has shown mastery in clinic.
                                 </p>
                             </div>
                             {/* Stats Grid */}
@@ -783,7 +796,7 @@ const MyChildren = () => {
 
     // Get child data for modal
     const selectedChildData = selectedChild ? {
-        child: selectedChild,
+        child: kids.find(k => k.id === selectedChild.id) || selectedChild,
         sessions: getChildSessions(selectedChild.id),
         skillScores: getLatestSkillScores(selectedChild.id)
     } : null;
