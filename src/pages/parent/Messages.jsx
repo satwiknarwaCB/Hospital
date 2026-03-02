@@ -256,6 +256,8 @@ const MessageBubble = ({ message, isOwn, currentUserId, onDeleteForMe, onDeleteF
 // ─── ThreadItem ───────────────────────────────────────────────────────────────
 const ThreadItem = ({ thread, isActive, onClick, myIds = [] }) => {
     const latestMessage = thread.messages[thread.messages.length - 1];
+    // Guard: skip rendering if the thread has no messages yet
+    if (!latestMessage) return null;
     const isOwn = myIds.includes(latestMessage.senderId);
     const unreadCount = thread.messages.filter(m => myIds.includes(m.recipientId) && !m.read).length;
 
@@ -426,10 +428,12 @@ const Messages = () => {
             thread.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         });
 
-        return Object.values(threadMap).sort((a, b) =>
-            new Date(b.messages[b.messages.length - 1].timestamp) -
-            new Date(a.messages[a.messages.length - 1].timestamp)
-        );
+        return Object.values(threadMap)
+            .filter(t => t.messages.length > 0)
+            .sort((a, b) =>
+                new Date(b.messages[b.messages.length - 1].timestamp) -
+                new Date(a.messages[a.messages.length - 1].timestamp)
+            );
     }, [allMessages, childId, userId, users]);
 
     // Filter threads by search

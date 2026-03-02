@@ -18,7 +18,6 @@ import {
     Calendar,
     X,
     CheckCircle2,
-    Users,
     Activity,
     Lock,
     ChevronRight,
@@ -37,7 +36,7 @@ import ParentSessions from './ParentSessions';
 import Messages from './Messages';
 import MemoryBox from './MemoryBox';
 import Reports from './Reports';
-import CareTeam from './CareTeam';
+
 
 
 // ============================================================
@@ -740,7 +739,7 @@ const ParentPortal = () => {
         { label: 'Sessions', path: '/parent/sessions', icon: Calendar },
         { label: 'Reports', path: '/parent/reports', icon: FileText },
         { label: 'Memory Box', path: '/parent/memory-box', icon: History },
-        { label: 'Care Team', path: '/parent/care-team', icon: Users },
+
         { label: 'Messages', path: '/parent/messages', icon: MessageCircle, badge: totalMessagesUnread },
     ];
 
@@ -755,7 +754,7 @@ const ParentPortal = () => {
                 <Route path="reports" element={<Reports />} />
                 <Route path="messages" element={<Messages />} />
                 <Route path="memory-box" element={<MemoryBox />} />
-                <Route path="care-team" element={<CareTeam />} />
+
                 <Route path="*" element={<Navigate to="today" replace />} />
             </Route>
         </Routes>

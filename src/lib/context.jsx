@@ -87,6 +87,50 @@ export const AppProvider = ({ children }) => {
         localStorage.setItem('neurobridge_skill_progress', JSON.stringify(skillProgress));
     }, [skillProgress]);
 
+    // Derive skillScores from skillProgress so Therapy Mastery displays real data
+    // Maps progress categories → therapy domains that the parent dashboard expects
+    useEffect(() => {
+        if (!skillProgress || skillProgress.length === 0) return;
+
+        // Map each category keyword to a therapy domain name
+        const categoryToDomain = (category) => {
+            const c = (category || '').toLowerCase();
+            if (c.includes('speech') || c.includes('communication') || c.includes('language')) return 'Language & Communication';
+            if (c.includes('ot') || c.includes('adaptive') || c.includes('sensory')) return 'Sensory & Interaction';
+            if (c.includes('motor') || c.includes('physical') || c.includes('gross') || c.includes('fine')) return 'Motor Skills';
+            if (c.includes('behavioral') || c.includes('social') || c.includes('emotional') || c.includes('regulation')) return 'Emotional Regulation';
+            if (c.includes('cognitive')) return 'Language & Communication';
+            return 'General';
+        };
+
+        // Group progress records by childId and domain, then average the progress
+        const childMap = {};
+        skillProgress.forEach(p => {
+            const childId = p.childId || p.child_id;
+            if (!childId) return;
+            const domain = categoryToDomain(p.category);
+            if (!childMap[childId]) childMap[childId] = {};
+            if (!childMap[childId][domain]) childMap[childId][domain] = [];
+            childMap[childId][domain].push(p.progress || 0);
+        });
+
+        const derivedScores = [];
+        Object.entries(childMap).forEach(([childId, domains]) => {
+            Object.entries(domains).forEach(([domain, progressValues]) => {
+                const avg = Math.round(progressValues.reduce((a, b) => a + b, 0) / progressValues.length);
+                derivedScores.push({
+                    childId,
+                    domain,
+                    score: avg,
+                    trend: avg >= 70 ? 'improving' : avg >= 40 ? 'stable' : 'needs-attention',
+                    date: new Date().toISOString()
+                });
+            });
+        });
+
+        setSkillScores(derivedScores);
+    }, [skillProgress]);
+
     useEffect(() => {
         localStorage.setItem('neurobridge_skill_goals', JSON.stringify(skillGoals));
     }, [skillGoals]);

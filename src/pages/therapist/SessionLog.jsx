@@ -9,7 +9,7 @@ import { THERAPY_TYPES } from '../../data/mockData';
 import { sessionAPI } from '../../lib/api';
 
 const SessionLog = () => {
-  const { kids, addSession, getChildDocuments, currentUser, refreshSessions } = useApp();
+  const { kids, sessions, addSession, getChildDocuments, currentUser, refreshSessions } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const childIdFromState = location.state?.childId;
@@ -17,18 +17,40 @@ const SessionLog = () => {
   // Filter kids assigned to this therapist or all if admin
   const myKids = useMemo(() => {
     const safeKids = Array.isArray(kids) ? kids : [];
-    const tId = currentUser?.id;
+    const tId = currentUser?.id || currentUser?._id;
+
+    // Admin sees all children
+    if (currentUser?.role === 'admin') {
+      return safeKids;
+    }
+
+    // Build a set of child IDs that have sessions with this therapist
+    const safeSessions = Array.isArray(sessions) ? sessions : [];
+    const sessionChildIds = new Set(
+      safeSessions
+        .filter(s => (s.therapistId === tId || s.therapist_id === tId))
+        .map(s => s.childId || s.child_id)
+        .filter(Boolean)
+    );
 
     const filtered = safeKids.filter(k => {
-      const tIds = k.therapistIds || [];
+      const childId = k.id || k._id;
+
+      // Check if child is directly assigned to this therapist
+      const tIds = Array.isArray(k.therapistIds) ? k.therapistIds : [];
       const ktId = k.therapistId || k.therapist_id;
-      const allIds = [...tIds, ktId].filter(Boolean);
-      return allIds.includes(tId || 't1') || (currentUser?.role === 'admin');
+      const allIds = [...new Set([...tIds, ktId].filter(Boolean))];
+      const isAssigned = tId && allIds.includes(tId);
+
+      // Also check if this child has sessions with the therapist
+      const hasSessionsWithTherapist = sessionChildIds.has(childId);
+
+      return isAssigned || hasSessionsWithTherapist;
     });
 
     // Fallback: If therapist has no specific kids, show all to prevent empty dropdown
     return filtered.length > 0 ? filtered : safeKids;
-  }, [kids, currentUser]);
+  }, [kids, sessions, currentUser]);
 
   const [selectedChild, setSelectedChild] = useState(
     childIdFromState || (myKids && myKids[0] ? myKids[0].id : '')

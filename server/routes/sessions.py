@@ -1,7 +1,6 @@
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from database import db_manager
-from models.session import SessionCreate, SessionResponse
+from models.session import SessionCreate
 from middleware.auth_middleware import get_current_active_doctor, get_current_user
 from models.doctor import DoctorResponse
 from datetime import datetime, timezone
@@ -9,7 +8,7 @@ from bson import ObjectId
 
 router = APIRouter(prefix="/api/sessions", tags=["Therapy Sessions"])
 
-@router.get("", response_model=List[SessionResponse])
+@router.get("")
 async def list_all_sessions(current_user: dict = Depends(get_current_user)):
     """
     List all sessions in the system.
@@ -35,7 +34,7 @@ async def list_all_sessions(current_user: dict = Depends(get_current_user)):
         )
 
 
-@router.post("", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 async def create_session(
     session: SessionCreate,
     current_doctor: DoctorResponse = Depends(get_current_active_doctor)
@@ -45,9 +44,10 @@ async def create_session(
     
     Security: Only authenticated therapists can log sessions.
     Automation: Automatically assigns current therapist ID and timestamps.
+    Persists all clinical data including location, outcomes, and health status.
     """
     try:
-        session_data = session.dict()
+        session_data = session.model_dump(exclude_none=True)
         
         # Security: Force therapistId to be the authenticated user
         session_data["therapistId"] = current_doctor.id
@@ -62,6 +62,7 @@ async def create_session(
         
         # Prepare response
         session_data["_id"] = str(result.inserted_id)
+        session_data["id"] = session_data["_id"]
         return session_data
         
     except Exception as e:
@@ -71,7 +72,8 @@ async def create_session(
             detail="Failed to persist session data to MongoDB"
         )
 
-@router.get("/child/{child_id}", response_model=List[SessionResponse])
+
+@router.get("/child/{child_id}")
 async def get_child_sessions(child_id: str):
     """
     Fetch all sessions for a specific patient.
@@ -104,7 +106,7 @@ async def get_child_sessions(child_id: str):
             detail="Error retrieving session history"
         )
 
-@router.get("/therapist/{therapist_id}", response_model=List[SessionResponse])
+@router.get("/therapist/{therapist_id}")
 async def get_therapist_sessions(therapist_id: str):
     """
     Fetch all sessions logged by a specific therapist.
