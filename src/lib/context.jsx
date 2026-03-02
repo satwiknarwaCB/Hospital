@@ -40,14 +40,24 @@ export const AppProvider = ({ children }) => {
     const [messages, setMessages] = useState([]);
     const [consentRecords] = useState([]);
     const [auditLogs, setAuditLogs] = useState([]);
-    const [cdcMetrics] = useState({
-        activeChildren: 0,
-        waitlistSize: 0,
-        therapistCount: 0,
-        monthlyRevenue: 0,
-        revenueTarget: 0,
-        totalHours: 0
-    });
+    const cdcMetrics = useMemo(() => {
+        const activeKidsCount = kids.filter(k => k.status === 'active' || !k.status).length;
+        const totalSess = sessions.filter(s => s.status === 'completed' || s.status === 'scheduled').length;
+
+        // Calculate Average Sessions Per Week
+        // Based on a 4-week moving average or total sessions divided by 4 for baseline
+        const avgSessPerWeek = totalSess > 0 ? Math.ceil(totalSess / 4) : 0;
+
+        return {
+            activeChildren: activeKidsCount,
+            waitlistSize: kids.filter(k => k.status === 'pending' || k.status === 'on-hold').length || 0,
+            therapistCount: users.filter(u => u.role === 'therapist').length,
+            monthlyRevenue: activeKidsCount * 2500, // Example: 2500 per active child
+            revenueTarget: 100000,
+            totalHours: Math.round(sessions.reduce((acc, s) => acc + (parseInt(s.duration) || 60), 0) / 60),
+            avgSessionsPerWeek: avgSessPerWeek
+        };
+    }, [kids, sessions, users]);
     const [periodicReviews, setPeriodicReviews] = useState([]);
     const [adminStats, setAdminStats] = useState({
         therapist_count: 0,
