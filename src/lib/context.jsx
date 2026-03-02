@@ -288,25 +288,35 @@ export const AppProvider = ({ children }) => {
 
     const refreshUsers = useCallback(async () => {
         try {
+            console.log('🔄 [refreshUsers] Fetching therapists and parents from DB...');
             const [tData, pData] = await Promise.all([
                 userManagementAPI.listTherapists(),
                 userManagementAPI.listParents()
             ]);
-            setRealTherapists(Array.isArray(tData) ? tData : []);
-            setRealParents(Array.isArray(pData) ? pData : []);
+            const therapists = Array.isArray(tData) ? tData.map(t => ({ ...t, id: t.id || t._id })) : [];
+            const parents = Array.isArray(pData) ? pData.map(p => ({ ...p, id: p.id || p._id })) : [];
+            console.log(`✅ [refreshUsers] Got ${therapists.length} therapist(s), ${parents.length} parent(s)`);
+            setRealTherapists(therapists);
+            setRealParents(parents);
         } catch (err) {
-            console.warn('Failed to refresh real users:', err);
+            console.error('❌ [refreshUsers] Failed to fetch users:', err?.response?.data || err?.message || err);
         }
     }, []);
 
-    // Initial fetch for users
+    // Initial fetch for users + periodic refresh so the list stays live
     useEffect(() => {
         if (isAuthenticated && currentUser) {
             // Everyone needs children data for dossiers/dashboards
             refreshChildren();
 
-            // Admins/Therapists need full user lists; Parents can benefit for message recipients
+            // Admins/Therapists need full user lists
             refreshUsers();
+
+            // Re-fetch every 30 s for admins so newly registered therapists appear without a reload
+            if (currentUser?.role === 'admin') {
+                const interval = setInterval(refreshUsers, 30000);
+                return () => clearInterval(interval);
+            }
         }
     }, [isAuthenticated, currentUser?.role, refreshUsers, refreshChildren]);
 
@@ -2162,6 +2172,7 @@ export const AppProvider = ({ children }) => {
         adminStats,
         refreshAdminStats,
         realParents,
+        realTherapists,
         currentUser,
         isAuthenticated,
         notifications,
@@ -2306,7 +2317,7 @@ export const AppProvider = ({ children }) => {
         periodicReviews, addPeriodicReview,
         roadmap, addRoadmapGoal,
         skillGoals, getChildGoals, updateSkillGoal, addSkillGoal, deleteSkillGoal, deleteSkillProgress,
-        childDocuments, addChild, realParents, deleteDocument
+        childDocuments, addChild, realParents, realTherapists, deleteDocument
     ]);
 
     return (

@@ -9,7 +9,6 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import {
     LayoutDashboard,
     Building2,
-    FileBarChart,
     ShieldAlert,
     Users,
     TrendingUp,
@@ -375,38 +374,7 @@ const OperationsPage = () => {
         return users.reduce((acc, u) => ({ ...acc, [u.id]: u }), {});
     }, [users]);
 
-    const roomStats = useMemo(() => {
-        const rooms = ['Therapy Room A', 'Therapy Room B', 'Sensory Room', 'Group Room', 'Virtual Session'];
-        // Use local date (YYYY-MM-DD) instead of UTC to avoid off-by-one errors in different timezones
-        const today = new Date().toLocaleDateString('en-CA');
-        const workDayMinutes = 8 * 60; // 8 hours total capacity per day
 
-        return rooms.map(roomName => {
-            const occupiedMinutes = sessions
-                .filter(s => {
-                    if (!s.location || !s.date) return false;
-                    const sessionLoc = s.location.toLowerCase().trim();
-                    const targetLoc = roomName.toLowerCase().trim();
-
-                    // Robust date match: convert UTC to local date string (en-CA: YYYY-MM-DD)
-                    const sessionDateLocal = new Date(s.date).toLocaleDateString('en-CA');
-
-                    // Match if locations are exact or if one contains the other (e.g. "Room A" matches "Therapy Room A")
-                    const isRoomMatch = sessionLoc === targetLoc ||
-                        sessionLoc.includes(targetLoc) ||
-                        targetLoc.includes(sessionLoc);
-
-                    return isRoomMatch && sessionDateLocal === today;
-                })
-                .reduce((total, s) => total + (parseInt(s.duration) || 45), 0);
-
-            const utilization = Math.round((occupiedMinutes / workDayMinutes) * 100);
-            return {
-                name: roomName,
-                usage: Math.min(utilization, 100)
-            };
-        });
-    }, [sessions]);
 
     return (
         <div className="space-y-8 pb-safe-nav animate-slide-up">
@@ -608,23 +576,7 @@ const OperationsPage = () => {
                 </div>
             </Modal>
 
-            {/* Room Utilization - Placeholder */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Room Utilization</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {roomStats.map((room, idx) => (
-                            <div key={idx} className="p-4 border border-neutral-200 rounded-xl text-center">
-                                <p className="font-medium text-neutral-800">{room.name}</p>
-                                <p className="text-2xl font-bold text-primary-600 mt-2">{room.usage}%</p>
-                                <p className="text-xs text-neutral-500">Today's usage</p>
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
+
         </div>
     );
 };
@@ -633,7 +585,7 @@ const OperationsPage = () => {
 // Reports Page
 // ============================================================
 const ReportsPage = () => {
-    const { sessions, kids, addNotification } = useApp();
+    const { sessions, kids } = useApp();
     const [selectedReport, setSelectedReport] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -643,7 +595,7 @@ const ReportsPage = () => {
         const safeKids = Array.isArray(kids) ? kids : [];
 
         return safeSessions
-            .filter(s => s.status === 'completed' || s.aiSummary)
+            .filter(s => !!s.aiSummary)
             .map(session => {
                 const child = safeKids.find(k => k.id === (session.childId || session.child_id));
                 const childName = child?.name || 'Unknown Child';
@@ -678,13 +630,6 @@ const ReportsPage = () => {
         );
     }, [reports, searchQuery]);
 
-    const handleGenerateReport = () => {
-        addNotification({
-            type: 'info',
-            title: 'Report Generation',
-            message: `There are currently ${reports.length} reports derived from completed sessions. Log new sessions to generate more reports.`
-        });
-    };
 
     const handleViewReport = (report) => {
         setSelectedReport(report);
@@ -730,15 +675,8 @@ const ReportsPage = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl md:text-3xl font-black text-neutral-900 uppercase tracking-tight">Clinical Reports</h2>
-                    <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Generate and distribute clinical records</p>
+                    <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Session reports submitted by therapists</p>
                 </div>
-                <Button
-                    className="bg-primary-600 hover:bg-primary-700 shadow-xl shadow-primary-100 rounded-xl h-12 md:h-14 px-6 font-black text-[11px] uppercase tracking-widest"
-                    onClick={handleGenerateReport}
-                >
-                    <FileBarChart className="h-5 w-5 mr-3" />
-                    Generate New Report
-                </Button>
             </div>
 
             {/* Report Stats */}
@@ -907,7 +845,7 @@ const ReportsPage = () => {
                             </div>
                         )) : (
                             <div className="text-center py-12 text-neutral-400">
-                                <FileBarChart className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                                <Eye className="h-12 w-12 mx-auto mb-4 opacity-20" />
                                 <p className="font-black uppercase tracking-widest text-[10px]">{searchQuery ? 'No reports match your search' : 'No clinical reports available'}</p>
                                 <p className="text-[10px] text-neutral-300 mt-2">Reports are generated from completed therapy sessions with AI summaries</p>
                             </div>
@@ -936,7 +874,7 @@ const AdminPortal = () => {
         { label: 'Overview', path: '/admin/overview', icon: LayoutDashboard },
         { label: 'Operations', path: '/admin/operations', icon: Building2 },
         { label: 'Users', path: '/admin/users', icon: Users },
-        { label: 'Reports', path: '/admin/reports', icon: FileBarChart },
+        { label: 'Reports', path: '/admin/reports', icon: Eye },
     ];
 
     return (
