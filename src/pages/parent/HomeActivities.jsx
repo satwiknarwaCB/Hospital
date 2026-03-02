@@ -350,8 +350,8 @@ const HomeActivities = () => {
     const [showResults, setShowResults] = useState(false);
 
     // Get current child
-    const child = kids.find(k => k.id === currentUser?.childId) || kids.find(k => k.name === 'wfini') || { id: 'c1', name: 'wfini', enrollmentDate: '2025-01-01', gamesUnlocked: false };
-    const childId = child.id;
+    const child = kids.find(k => k.id === currentUser?.childId) || kids[0];
+    const childId = child?.id;
 
     // Get home activities
     const activities = getChildHomeActivities(childId);
@@ -489,11 +489,13 @@ const HomeActivities = () => {
                     <div>
                         <h4 className="font-semibold text-violet-900">Today's Recommendation</h4>
                         <p className="text-violet-700 text-sm mt-1">
-                            {completedToday === 0
-                                ? `Start with "${activities[0]?.title}" - it's a great way to begin the day! Studies show morning practice has 40% better retention.`
-                                : completedToday === activities.length
-                                    ? `Amazing! You've completed all activities for today! 🎉 Your consistency is making a real difference in ${child.name}'s progress.`
-                                    : `Great progress! ${activities.length - completedToday} more to go. Consider doing "${activities.find(a => !a.completions?.some(c => c.date === today && c.completed))?.title}" next.`
+                            {activities.length === 0
+                                ? "No activities assigned for today. Your therapist will update your plan soon!"
+                                : completedToday === 0
+                                    ? `Start with "${activities[0]?.title}" - it's a great way to begin the day! Studies show morning practice has 40% better retention.`
+                                    : completedToday === activities.length
+                                        ? `Amazing! You've completed all activities for today! 🎉 Your consistency is making a real difference in ${child?.name || 'your child'}'s progress.`
+                                        : `Great progress! ${activities.length - completedToday} more to go. Consider doing "${activities.find(a => !a.completions?.some(c => c.date === today && c.completed))?.title || 'the next activity'}" next.`
                             }
                         </p>
                     </div>

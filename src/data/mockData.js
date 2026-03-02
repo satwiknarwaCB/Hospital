@@ -9,34 +9,17 @@ export const USERS = [
         name: 'Parent User',
         email: 'parent@example.com',
         role: 'parent',
-        childId: 'c1'
+        childId: null
     }
 ];
-export const CHILDREN = [
-    {
-        id: 'c1',
-        name: 'wfini',
-        diagnosis: 'Autism Spectrum Disorder',
-        age: 6,
-        gender: 'Male',
-        parent_id: 'p1',
-        therapist_id: null,
-        photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=wfini',
-        program: ["Speech Therapy", "Occupational Therapy"],
-        streak: 7,
-        enrollmentDate: '2025-01-01',
-        currentMood: '😊 Regulated',
-        moodContext: 'Doing great today!',
-        gamesUnlocked: false
-    }
-];
+export const CHILDREN = [];
 export const SESSIONS = [];
 export const SKILL_SCORES = [];
 export const ROADMAP = [];
 export const HOME_ACTIVITIES = [
     {
         id: 'ha1',
-        childId: 'c1',
+        childId: null,
         domain: 'Communication',
         title: 'Magic Picture Talk',
         description: 'Explore vibrant scenes and describe what you see to build vocabulary.',
@@ -53,7 +36,7 @@ export const HOME_ACTIVITIES = [
     },
     {
         id: 'ha2',
-        childId: 'c1',
+        childId: null,
         domain: 'Sensory',
         title: 'Calm Bubble World',
         description: 'Interactive bubble popping to practice focus and emotional regulation.',
@@ -69,7 +52,7 @@ export const HOME_ACTIVITIES = [
     },
     {
         id: 'ha3',
-        childId: 'c1',
+        childId: null,
         domain: 'Social Interaction',
         title: 'Good Choice City',
         description: 'Navigate social scenarios and practice making positive choices.',
@@ -85,7 +68,7 @@ export const HOME_ACTIVITIES = [
     },
     {
         id: 'ha4',
-        childId: 'c1',
+        childId: null,
         domain: 'Physical / Motor',
         title: 'Sound Pop Adventure',
         description: 'A rhythmic game to improve reaction time and motor coordination.',

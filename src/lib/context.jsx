@@ -46,7 +46,17 @@ export const AppProvider = ({ children }) => {
         const saved = localStorage.getItem('neurobridge_roadmap');
         return saved ? JSON.parse(saved) : [];
     });
-    const [homeActivities, setHomeActivities] = useState(HOME_ACTIVITIES);
+    const [homeActivities, setHomeActivities] = useState(() => {
+        const saved = localStorage.getItem('neurobridge_home_activities');
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch (e) {
+                console.error('Failed to parse home activities from localStorage', e);
+            }
+        }
+        return HOME_ACTIVITIES;
+    });
     const [messages, setMessages] = useState([]);
     const [consentRecords] = useState([]);
     const [auditLogs, setAuditLogs] = useState([]);
@@ -118,6 +128,10 @@ export const AppProvider = ({ children }) => {
     }, [quickTestProgress]);
 
     useEffect(() => {
+        localStorage.setItem('neurobridge_home_activities', JSON.stringify(homeActivities));
+    }, [homeActivities]);
+
+    useEffect(() => {
         const junkSkill = 'kjnskv';
         const goalToRemove = skillGoals.find(g => g.skillName === junkSkill);
         const progressToRemove = skillProgress.find(p => p.skillName === junkSkill);
@@ -133,7 +147,14 @@ export const AppProvider = ({ children }) => {
                 progressAPI.deleteProgress(progressToRemove.id).catch(err => console.error("Failed to delete junk progress:", err));
             }
         }
-    }, [skillGoals, skillProgress]);
+
+        // Cleanup 'wfini' if it still exists in the list (came from older mock data)
+        const wfiniExists = kids.some(k => k.name === 'wfini' || k.id === 'c1');
+        if (wfiniExists) {
+            console.log('🧹 Cleaning up mock child: wfini');
+            setKids(prev => prev.filter(k => k.name !== 'wfini' && k.id !== 'c1'));
+        }
+    }, [skillGoals, skillProgress, kids]);
 
     useEffect(() => {
         localStorage.setItem('neurobridge_roadmap', JSON.stringify(roadmap));
