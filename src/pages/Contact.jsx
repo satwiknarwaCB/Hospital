@@ -38,7 +38,7 @@ const Contact = () => {
         {
             icon: Phone,
             title: 'Call Us',
-            details: '+1 (555) 000-0000',
+            details: '+91 9985333108',
             sub: 'Mon-Fri from 8am to 6pm',
             color: 'text-blue-600',
             bg: 'bg-blue-50'
@@ -70,7 +70,7 @@ const Contact = () => {
     ];
 
     return (
-        <div className="pt-8 md:pt-24 pb-8 overflow-x-hidden">
+        <div className="pt-20 md:pt-32 pb-8 overflow-x-hidden">
             {/* Header Section */}
             <section className="bg-primary-50 pt-6 pb-8 md:py-20 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-1/3 h-full bg-primary-100/50 skew-x-12 transform translate-x-1/2" />

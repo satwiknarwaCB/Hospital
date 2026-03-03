@@ -101,6 +101,7 @@ export const AppProvider = ({ children }) => {
         const saved = localStorage.getItem('neurobridge_quick_test_progress');
         return saved ? JSON.parse(saved) : {};
     });
+    const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
 
     // Sync skill progress to localStorage and across tabs
     useEffect(() => {
@@ -2201,6 +2202,8 @@ export const AppProvider = ({ children }) => {
         communityUnreadCount,
         privateUnreadCount,
         setCommunityUnreadCount,
+        isAppointmentModalOpen,
+        setIsAppointmentModalOpen,
 
         // Auth Actions
         login,
@@ -2338,7 +2341,8 @@ export const AppProvider = ({ children }) => {
         periodicReviews, addPeriodicReview,
         roadmap, addRoadmapGoal,
         skillGoals, getChildGoals, updateSkillGoal, addSkillGoal, deleteSkillGoal, deleteSkillProgress,
-        childDocuments, addChild, realParents, realTherapists, deleteDocument
+        childDocuments, addChild, realParents, realTherapists, deleteDocument,
+        isAppointmentModalOpen
     ]);
 
     return (

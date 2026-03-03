@@ -5,7 +5,6 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import Landing from './pages/Landing';
 import About from './pages/About';
-import Services from './pages/Services';
 import ParentPortal from './pages/parent/ParentPortal';
 import ParentLogin from './pages/parent/ParentLogin';
 import TherapistPortal from './pages/therapist/TherapistPortal';
@@ -18,6 +17,10 @@ import DoctorLogin from './pages/doctor/DoctorLogin';
 import DoctorPortal from './pages/doctor/DoctorPortal';
 import ProtectedRoute from './components/ProtectedRoute';
 import ActivateAccount from './pages/ActivateAccount';
+import TherapyPage from './pages/services/TherapyPage';
+import Careers from './pages/Careers';
+import BookAppointmentModal from './components/BookAppointmentModal';
+import ScrollToTop from './components/ScrollToTop';
 
 // Layout wrapper for public pages (Landing, About, Services)
 const PublicLayout = ({ children }) => {
@@ -47,7 +50,8 @@ function AppContent() {
             {/* Public Routes with Header/Footer */}
             <Route path="/" element={<PublicLayout><Landing /></PublicLayout>} />
             <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
-            <Route path="/services" element={<PublicLayout><Services /></PublicLayout>} />
+            <Route path="/services/:slug" element={<PublicLayout><TherapyPage /></PublicLayout>} />
+            <Route path="/careers" element={<PublicLayout><Careers /></PublicLayout>} />
             <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
             <Route path="/login" element={<Login />} />
             <Route path="/activate" element={<ActivateAccount />} />
@@ -106,7 +110,9 @@ function App() {
     return (
         <AppProvider>
             <Router>
+                <ScrollToTop />
                 <AppContent />
+                <BookAppointmentModal />
             </Router>
         </AppProvider>
     );

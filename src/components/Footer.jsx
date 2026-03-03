@@ -10,14 +10,15 @@ const Footer = () => {
         company: [
             { name: 'About Us', path: '/about' },
             { name: 'Our Team', path: '/team' },
-            { name: 'Careers', path: '/careers' },
+            { name: 'Career', path: '/careers' }, // Added this line as per instruction
             { name: 'Contact', path: '/contact' },
         ],
         services: [
-            { name: 'ABA Therapy', path: '/services/aba' },
-            { name: 'Speech Therapy', path: '/services/speech' },
-            { name: 'Occupational Therapy', path: '/services/ot' },
-            { name: 'Physiotherapy', path: '/services/physio' },
+            { name: 'Speech Therapy', path: '/services/speech-therapy' },
+            { name: 'ABA Therapy', path: '/services/aba-therapy' },
+            { name: 'Occupational Therapy', path: '/services/occupational-therapy' },
+            { name: 'Behavioural Therapy', path: '/services/behavioural-therapy' },
+            { name: 'Autism Therapy', path: '/services/autism-therapy' },
         ],
         support: [
             { name: 'Help Center', path: '/help' },
@@ -44,7 +45,15 @@ const Footer = () => {
                         </p>
                         <div className="flex items-center gap-4">
                             {[Facebook, Twitter, Linkedin, Instagram].map((Icon, i) => (
-                                <a key={i} href="#" className="p-2 bg-neutral-800 rounded-full hover:bg-primary-600 hover:text-white transition-colors">
+                                <a
+                                    key={i}
+                                    href="#scroll-to-top"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }}
+                                    className="p-3 bg-neutral-800 rounded-full hover:bg-[#0284c7] hover:text-white transition-all duration-300 hover:scale-110 shadow-lg shadow-black/20"
+                                >
                                     <Icon className="h-5 w-5" />
                                 </a>
                             ))}
@@ -100,7 +109,7 @@ const Footer = () => {
                         <div className="pt-4 space-y-3">
                             <div className="flex items-center gap-3">
                                 <Phone className="h-5 w-5 text-primary-500" />
-                                <span>+1 (555) 123-4567</span>
+                                <span>+91 9985333108</span>
                             </div>
                             <div className="flex items-center gap-3">
                                 <Mail className="h-5 w-5 text-primary-500" />
