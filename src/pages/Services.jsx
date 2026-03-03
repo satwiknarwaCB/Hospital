@@ -50,8 +50,8 @@ const Services = () => {
     ];
 
     return (
-        <div className="pt-24 pb-16">
-            <section className="bg-neutral-900 py-24 text-white">
+        <div className="pt-16 md:pt-24 pb-12">
+            <section className="bg-neutral-900 py-16 md:py-24 text-white">
                 <div className="container mx-auto px-4 md:px-6">
                     <div className="max-w-3xl mx-auto text-center">
                         <h1 className="text-4xl md:text-5xl font-bold mb-6">
@@ -64,7 +64,7 @@ const Services = () => {
                 </div>
             </section>
 
-            <section className="py-20 bg-white">
+            <section className="py-12 md:py-20 bg-white">
                 <div className="container mx-auto px-4 md:px-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {services.map((service, i) => (
@@ -98,9 +98,9 @@ const Services = () => {
             </section>
 
             {/* CTA Section */}
-            <section className="py-20 mt-10">
+            <section className="py-12 md:py-20 mt-6 md:mt-10">
                 <div className="container mx-auto px-4 md:px-6">
-                    <div className="bg-primary-600 rounded-3xl p-12 relative overflow-hidden flex flex-col items-center text-center">
+                    <div className="bg-primary-600 rounded-2xl md:rounded-3xl p-6 md:p-12 relative overflow-hidden flex flex-col items-center text-center">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl" />
                         <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary-900/20 rounded-full -ml-32 -mb-32 blur-3xl" />
 

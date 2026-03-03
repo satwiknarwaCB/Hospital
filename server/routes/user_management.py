@@ -52,13 +52,16 @@ async def get_admin_stats(current_admin: AdminResponse = Depends(get_current_adm
         ]
     })
     
-    # Pending assignments: Children with no therapist assigned
-    pending_assignments = db_manager.children.count_documents({
+    # Pending assignments: Children with no therapist assigned + Pending appointment requests
+    non_assigned_kids = db_manager.children.count_documents({
         "$and": [
             {"$or": [{"therapistId": None}, {"therapistId": {"$exists": False}}]},
             {"$or": [{"therapistIds": None}, {"therapistIds": {"$exists": False}}, {"therapistIds": {"$size": 0}}]}
         ]
     })
+    
+    pending_appointments = db_manager.appointments.count_documents({"status": "pending"})
+    pending_assignments = non_assigned_kids + pending_appointments
     
     return {
         "therapist_count": therapist_count,

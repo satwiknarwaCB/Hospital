@@ -3,7 +3,7 @@
 // Complete Administrative Experience with All Modules
 // ============================================================
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import {
@@ -25,7 +25,9 @@ import {
     DollarSign,
     Heart,
     FileBarChart,
-    FileText
+    FileText,
+    Loader2,
+    CalendarClock
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -36,6 +38,7 @@ import UtilizationChart from '../../components/charts/UtilizationChart';
 import TherapistProgressOverview from '../../components/admin/TherapistProgressOverview';
 import UserManagement from '../../components/admin/UserManagement';
 import Modal from '../../components/ui/Modal';
+import { appointmentAPI } from '../../lib/api';
 
 // ============================================================
 // Admin Dashboard - Main Overview
@@ -422,7 +425,7 @@ const OperationsPage = () => {
                             <Clock className="h-5 w-5 text-amber-500" />
                         </div>
                         <p className="text-2xl md:text-3xl font-black text-neutral-800 leading-none">
-                            {kids.filter(k => !k.therapistId && (!k.therapistIds || k.therapistIds.length === 0)).length}
+                            {adminStats.pending_assignments || 0}
                         </p>
                         <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-2 px-1">Waitlist</p>
                     </CardContent>
@@ -950,6 +953,163 @@ const ReportsPage = () => {
 
 
 // ============================================================
+// ============================================================
+// Appointments List Page
+// ============================================================
+const AppointmentsPage = () => {
+    const [appointments, setAppointments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    useEffect(() => {
+        fetchAppointments();
+    }, []);
+
+    const fetchAppointments = async () => {
+        try {
+            setLoading(true);
+            const response = await appointmentAPI.listAll();
+            setAppointments(response.data || []);
+        } catch (error) {
+            console.error("Failed to fetch appointments", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const filtered = appointments.filter(a =>
+        (a.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (a.email?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (a.department?.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    return (
+        <div className="space-y-6 pb-20 animate-slide-up">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-neutral-800 uppercase tracking-tight">Appointment Requests</h2>
+                    <p className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] mt-1">Waitlist from Public Booking System</p>
+                </div>
+                <div className="relative w-full md:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                    <input
+                        type="text"
+                        placeholder="Search bookings..."
+                        className="w-full pl-10 pr-4 py-3 bg-white border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none font-bold text-xs"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+            </div>
+
+            <Card className="glass-card border-none overflow-hidden rounded-[2rem]">
+                <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="bg-neutral-50/50 border-b border-neutral-100">
+                                <tr className="text-left text-[10px] font-black text-neutral-400 uppercase tracking-widest">
+                                    <th className="px-6 py-5">Requestor</th>
+                                    <th className="px-6 py-5">Contact Details</th>
+                                    <th className="px-6 py-5">Clinical Need</th>
+                                    <th className="px-6 py-5">Schedule</th>
+                                    <th className="px-6 py-5">Status</th>
+                                    <th className="px-6 py-5">Acted By</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-100">
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={6} className="px-6 py-20 text-center">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
+                                                <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Synchronizing Queue...</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : filtered.length > 0 ? (
+                                    filtered.map((appt) => (
+                                        <tr key={appt.id} className="hover:bg-neutral-50/50 transition-colors">
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-10 w-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center font-black text-sm uppercase">
+                                                        {appt.name?.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-black text-neutral-900 uppercase text-xs tracking-tight">{appt.name}</p>
+                                                        <span className="text-[9px] font-black text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded uppercase tracking-tighter">{appt.mode}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="space-y-1">
+                                                    <p className="text-xs font-bold text-neutral-800">{appt.email}</p>
+                                                    <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">{appt.mobile}</p>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <span className="px-3 py-1 rounded-full bg-violet-50 text-violet-600 text-[9px] font-black uppercase tracking-tight border border-violet-100">
+                                                    {appt.department}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="p-1.5 bg-neutral-100 rounded-lg">
+                                                        <Calendar className="h-3.5 w-3.5 text-neutral-400" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-black text-neutral-800">
+                                                            {new Date(appt.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                        </p>
+                                                        <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest">Requested Date</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`h-2 w-2 rounded-full ${appt.status === 'pending' ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
+                                                    <span className={`text-[10px] font-black uppercase tracking-widest ${appt.status === 'pending' ? 'text-amber-600' : 'text-emerald-600'
+                                                        }`}>
+                                                        {appt.status}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                {appt.acted_by ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="h-7 w-7 rounded-lg bg-secondary-100 text-secondary-600 flex items-center justify-center font-black text-[10px] uppercase">
+                                                            {appt.acted_by.charAt(0)}
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs font-black text-neutral-800 uppercase tracking-tight">{appt.acted_by}</p>
+                                                            <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest">Therapist</p>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-[10px] font-black text-neutral-300 uppercase tracking-widest">—</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={6} className="px-6 py-20 text-center">
+                                            <div className="max-w-xs mx-auto">
+                                                <CalendarClock className="h-12 w-12 text-neutral-200 mx-auto mb-4" />
+                                                <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-2">{searchTerm ? 'No bookings match your search' : 'No pending appointments in queue'}</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
+
+// ============================================================
 // Admin Portal Router
 // ============================================================
 const AdminPortal = () => {
@@ -964,6 +1124,7 @@ const AdminPortal = () => {
         { label: 'Overview', path: '/admin/overview', icon: LayoutDashboard },
         { label: 'Operations', path: '/admin/operations', icon: Building2 },
         { label: 'Users', path: '/admin/users', icon: Users },
+        { label: 'Appointments', path: '/admin/appointments', icon: CalendarClock },
         { label: 'Reports', path: '/admin/reports', icon: Eye },
     ];
 
@@ -973,6 +1134,7 @@ const AdminPortal = () => {
                 <Route path="overview" element={<AdminDashboard />} />
                 <Route path="operations" element={<OperationsPage />} />
                 <Route path="users" element={<UserManagement />} />
+                <Route path="appointments" element={<AppointmentsPage />} />
                 <Route path="reports" element={<ReportsPage />} />
                 <Route path="*" element={<Navigate to="overview" replace />} />
             </Route>

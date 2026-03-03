@@ -70,13 +70,13 @@ const Contact = () => {
     ];
 
     return (
-        <div className="pt-24 pb-20">
+        <div className="pt-8 md:pt-24 pb-8 overflow-x-hidden">
             {/* Header Section */}
-            <section className="bg-primary-50 py-20 relative overflow-hidden">
+            <section className="bg-primary-50 pt-6 pb-8 md:py-20 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-1/3 h-full bg-primary-100/50 skew-x-12 transform translate-x-1/2" />
                 <div className="container mx-auto px-4 md:px-6 relative z-10">
                     <div className="max-w-3xl mx-auto text-center">
-                        <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
+                        <h1 className="text-3xl md:text-5xl font-bold text-neutral-900 mb-4">
                             Let's Start a <span className="text-primary-600">Conversation</span>
                         </h1>
                         <p className="text-lg text-neutral-600 leading-relaxed">
@@ -88,30 +88,30 @@ const Contact = () => {
             </section>
 
             {/* Contact Content */}
-            <section className="py-20">
+            <section className="py-6 md:py-20 text-center lg:text-left">
                 <div className="container mx-auto px-4 md:px-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-12">
 
                         {/* Contact Info Cards */}
-                        <div className="lg:col-span-4 space-y-6">
-                            <h2 className="text-2xl font-bold text-neutral-800 mb-8">Contact Information</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6">
+                        <div className="lg:col-span-4 space-y-4 md:space-y-6">
+                            <h2 className="text-xl md:text-2xl font-bold text-neutral-800 mb-4 md:mb-8">Contact Information</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 md:gap-6">
                                 {contactInfo.map((card, i) => (
-                                    <div key={i} className="flex gap-4 p-6 bg-white rounded-2xl border border-neutral-100 shadow-sm hover:shadow-md transition-shadow">
-                                        <div className={`h-12 w-12 rounded-xl ${card.bg} ${card.color} flex items-center justify-center shrink-0`}>
-                                            <card.icon className="h-6 w-6" />
+                                    <div key={i} className="flex items-center gap-3 p-3 md:p-6 bg-white rounded-xl md:rounded-2xl border border-neutral-100 shadow-sm hover:shadow-md transition-all text-left">
+                                        <div className={`h-10 w-10 md:h-12 md:w-12 rounded-lg md:rounded-xl ${card.bg} ${card.color} flex items-center justify-center shrink-0`}>
+                                            <card.icon className="h-5 w-5 md:h-6 md:w-6" />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-neutral-800">{card.title}</h3>
-                                            <p className="text-neutral-700 font-medium">{card.details}</p>
-                                            <p className="text-xs text-neutral-500">{card.sub}</p>
+                                            <h3 className="font-bold text-neutral-800 text-sm md:text-base">{card.title}</h3>
+                                            <p className="text-neutral-700 font-medium text-xs md:text-sm">{card.details}</p>
+                                            <p className="text-[10px] md:text-xs text-neutral-400">{card.sub}</p>
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
                             {/* Social Presence */}
-                            <div className="p-8 bg-neutral-900 rounded-3xl text-white mt-12 relative overflow-hidden group">
+                            <div className="p-5 md:p-8 bg-neutral-900 rounded-2xl md:rounded-3xl text-white mt-6 md:mt-12 relative overflow-hidden group">
                                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
                                     <Globe className="h-24 w-24" />
                                 </div>
@@ -130,10 +130,10 @@ const Contact = () => {
 
                         {/* Contact Form */}
                         <div className="lg:col-span-8">
-                            <div className="bg-white rounded-3xl p-8 md:p-12 border border-neutral-100 shadow-xl">
-                                <div className="mb-8">
-                                    <h2 className="text-3xl font-bold text-neutral-900 mb-2">Send us a Message</h2>
-                                    <p className="text-neutral-500">We typically respond within 2-4 business hours.</p>
+                            <div className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-12 border border-neutral-100 shadow-xl">
+                                <div className="mb-6">
+                                    <h2 className="text-xl md:text-3xl font-bold text-neutral-900 mb-1">Send us a Message</h2>
+                                    <p className="text-xs md:text-base text-neutral-500">We typically respond within 2-4 business hours.</p>
                                 </div>
 
                                 {status === 'success' ? (
@@ -160,7 +160,7 @@ const Contact = () => {
                                                     required
                                                     value={formData.name}
                                                     onChange={handleChange}
-                                                    className="w-full px-5 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                                                    className="w-full px-4 py-3 md:px-5 md:py-4 bg-neutral-50 border border-neutral-200 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
                                                     placeholder="John Doe"
                                                 />
                                             </div>
@@ -172,7 +172,7 @@ const Contact = () => {
                                                     required
                                                     value={formData.email}
                                                     onChange={handleChange}
-                                                    className="w-full px-5 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                                                    className="w-full px-4 py-3 md:px-5 md:py-4 bg-neutral-50 border border-neutral-200 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
                                                     placeholder="john@example.com"
                                                 />
                                             </div>
@@ -186,7 +186,7 @@ const Contact = () => {
                                                 required
                                                 value={formData.subject}
                                                 onChange={handleChange}
-                                                className="w-full px-5 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                                                className="w-full px-4 py-3 md:px-5 md:py-4 bg-neutral-50 border border-neutral-200 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
                                                 placeholder="Inquiry about ABA Therapy"
                                             />
                                         </div>
@@ -199,7 +199,7 @@ const Contact = () => {
                                                 value={formData.message}
                                                 onChange={handleChange}
                                                 rows="5"
-                                                className="w-full px-5 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none resize-none"
+                                                className="w-full px-4 py-3 md:px-5 md:py-4 bg-neutral-50 border border-neutral-200 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none resize-none"
                                                 placeholder="Tell us about your requirements..."
                                             />
                                         </div>
@@ -208,7 +208,7 @@ const Contact = () => {
                                             type="submit"
                                             size="lg"
                                             disabled={status === 'loading'}
-                                            className="w-full h-14 text-lg bg-primary-600 hover:bg-primary-700 shadow-xl shadow-primary-100 rounded-2xl group"
+                                            className="w-full h-12 md:h-14 text-base md:text-lg bg-primary-600 hover:bg-primary-700 shadow-xl shadow-primary-100 rounded-xl md:rounded-2xl group transition-all"
                                         >
                                             {status === 'loading' ? (
                                                 <>
@@ -229,8 +229,8 @@ const Contact = () => {
             </section>
 
             {/* Map Section */}
-            <section className="container mx-auto px-4 md:px-6 mb-20">
-                <div className="h-[450px] w-full bg-neutral-100 rounded-3xl border border-neutral-200 overflow-hidden shadow-lg relative group">
+            <section className="container mx-auto px-4 md:px-6 mb-12 md:mb-20">
+                <div className="h-[300px] md:h-[450px] w-full bg-neutral-100 rounded-2xl md:rounded-3xl border border-neutral-200 overflow-hidden shadow-lg relative group">
                     <iframe
                         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.1422937950147!2d-73.98731968482413!3d40.75889497932681!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25855c6480299%3A0x55194ec5a1ae072e!2sTimes%20Square!5e0!3m2!1sen!2sus!4v1620304953684!5m2!1sen!2sus"
                         width="100%"

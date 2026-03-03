@@ -33,6 +33,8 @@ class Appointment(AppointmentCreate):
     id: str
     status: str = "pending"
     created_at: datetime
+    acted_by: Optional[str] = None
+    updated_at: Optional[datetime] = None
     
     model_config = ConfigDict(
         populate_by_name=True,

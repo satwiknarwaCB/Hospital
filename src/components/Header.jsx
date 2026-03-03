@@ -37,22 +37,22 @@ const Header = () => {
             />
 
             <header
-                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 backdrop-blur-md shadow-sm py-3' : 'bg-transparent py-5'
+                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 backdrop-blur-md shadow-sm py-2' : 'bg-transparent py-3'
                     }`}
             >
-                <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
+                <div className="container mx-auto px-4 md:px-6 lg:px-8 flex items-center justify-between">
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2 group">
                         <div className="p-2 bg-primary-600 rounded-lg group-hover:scale-110 transition-transform">
                             <Activity className="h-6 w-6 text-white" />
                         </div>
-                        <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-700 to-primary-500">
+                        <span className="text-xl lg:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-700 to-primary-500">
                             NeuroBridge™
                         </span>
                     </Link>
 
                     {/* Desktop Navigation */}
-                    <nav className="hidden md:flex items-center gap-8">
+                    <nav className="hidden lg:flex items-center gap-4 xl:gap-8">
                         {navLinks.map((link) => (
                             <Link
                                 key={link.name}
@@ -66,7 +66,7 @@ const Header = () => {
                     </nav>
 
                     {/* Header Actions */}
-                    <div className="hidden md:flex items-center gap-4">
+                    <div className="hidden lg:flex items-center gap-2 xl:gap-4">
                         <Button
                             variant="outline"
                             className="border-primary-200 hover:bg-primary-50"
@@ -76,13 +76,13 @@ const Header = () => {
                             Sign In
                         </Button>
                         <Button
-                            className="bg-neutral-900 hover:bg-black text-white px-6"
+                            className="bg-neutral-900 hover:bg-black text-white px-4 xl:px-6"
                             onClick={() => navigate('/login', { state: { openSignup: true } })}
                         >
                             Join NeuroBridge™
                         </Button>
                         <Button
-                            className="bg-primary-600 hover:bg-primary-700"
+                            className="bg-primary-600 hover:bg-primary-700 px-4 xl:px-6"
                             onClick={() => setIsAppointmentModalOpen(true)}
                         >
                             Book Appointment
@@ -91,7 +91,7 @@ const Header = () => {
 
                     {/* Mobile Menu Toggle */}
                     <button
-                        className="md:hidden p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg"
+                        className="lg:hidden p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
                         {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -100,7 +100,7 @@ const Header = () => {
 
                 {/* Mobile Menu */}
                 {isMobileMenuOpen && (
-                    <div className="md:hidden absolute top-full left-0 right-0 bg-white border-t border-neutral-100 shadow-xl p-4 animate-in slide-in-from-top-4 duration-200">
+                    <div className="lg:hidden absolute top-full left-0 right-0 bg-white border-t border-neutral-100 shadow-xl p-4 animate-in slide-in-from-top-4 duration-200">
                         <nav className="flex flex-col gap-4">
                             {navLinks.map((link) => (
                                 <Link

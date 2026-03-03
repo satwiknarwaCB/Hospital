@@ -227,6 +227,8 @@ export const adminAuthAPI = {
 // Session API
 export const appointmentAPI = {
     create: (data) => apiClient.post('/api/appointments/', data),
+    listAll: () => apiClient.get('/api/appointments/'),
+    updateStatus: (id, status, actedBy) => apiClient.put(`/api/appointments/${id}/status`, { status, acted_by: actedBy }),
 };
 
 export const sessionAPI = {

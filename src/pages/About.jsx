@@ -3,9 +3,9 @@ import { Target, Eye, Users2, ShieldCheck, Heart, Award } from 'lucide-react';
 
 const About = () => {
     return (
-        <div className="pt-24 pb-16">
+        <div className="pt-16 md:pt-24 pb-12">
             {/* Header Section */}
-            <section className="bg-primary-50 py-20">
+            <section className="bg-primary-50 py-12 md:py-20">
                 <div className="container mx-auto px-4 md:px-6">
                     <div className="max-w-3xl mx-auto text-center">
                         <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
@@ -19,7 +19,7 @@ const About = () => {
             </section>
 
             {/* Mission & Vision */}
-            <section className="py-20">
+            <section className="py-12 md:py-20">
                 <div className="container mx-auto px-4 md:px-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                         <div className="p-8 rounded-2xl bg-white shadow-xl border border-neutral-100 space-y-4">
@@ -45,7 +45,7 @@ const About = () => {
             </section>
 
             {/* Core Values */}
-            <section className="py-20 bg-neutral-50">
+            <section className="py-12 md:py-20 bg-neutral-50">
                 <div className="container mx-auto px-4 md:px-6">
                     <div className="text-center max-w-2xl mx-auto mb-16">
                         <h2 className="text-3xl font-bold text-neutral-900">Our Core Values</h2>

@@ -14,7 +14,7 @@ const Landing = () => {
 
         <div className="flex flex-col min-h-screen">
             {/* Hero Section */}
-            <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-gradient-to-b from-primary-50 to-white">
+            <section className="relative pt-16 pb-20 lg:pt-20 lg:pb-32 overflow-hidden bg-gradient-to-b from-primary-50 to-white">
                 <div className="absolute top-0 left-0 w-full h-full -z-10 opacity-30">
                     <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary-200 rounded-full blur-3xl animate-pulse" />
                     <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-secondary-200 rounded-full blur-3xl" />
@@ -22,13 +22,15 @@ const Landing = () => {
 
                 <div className="container mx-auto px-4 md:px-6">
                     <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-                        <div className="flex-1 text-center lg:text-left space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-100 text-primary-700 text-sm font-semibold">
-                                <Award className="h-4 w-4" /> Leading Autism Therapy Platform
+                        <div className="flex-1 text-center lg:text-left space-y-4 animate-in fade-in slide-in-from-left-8 duration-1000">
+                            <div className="space-y-2">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-100 text-primary-700 text-sm font-semibold">
+                                    <Award className="h-4 w-4" /> Leading Autism Therapy Platform
+                                </div>
+                                <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-neutral-900 leading-tight">
+                                    Connecting Therapy with <span className="text-primary-600">Measurable Progress</span>
+                                </h1>
                             </div>
-                            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-neutral-900 leading-tight">
-                                Connecting Therapy with <span className="text-primary-600">Measurable Progress</span>
-                            </h1>
                             <p className="text-xl text-neutral-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
                                 NeuroBridge™ provides a transparent, data-driven ecosystem where parents, therapists, and clinicians collaborate seamlessly for better outcomes.
                             </p>

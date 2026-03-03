@@ -63,13 +63,13 @@ const DoctorDashboard = () => {
     return (
         <div className="space-y-6">
             {/* Premium Header */}
-            <div className="relative overflow-hidden bg-neutral-900 rounded-[2.5rem] p-10 text-white shadow-2xl group transition-all duration-700">
+            <div className="relative overflow-hidden bg-neutral-900 rounded-3xl md:rounded-[2.5rem] p-6 md:p-10 text-white shadow-2xl group transition-all duration-700">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/20 blur-[100px] rounded-full -mr-48 -mt-48 group-hover:bg-primary-500/30 transition-all duration-700" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-violet-500/10 blur-[80px] rounded-full -ml-32 -mb-32" />
 
                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                     <div className="text-center md:text-left">
-                        <h1 className="text-4xl font-black mb-2 tracking-tight">
+                        <h1 className="text-2xl md:text-4xl font-black mb-2 tracking-tight">
                             Namaste, Dr. {profileData.name.split(' ')[1] || profileData.name}! 👋
                         </h1>
                         <p className="text-primary-300 text-lg font-bold uppercase tracking-widest text-[11px]">
@@ -77,12 +77,12 @@ const DoctorDashboard = () => {
                         </p>
                     </div>
                     <div className="flex gap-4">
-                        <div className="bg-white/10 backdrop-blur-md rounded-[2rem] p-6 text-center border border-white/10 shadow-xl min-w-[120px]">
-                            <div className="text-4xl font-black">{profileData.experience_years}</div>
+                        <div className="bg-white/10 backdrop-blur-md rounded-2xl md:rounded-[2rem] p-4 md:p-6 text-center border border-white/10 shadow-xl min-w-[100px] md:min-w-[120px]">
+                            <div className="text-2xl md:text-4xl font-black">{profileData.experience_years}</div>
                             <div className="text-[10px] font-black text-primary-300 uppercase tracking-widest">Growth Yrs</div>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-md rounded-[2rem] p-6 text-center border border-white/10 shadow-xl min-w-[120px]">
-                            <div className="text-4xl font-black text-green-400">{profileData.assigned_children}</div>
+                        <div className="bg-white/10 backdrop-blur-md rounded-2xl md:rounded-[2rem] p-4 md:p-6 text-center border border-white/10 shadow-xl min-w-[100px] md:min-w-[120px]">
+                            <div className="text-2xl md:text-4xl font-black text-green-400">{profileData.assigned_children}</div>
                             <div className="text-[10px] font-black text-green-300/70 uppercase tracking-widest">Lives Impacted</div>
                         </div>
                     </div>
@@ -146,9 +146,9 @@ const DoctorDashboard = () => {
 
             {/* Glanceable Child Status Grid (The Traffic Light) */}
             <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4">
                     <h2 className="text-xl font-black text-neutral-800 tracking-tight">Child Care Tracking 🏥</h2>
-                    <div className="flex gap-4">
+                    <div className="flex flex-wrap gap-3 md:gap-4">
                         <span className="flex items-center gap-1.5 text-[10px] font-bold text-red-500 uppercase"><span className="h-2 w-2 bg-red-500 rounded-full" /> Declining</span>
                         <span className="flex items-center gap-1.5 text-[10px] font-bold text-yellow-500 uppercase"><span className="h-2 w-2 bg-yellow-500 rounded-full" /> Stale</span>
                         <span className="flex items-center gap-1.5 text-[10px] font-bold text-green-500 uppercase"><span className="h-2 w-2 bg-green-500 rounded-full" /> Improving</span>
@@ -166,10 +166,10 @@ const DoctorDashboard = () => {
 
             {/* Detailed Profile Information */}
             <Card className="shadow-lg">
-                <CardHeader className="border-b border-neutral-100">
-                    <CardTitle className="text-2xl">Doctor Profile</CardTitle>
+                <CardHeader className="border-b border-neutral-100 p-4 md:p-6">
+                    <CardTitle className="text-xl md:text-2xl">Doctor Profile</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-6">
+                <CardContent className="p-4 md:p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Full Name */}
                         <div>

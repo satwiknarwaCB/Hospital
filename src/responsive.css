@@ -5,19 +5,33 @@
 
 /* ── Global Reset for Responsive ── */
 #root {
-  max-width: 100%;
+  max-width: 100vw;
   width: 100%;
   padding: 0;
   text-align: left;
   margin: 0;
+  overflow-x: hidden;
+}
+
+html,
+body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  position: relative;
 }
 
 /* Ensure no horizontal overflow anywhere */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-img, video, canvas, svg {
+img,
+video,
+canvas,
+svg {
   max-width: 100%;
   height: auto;
 }
@@ -25,21 +39,38 @@ img, video, canvas, svg {
 /* ── Responsive Typography ── */
 @media (max-width: 640px) {
   h1 {
-    font-size: 1.75rem !important;
-    line-height: 1.25 !important;
+    font-size: 1.35rem !important;
+    line-height: 1.2 !important;
+    word-break: break-word;
+    hyphens: auto;
   }
 
   h2 {
-    font-size: 1.35rem !important;
+    font-size: 1.15rem !important;
+    word-break: break-word;
   }
 
   h3 {
-    font-size: 1.1rem !important;
+    font-size: 1.05rem !important;
+  }
+
+  p,
+  span,
+  div,
+  li,
+  a {
+    word-break: break-word;
+  }
+
+  p {
+    font-size: 0.9rem !important;
+    line-height: 1.4 !important;
   }
 }
 
 /* ── Touch Targets: Minimum 44px for accessibility ── */
 @media (max-width: 768px) {
+
   button,
   a,
   input[type="radio"],
@@ -55,7 +86,8 @@ img, video, canvas, svg {
   input[type="date"],
   textarea,
   select {
-    font-size: 16px !important; /* Prevents iOS zoom on focus */
+    font-size: 16px !important;
+    /* Prevents iOS zoom on focus */
   }
 }
 
@@ -69,12 +101,13 @@ img, video, canvas, svg {
 
 /* ── Login Page Responsive ── */
 @media (max-width: 768px) {
+
   /* Ensure the login sidebar scrolls horizontally on small screens */
   [class*="max-w-5xl"] {
     flex-direction: column !important;
   }
 
-  [class*="max-w-5xl"] > [class*="md:w-80"] {
+  [class*="max-w-5xl"]>[class*="md:w-80"] {
     max-height: 250px;
   }
 }
@@ -99,6 +132,7 @@ img, video, canvas, svg {
 
 /* ── Dashboard Cards: Better grid on small screens ── */
 @media (max-width: 640px) {
+
   /* Stat cards — force 2 columns on even the smallest screens */
   [class*="grid-cols-2"][class*="md:grid-cols-4"],
   [class*="grid-cols-2"][class*="md:grid-cols-5"] {
@@ -114,6 +148,7 @@ img, video, canvas, svg {
 
 /* ── Modal Responsiveness ── */
 @media (max-width: 640px) {
+
   /* Profile edit modal & other modals */
   [class*="max-w-2xl"],
   [class*="max-w-lg"],
@@ -123,14 +158,15 @@ img, video, canvas, svg {
   }
 
   /* Make modal action buttons stack on very small screens */
-  [class*="flex gap-3"] > button,
-  [class*="flex gap-3"] > [class*="Button"] {
+  [class*="flex gap-3"]>button,
+  [class*="flex gap-3"]>[class*="Button"] {
     min-width: 0;
   }
 }
 
 /* ── Sidebar Responsive Overrides ── */
 @media (max-width: 1023px) {
+
   /* Ensure sidebar overlay covers full screen */
   aside[class*="fixed inset-y-0"] {
     max-height: 100dvh;
@@ -142,7 +178,8 @@ img, video, canvas, svg {
   [class*="fixed bottom-6 right-6"] {
     left: 1rem;
     right: 1rem;
-    bottom: 5rem; /* Above mobile bottom nav */
+    bottom: 5rem;
+    /* Above mobile bottom nav */
   }
 }
 
@@ -157,11 +194,19 @@ img, video, canvas, svg {
 @media (max-width: 640px) {
   footer [class*="grid-cols-1"][class*="lg:grid-cols-4"] {
     gap: 2rem;
+    text-align: center;
+    /* Center footer content on mobile */
   }
 
   footer [class*="flex"][class*="gap-6"] {
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  footer .flex-col.md\:flex-row {
+    text-align: center;
+    align-items: center;
   }
 }
 
@@ -186,13 +231,13 @@ img, video, canvas, svg {
     gap: 0.5rem;
   }
 
-  [class*="flex items-center p-4"][class*="rounded-xl"] > div:last-child {
+  [class*="flex items-center p-4"][class*="rounded-xl"]>div:last-child {
     width: 100%;
     margin-top: 0.5rem;
   }
 
-  [class*="flex items-center p-4"][class*="rounded-xl"] > div:last-child button,
-  [class*="flex items-center p-4"][class*="rounded-xl"] > div:last-child span {
+  [class*="flex items-center p-4"][class*="rounded-xl"]>div:last-child button,
+  [class*="flex items-center p-4"][class*="rounded-xl"]>div:last-child span {
     width: 100%;
     text-align: center;
   }
@@ -200,6 +245,7 @@ img, video, canvas, svg {
 
 /* ── Safe Area Insets for Modern Phones ── */
 @supports (padding: env(safe-area-inset-bottom)) {
+
   /* Bottom nav safe area */
   nav[class*="fixed bottom-0"] {
     padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
@@ -230,6 +276,7 @@ img, video, canvas, svg {
 
 /* ── Contact Page: Better spacing on mobile ── */
 @media (max-width: 1023px) {
+
   [class*="lg:col-span-4"],
   [class*="lg:col-span-8"] {
     grid-column: span 12;
@@ -238,6 +285,7 @@ img, video, canvas, svg {
 
 /* ── Smooth Scrolling & Momentum ── */
 @media (max-width: 768px) {
+
   .overflow-y-auto,
   .overflow-auto {
     -webkit-overflow-scrolling: touch;
@@ -246,6 +294,7 @@ img, video, canvas, svg {
 
 /* ── Print Responsive: Hide nav elements ── */
 @media print {
+
   nav[class*="fixed bottom-0"],
   aside,
   header[class*="sticky"] {
@@ -260,6 +309,7 @@ img, video, canvas, svg {
 
 /* ── Landscape Mode Adjustments ── */
 @media (max-height: 500px) and (orientation: landscape) {
+
   /* Reduce header height in landscape */
   header[class*="h-16"] {
     height: 3rem;
@@ -277,4 +327,85 @@ img, video, canvas, svg {
   .container {
     max-width: 1440px;
   }
+}
+
+/* ── Generic Responsive Utilities ── */
+@media (max-width: 768px) {
+  .container {
+    width: 100% !important;
+    max-width: 100vw !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Prevent absolute background decorations from leaking */
+  [class*="absolute"][class*="blur"] {
+    max-width: 100vw;
+  }
+
+  /* Force buttons and inputs to be flexible */
+  button,
+  input,
+  select,
+  textarea {
+    max-width: 100% !important;
+  }
+
+  /* Reduce excessive paddings globally for mobile */
+  .p-6,
+  .p-8,
+  .p-10,
+  .p-12,
+  .p-16,
+  .px-6,
+  .px-8,
+  .px-10,
+  .px-12,
+  .px-16 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .py-12,
+  .py-16,
+  .py-20 {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  /* Reduce excessive rounded corners on mobile */
+  [class*="rounded-[2.5rem]"],
+  [class*="rounded-[3rem]"] {
+    border-radius: 1rem !important;
+  }
+
+  /* Ensure card headings are readable */
+  .text-4xl,
+  .text-5xl {
+    font-size: 1.5rem !important;
+    line-height: normal !important;
+  }
+
+  /* Fix grid layouts that might be too wide */
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Specific Element Fixes ── */
+.overflow-x-hidden {
+  overflow-x: hidden !important;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
 }

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Calendar, ClipboardList, Clock, Activity } from 'lucide-react';
+import { Calendar, ClipboardList, Clock, Activity, CalendarPlus } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import ScheduleManagement from './ScheduleManagement';
 import SessionLog from './SessionLog';
+import IncomingAppointments from './IncomingAppointments';
 import { cn } from '../../lib/utils';
+
 
 const Sessions = () => {
     const location = useLocation();
@@ -25,7 +27,8 @@ const Sessions = () => {
 
     const tabs = [
         { id: 'schedule', label: 'Schedule', icon: Calendar },
-        { id: 'logs', label: 'Session Logs', icon: ClipboardList }
+        { id: 'logs', label: 'Session Logs', icon: ClipboardList },
+        { id: 'incoming', label: 'Appointments', icon: CalendarPlus }
     ];
 
     return (
@@ -38,13 +41,13 @@ const Sessions = () => {
             </header>
 
             {/* Tab Navigation */}
-            <nav className="p-1.5 bg-neutral-100/80 backdrop-blur rounded-2xl flex gap-1 sticky top-0 z-10 shadow-sm border border-neutral-200/50 max-w-md">
+            <nav className="p-1.5 bg-neutral-100/80 backdrop-blur rounded-2xl flex gap-1 sticky top-0 z-10 shadow-sm border border-neutral-200/50 max-w-lg">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(
-                            "flex-1 flex items-center justify-center gap-2 py-3 px-4 text-sm font-bold transition-all duration-300",
+                            "flex-1 flex items-center justify-center gap-2 py-3 px-4 text-sm font-bold transition-all duration-300 whitespace-nowrap",
                             activeTab === tab.id
                                 ? "bg-white text-secondary-600 shadow-sm rounded-xl"
                                 : "text-neutral-400 hover:text-neutral-600"
@@ -59,11 +62,14 @@ const Sessions = () => {
             <div className="animate-in fade-in slide-in-from-bottom-3 duration-500">
                 {activeTab === 'schedule' ? (
                     <ScheduleManagement />
-                ) : (
+                ) : activeTab === 'logs' ? (
                     <SessionLog />
+                ) : (
+                    <IncomingAppointments />
                 )}
             </div>
         </div>
+
     );
 };
 
