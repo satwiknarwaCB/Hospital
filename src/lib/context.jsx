@@ -157,6 +157,33 @@ export const AppProvider = ({ children }) => {
         }
     }, [skillGoals, skillProgress, kids]);
 
+    // NEW: Sync childDocuments from kids data (Source of Truth after Refresh)
+    useEffect(() => {
+        const allDocsFromKids = kids.reduce((acc, kid) => {
+            const kidDocs = (kid.documents || []).map(doc => ({
+                ...doc,
+                childId: kid.id,
+                // Ensure ID is stable
+                id: doc.id || `doc-${kid.id}-${Date.now()}`
+            }));
+            return [...acc, ...kidDocs];
+        }, []);
+
+        if (allDocsFromKids.length > 0) {
+            // Only update if there's a difference to avoid loops
+            setChildDocuments(prev => {
+                const prevIds = new Set(prev.map(d => d.id));
+                const newIds = new Set(allDocsFromKids.map(d => d.id));
+                
+                if (prev.length !== allDocsFromKids.length || allDocsFromKids.some(d => !prevIds.has(d.id))) {
+                    console.log('🔄 Syncing Documents from Backend Caseload');
+                    return allDocsFromKids;
+                }
+                return prev;
+            });
+        }
+    }, [kids]);
+
     useEffect(() => {
         localStorage.setItem('neurobridge_roadmap', JSON.stringify(roadmap));
     }, [roadmap]);
@@ -1295,19 +1322,52 @@ export const AppProvider = ({ children }) => {
         }
     }, [currentUser]);
 
-    const addDocument = useCallback((doc) => {
+    const addDocument = useCallback(async (doc) => {
         const newDoc = {
             ...doc,
             id: doc.id || `doc-${Date.now()}`,
             date: doc.date || new Date().toISOString().split('T')[0]
         };
+        
+        // 1. Update local state
         setChildDocuments(prev => [newDoc, ...prev]);
-        return newDoc;
-    }, []);
 
-    const deleteDocument = useCallback((docId) => {
+        // 2. Persist to Backend Child Record
+        const child = kids.find(k => k.id === doc.childId);
+        if (child) {
+            const updatedDocs = [...(child.documents || []), newDoc];
+            try {
+                await userManagementAPI.updateChild(child.id, { documents: updatedDocs });
+                console.log('✅ Document saved to backend profile');
+            } catch (err) {
+                console.error('❌ Failed to persist document to backend:', err);
+            }
+        }
+        
+        return newDoc;
+    }, [kids]);
+
+    const deleteDocument = useCallback(async (docId) => {
+        // Find which child this doc belongs to
+        const docToDelete = childDocuments.find(d => d.id === docId);
+        
+        // 1. Update local state
         setChildDocuments(prev => prev.filter(d => d.id !== docId));
-    }, []);
+
+        // 2. Persist to Backend
+        if (docToDelete && docToDelete.childId) {
+            const child = kids.find(k => k.id === docToDelete.childId);
+            if (child) {
+                const updatedDocs = (child.documents || []).filter(d => d.id !== docId);
+                try {
+                    await userManagementAPI.updateChild(child.id, { documents: updatedDocs });
+                    console.log('✅ Document removed from backend profile');
+                } catch (err) {
+                    console.error('❌ Failed to remove document from backend:', err);
+                }
+            }
+        }
+    }, [childDocuments, kids]);
 
     // ============ Skill Score Actions ============
     const getChildSkillScores = useCallback((childId, limit = null) => {

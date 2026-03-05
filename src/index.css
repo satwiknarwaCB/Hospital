@@ -4,6 +4,7 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 @import './responsive.css';
+@import './audit_fixes.css';
 
 @layer base {
 

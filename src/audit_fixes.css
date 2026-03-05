@@ -1,0 +1,205 @@
+/* ============================================================
+   NeuroBridge™ - High Priority Audit Fixes (v9)
+   Force-fixing Header/Tablet layout misalignment
+   ============================================================ */
+
+/* ── Top-most Fixed Area (Header + TopBar) ── */
+header {
+    z-index: 9999 !important;
+}
+
+@media (max-width: 480px) {
+    header>div:first-child>div[class*="container"]>div:nth-child(2) {
+        display: none !important;
+    }
+
+    header a[href*="mailto"] {
+        display: none !important;
+    }
+
+    header>div:first-child {
+        height: 36px !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    header div[class*="items-center justify-between"] {
+        padding-top: 0.25rem !important;
+        padding-bottom: 0.25rem !important;
+        gap: 0.25rem !important;
+    }
+
+    header span[class*="font-bold"] {
+        font-size: 0.9rem !important;
+        margin: 0 !important;
+    }
+
+    header div[class*="bg-[#0284c7]"] {
+        padding: 0.3rem !important;
+    }
+
+    header svg {
+        height: 1.1rem !important;
+        width: 1.1rem !important;
+    }
+}
+
+/* ── Tablet Fixes (768px - 1024px) ── */
+@media (max-width: 1024px) {
+
+    /* FORCE header logo link to NOT expand to full width */
+    header a.flex.items-center,
+    header [class*="Logo"],
+    header a[href="/"],
+    [class*="Header"] a[href="/"] {
+        width: auto !important;
+        max-width: fit-content !important;
+        justify-content: flex-start !important;
+        display: flex !important;
+        flex: 0 0 auto !important;
+    }
+
+    /* Ensure title text stays with the icon */
+    header span[class*="NeuroBridge"] {
+        font-size: 1.15rem !important;
+        margin-left: 0.5rem !important;
+        display: inline-block !important;
+        width: auto !important;
+    }
+
+    /* Prevent the container from splitting children incorrectly */
+    header div[class*="container"]>div.flex {
+        justify-content: space-between !important;
+        width: 100% !important;
+    }
+}
+
+/* ── Hero Slider Header Collision Audit Fixes ── */
+@media (max-width: 480px) {
+    [class*="HeroSlider"] [class*="pt-28"] {
+        padding-top: 7.5rem !important;
+    }
+
+    [class*="HeroSlider"] [class*="max-w-[320px]"] {
+        max-width: 88% !important;
+        padding: 1rem !important;
+        margin: 0 auto !important;
+        transform: translateY(15px) !important;
+    }
+
+    [class*="HeroSlider"] h1 {
+        font-size: 1rem !important;
+        line-height: 1.2 !important;
+    }
+}
+
+/* ── Careers & Contact Page Header Collision Fix ── */
+@media (max-width: 640px) {
+
+    main>div[class*="pt-24"],
+    main>div[class*="pt-20"] {
+        padding-top: 10rem !important;
+    }
+
+    [class*="Careers"] h1,
+    [class*="Contact"] h1,
+    h1[class*="text-3xl md:text-5xl"] {
+        font-size: 1.6rem !important;
+        line-height: 1.2 !important;
+        margin-top: 0.5rem !important;
+    }
+
+    [class*="Careers"] [class*="inline-flex"],
+    [class*="Contact"] [class*="skew-x-12"],
+    [class*="Hero"] [class*="badge"] {
+        display: none !important;
+    }
+}
+
+/* ── Global Section Spacing Fixes ── */
+@media (max-width: 768px) {
+
+    .py-24,
+    [class*="py-24"] {
+        padding-top: 3.5rem !important;
+        padding-bottom: 3.5rem !important;
+    }
+
+    .gap-16,
+    [class*="gap-16"] {
+        gap: 2rem !important;
+    }
+
+    [class*="Landing"] [class*="h-[450px]"] {
+        height: 280px !important;
+        width: 100% !important;
+    }
+}
+
+/* ── Login Page Responsiveness ── */
+@media (max-width: 480px) {
+    [class*="Login"] [class*="p-8 md:p-12"] {
+        padding: 1.25rem !important;
+    }
+
+    [class*="Login"] h1 {
+        font-size: 1.25rem !important;
+    }
+}
+
+/* ── Global Safety Fix: Body Overflow ── */
+body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+}
+
+/* ── Fix: Show Social Media Icons on Mobile ── */
+@media (max-width: 480px) {
+
+    /* Give header a solid background so it sits above content clearly */
+    header {
+        background-color: #ffffff !important;
+        backdrop-filter: none !important;
+    }
+
+    /* Override fixed height on TopBar wrapper so it can grow for stacked rows */
+    header>div:first-child {
+        height: auto !important;
+        padding-top: 0.25rem !important;
+        padding-bottom: 0.25rem !important;
+    }
+
+    /* Override the rule that hides the social-icons container */
+    header>div:first-child>div[class*="container"]>div:nth-child(2) {
+        display: flex !important;
+        gap: 0.75rem !important;
+        justify-content: center !important;
+    }
+
+    /* Make the TopBar stack vertically so both rows fit */
+    header>div:first-child>div[class*="container"] {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 0.25rem !important;
+        padding-top: 0.35rem !important;
+        padding-bottom: 0.35rem !important;
+    }
+
+    /* Keep social icons compact and prevent oversized touch targets */
+    header>div:first-child>div[class*="container"]>div:nth-child(2) a {
+        min-height: auto !important;
+        padding: 0 !important;
+    }
+
+    header>div:first-child>div[class*="container"]>div:nth-child(2) svg {
+        height: 0.9rem !important;
+        width: 0.9rem !important;
+    }
+
+    /* Increase hero slider top padding to push below the taller header */
+    [class*="pt-28 md:pt-36"],
+    [class*="pt-28"] {
+        padding-top: 9rem !important;
+    }
+}

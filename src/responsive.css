@@ -409,3 +409,312 @@ img {
   max-width: 100%;
   height: auto;
 }
+
+/* ── Admin Portal Specific Responsive Overrides ── */
+
+/* Admin Dashboard Metrics Grid */
+@media (max-width: 1024px) {
+  [class*="grid-cols-1"][class*="sm:grid-cols-2"][class*="lg:grid-cols-5"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  [class*="grid-cols-1"][class*="sm:grid-cols-2"][class*="lg:grid-cols-5"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Admin Dashboard Directory Lists (Therapists/Parents cards) */
+@media (max-width: 1024px) {
+  [class*="grid-cols-1"][class*="lg:grid-cols-2"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Admin Operations Management Stats */
+@media (max-width: 768px) {
+  [class*="grid-cols-2"][class*="md:grid-cols-4"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 1rem !important;
+  }
+}
+
+/* Therapist Allocation Cards in Operations */
+@media (max-width: 768px) {
+  [class*="flex flex-col sm:flex-row"][class*="gap-4"][class*="p-5"] {
+    padding: 1rem !important;
+    gap: 1rem !important;
+  }
+
+  [class*="flex-1"][class*="max-w-none"][class*="sm:max-w-[180px]"] {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+
+/* Therapist Progress Overview - Clinical Control Deck */
+@media (max-width: 1024px) {
+  [class*="lg:sticky"][class*="lg:top-0"] {
+    position: relative !important;
+    top: auto !important;
+    margin-bottom: 1rem !important;
+  }
+
+  [class*="flex-col lg:flex-row"][class*="items-stretch"] {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+}
+
+/* Therapist Progress Cards (Expanded View) */
+@media (max-width: 768px) {
+  [class*="p-6 md:p-8"][class*="flex flex-col md:flex-row"] {
+    padding: 1.25rem !important;
+    gap: 1.25rem !important;
+  }
+
+  [class*="flex flex-col sm:flex-row sm:items-center"][class*="gap-6 md:gap-8"] {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+  }
+}
+
+/* Chart Container within Progress Cards */
+@media (max-width: 768px) {
+  [class*="grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  [class*="bg-white p-4 md:p-6 lg:p-8"][class*="xs:flex-row"] {
+    flex-direction: column !important;
+    gap: 2rem !important;
+  }
+}
+
+/* Child Progress Ledger Cards */
+@media (max-width: 768px) {
+  [class*="p-3 md:p-4 lg:p-5 flex flex-col sm:flex-row"] {
+    padding: 1rem !important;
+    gap: 1rem !important;
+  }
+
+  [class*="flex items-center justify-between sm:justify-end"] {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+}
+
+/* User Governance - Modal Forms */
+@media (max-width: 768px) {
+  [class*="p-6 md:p-10"] form [class*="grid-cols-1 md:grid-cols-2"] {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  /* Registration Form Inputs */
+  input,
+  select,
+  textarea {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Child Health Assessment Modal Fixes */
+@media (max-width: 768px) {
+
+  /* Header adjustments */
+  [class*="bg-neutral-50 px-8 py-6"] {
+    padding: 1.25rem !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+  }
+
+  [class*="flex items-center gap-2"] {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  /* Main content padding */
+  [class*="p-10 space-y-12"] {
+    padding: 1.5rem !important;
+    gap: 2rem !important;
+  }
+
+  /* Form spacing inside assessment */
+  [class*="grid-cols-1 md:grid-cols-3 gap-6"],
+  [class*="grid-cols-1 md:grid-cols-2 gap-6"] {
+    gap: 1.25rem !important;
+  }
+
+  /* Footer responsiveness */
+  [class*="p-8 bg-neutral-50"] {
+    padding: 1.25rem !important;
+    flex-direction: column-reverse !important;
+    width: 100% !important;
+  }
+
+  [class*="p-8 bg-neutral-50"] button,
+  [class*="p-8 bg-neutral-50"] [class*="Button"] {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+}
+
+/* ── Reports Page Specifics ── */
+@media (max-width: 768px) {
+
+  /* Report Stats Grid */
+  [class*="grid-cols-1 sm:grid-cols-3 gap-4"] {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+}
+
+/* ── Landing Page Refinements ── */
+@media (max-width: 640px) {
+
+  /* Fix fixed image heights */
+  [class*="h-[450px]"] {
+    height: 300px !important;
+  }
+
+  /* Reduce Hero Title Size */
+  h1[class*="text-xl md:text-2xl"] {
+    font-size: 1.25rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Adjust Hero Slider Padding */
+  [class*="pt-28 md:pt-36"] {
+    padding-top: 5rem !important;
+  }
+
+  [class*="p-8 md:p-16 lg:p-24"] {
+    padding: 1.5rem !important;
+  }
+
+  /* Final CTA Typography */
+  [class*="text-4xl md:text-6xl"] {
+    font-size: 1.75rem !important;
+    line-height: 1.25 !important;
+  }
+}
+
+/* ── Login Page Refinements ── */
+@media (max-width: 640px) {
+  [class*="max-w-2xl"][class*="bg-white"] {
+    border-radius: 1.5rem !important;
+  }
+
+  [class*="p-8 md:p-12"] {
+    padding: 1.5rem !important;
+  }
+
+  h1[class*="text-3xl"] {
+    font-size: 1.5rem !important;
+  }
+}
+
+/* ── Parent Portal Dashboard Fixes ── */
+@media (max-width: 768px) {
+
+  /* Quick Stats scaling */
+  [class*="text-3xl font-black"] {
+    font-size: 1.25rem !important;
+  }
+
+  /* Therapy Mastery SVG scaling */
+  [class*="h-20 w-20"][class*="mb-3"] {
+    height: 4rem !important;
+    width: 4rem !important;
+  }
+
+  /* Session Highights Padding */
+  [class*="p-5"] {
+    padding: 1.25rem !important;
+  }
+
+  /* Modal Paddings */
+  [class*="p-6"],
+  [class*="p-8"] {
+    padding: 1.25rem !important;
+  }
+}
+
+/* ── Therapist Portal Command Center ── */
+@media (max-width: 1024px) {
+
+  /* Force Stats grid into 2 columns on tablets */
+  [class*="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+
+  /* Force Stats grid into 1 column on mobile */
+  [class*="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Quick Action cards scaling */
+  [class*="h-10 w-10"][class*="text-primary-200"] {
+    height: 2rem !important;
+    width: 2rem !important;
+  }
+}
+
+/* ── General Component Adjustments ── */
+@media (max-width: 640px) {
+
+  /* Adjust Button heights for better mobile touch */
+  button[class*="h-14"],
+  [class*="Button"][class*="h-14"] {
+    height: 3.5rem !important;
+  }
+
+  /* Fix Chart Container responsive heights */
+  [class*="h-[160px]"],
+  [class*="h-[180px]"],
+  [class*="h-[200px]"] {
+    height: 150px !important;
+  }
+}
+
+/* Fix any horizontal scrolling containers */
+.flex-nowrap {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Ensure full width for containers on smallest screens */
+@media (max-width: 1280px) {
+
+  /* Reduce header spacing on smaller desktops/laptops to prevent overlap */
+  header [class*="gap-4 xl:gap-8"] {
+    gap: 1rem !important;
+  }
+
+  header [class*="gap-2 xl:gap-3"] {
+    gap: 0.5rem !important;
+  }
+
+  header button,
+  header [class*="Button"] {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    font-size: 0.75rem !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .px-4 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+}

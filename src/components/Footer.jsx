@@ -44,17 +44,20 @@ const Footer = () => {
                             Empowering neurodiverse families with data-driven therapy and compassionate care. Connecting progress with purpose.
                         </p>
                         <div className="flex items-center gap-4">
-                            {[Facebook, Twitter, Linkedin, Instagram].map((Icon, i) => (
+                            {[
+                                { Icon: Facebook, url: 'https://facebook.com' },
+                                { Icon: Twitter, url: 'https://twitter.com' },
+                                { Icon: Linkedin, url: 'https://linkedin.com' },
+                                { Icon: Instagram, url: 'https://instagram.com' },
+                            ].map((social, i) => (
                                 <a
                                     key={i}
-                                    href="#scroll-to-top"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                                    }}
+                                    href={social.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="p-3 bg-neutral-800 rounded-full hover:bg-[#0284c7] hover:text-white transition-all duration-300 hover:scale-110 shadow-lg shadow-black/20"
                                 >
-                                    <Icon className="h-5 w-5" />
+                                    <social.Icon className="h-5 w-5" />
                                 </a>
                             ))}
                         </div>
