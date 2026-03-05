@@ -69,7 +69,7 @@ const Footer = () => {
                         <ul className="space-y-4">
                             {footerLinks.company.map((link) => (
                                 <li key={link.name}>
-                                    <Link to={link.path} className="hover:text-primary-400 transition-colors flex items-center group">
+                                    <Link to={link.path} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-primary-400 transition-colors flex items-center group">
                                         <ArrowRight className="h-4 w-4 mr-2 opacity-0 -ml-6 group-hover:opacity-100 group-hover:ml-0 transition-all" />
                                         {link.name}
                                     </Link>
@@ -84,7 +84,7 @@ const Footer = () => {
                         <ul className="space-y-4">
                             {footerLinks.services.map((link) => (
                                 <li key={link.name}>
-                                    <Link to={link.path} className="hover:text-primary-400 transition-colors flex items-center group">
+                                    <Link to={link.path} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-primary-400 transition-colors flex items-center group">
                                         <ArrowRight className="h-4 w-4 mr-2 opacity-0 -ml-6 group-hover:opacity-100 group-hover:ml-0 transition-all" />
                                         {link.name}
                                     </Link>
@@ -131,9 +131,9 @@ const Footer = () => {
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-neutral-500">
                     <p>© {currentYear} NeuroBridge™ Clinical Services. All rights reserved.</p>
                     <div className="flex items-center gap-6">
-                        <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                        <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-                        <Link to="/cookies" className="hover:text-white transition-colors">Cookie Settings</Link>
+                        <Link to="/privacy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Privacy Policy</Link>
+                        <Link to="/terms" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Terms of Service</Link>
+                        <Link to="/cookies" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Cookie Settings</Link>
                     </div>
                 </div>
             </div>
