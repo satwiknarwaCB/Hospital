@@ -49,11 +49,11 @@ const Header = () => {
             />
 
             <header
-                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm' : 'bg-transparent'
+                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled || isMobileMenuOpen ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-white lg:bg-transparent'
                     }`}
             >
                 {!isScrolled && <TopBar />}
-                <div className={`container mx-auto px-4 md:px-6 lg:px-8 flex items-center justify-between transition-all duration-300 ${isScrolled ? 'py-2' : 'py-4'}`}>
+                <div className={`container mx-auto px-4 md:px-6 lg:px-8 flex items-center justify-between transition-all duration-300 ${isScrolled ? 'py-2' : 'py-3 lg:py-4'}`}>
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2 group">
                         <div className="p-2 bg-[#0284c7] rounded-lg group-hover:scale-110 transition-transform shadow-lg shadow-sky-100">
@@ -142,7 +142,7 @@ const Header = () => {
 
                     {/* Mobile Menu Toggle */}
                     <button
-                        className="lg:hidden p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg"
+                        className="lg:hidden p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
                         {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -151,8 +151,8 @@ const Header = () => {
 
                 {/* Mobile Menu */}
                 {isMobileMenuOpen && (
-                    <div className="lg:hidden absolute top-full left-0 right-0 bg-white border-t border-neutral-100 shadow-xl p-4 animate-in slide-in-from-top-4 duration-200">
-                        <nav className="flex flex-col gap-4">
+                    <div className="lg:hidden absolute top-full left-0 right-0 bg-white border-t border-neutral-100 shadow-2xl p-4 overflow-y-auto max-h-[calc(100dvh-80px)] animate-in slide-in-from-top-4 duration-200">
+                        <nav className="flex flex-col gap-4 pb-8">
                             {navLinks.slice(0, 2).map((link) => (
                                 <Link
                                     key={link.name}
@@ -214,7 +214,7 @@ const Header = () => {
                                     Join NeuroBridge™
                                 </Button>
                                 <Button
-                                    className="w-full"
+                                    className="w-full bg-[#0284c7] hover:bg-sky-700 text-white"
                                     onClick={() => {
                                         setIsMobileMenuOpen(false);
                                         setIsAppointmentModalOpen(true);

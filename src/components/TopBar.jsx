@@ -3,7 +3,7 @@ import { Phone, Mail, Instagram, Facebook, Twitter, Linkedin, Youtube } from 'lu
 
 const TopBar = () => {
     return (
-        <div className="bg-white text-slate-600 py-2.5 text-xs md:text-sm border-b border-slate-100">
+        <div className="hidden md:block bg-white text-slate-600 py-2.5 text-xs md:text-sm border-b border-slate-100">
             <div className="container mx-auto px-4 md:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-2">
                 <div className="flex items-center gap-4 md:gap-8">
                     <a href="tel:+919985333108" className="flex items-center gap-2.5 hover:text-[#0284c7] transition-colors group">

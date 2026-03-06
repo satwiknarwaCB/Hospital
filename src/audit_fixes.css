@@ -8,43 +8,6 @@ header {
     z-index: 9999 !important;
 }
 
-@media (max-width: 480px) {
-    header>div:first-child>div[class*="container"]>div:nth-child(2) {
-        display: none !important;
-    }
-
-    header a[href*="mailto"] {
-        display: none !important;
-    }
-
-    header>div:first-child {
-        height: 36px !important;
-        padding: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-    }
-
-    header div[class*="items-center justify-between"] {
-        padding-top: 0.25rem !important;
-        padding-bottom: 0.25rem !important;
-        gap: 0.25rem !important;
-    }
-
-    header span[class*="font-bold"] {
-        font-size: 0.9rem !important;
-        margin: 0 !important;
-    }
-
-    header div[class*="bg-[#0284c7]"] {
-        padding: 0.3rem !important;
-    }
-
-    header svg {
-        height: 1.1rem !important;
-        width: 1.1rem !important;
-    }
-}
-
 /* ── Tablet Fixes (768px - 1024px) ── */
 @media (max-width: 1024px) {
 
@@ -154,52 +117,3 @@ body {
     width: 100% !important;
 }
 
-/* ── Fix: Show Social Media Icons on Mobile ── */
-@media (max-width: 480px) {
-
-    /* Give header a solid background so it sits above content clearly */
-    header {
-        background-color: #ffffff !important;
-        backdrop-filter: none !important;
-    }
-
-    /* Override fixed height on TopBar wrapper so it can grow for stacked rows */
-    header>div:first-child {
-        height: auto !important;
-        padding-top: 0.25rem !important;
-        padding-bottom: 0.25rem !important;
-    }
-
-    /* Override the rule that hides the social-icons container */
-    header>div:first-child>div[class*="container"]>div:nth-child(2) {
-        display: flex !important;
-        gap: 0.75rem !important;
-        justify-content: center !important;
-    }
-
-    /* Make the TopBar stack vertically so both rows fit */
-    header>div:first-child>div[class*="container"] {
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 0.25rem !important;
-        padding-top: 0.35rem !important;
-        padding-bottom: 0.35rem !important;
-    }
-
-    /* Keep social icons compact and prevent oversized touch targets */
-    header>div:first-child>div[class*="container"]>div:nth-child(2) a {
-        min-height: auto !important;
-        padding: 0 !important;
-    }
-
-    header>div:first-child>div[class*="container"]>div:nth-child(2) svg {
-        height: 0.9rem !important;
-        width: 0.9rem !important;
-    }
-
-    /* Increase hero slider top padding to push below the taller header */
-    [class*="pt-28 md:pt-36"],
-    [class*="pt-28"] {
-        padding-top: 9rem !important;
-    }
-}
