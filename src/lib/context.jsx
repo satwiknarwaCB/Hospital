@@ -608,6 +608,8 @@ export const AppProvider = ({ children }) => {
                 cloudSessions = await sessionAPI.getByChild(currentUser.childId);
             } else if (currentUser.role === 'therapist') {
                 cloudSessions = await sessionAPI.getByTherapist(currentUser.id);
+            } else if (currentUser.role === 'admin') {
+                cloudSessions = await sessionAPI.listAll();
             }
 
             if (cloudSessions.length > 0) {
@@ -693,6 +695,21 @@ export const AppProvider = ({ children }) => {
                                 return Array.from(reviewMap.values());
                             });
                         }
+                    }
+                } else if (currentUser.role === 'admin') {
+                    const cloudReviews = await progressAPI.listAllReviews();
+                    if (cloudReviews.length > 0) {
+                        setPeriodicReviews(prev => {
+                            const reviewMap = new Map();
+                            cloudReviews.forEach(r => reviewMap.set(r.id || r._id, { ...r, id: r.id || r._id }));
+                            prev.forEach(r => {
+                                const rId = r.id || r._id;
+                                if (!reviewMap.has(rId)) {
+                                    reviewMap.set(rId, r);
+                                }
+                            });
+                            return Array.from(reviewMap.values());
+                        });
                     }
                 }
             } catch (err) {
@@ -873,6 +890,41 @@ export const AppProvider = ({ children }) => {
                         } catch (e) {
                             console.warn(`Failed to sync progress for child ${kid.id}`, e);
                         }
+                    }
+                } else if (currentUser.role === 'admin') {
+                    const [goals, progress] = await Promise.all([
+                        progressAPI.listAllGoals(),
+                        progressAPI.listAllProgress()
+                    ].map(p => p.catch(e => { console.warn('Admin sync partial fail:', e); return []; })));
+
+                    if (goals.length > 0) {
+                        setSkillGoals(prev => {
+                            const goalMap = new Map();
+                            prev.forEach(g => {
+                                const key = `${g.childId}-${g.skillName?.toLowerCase()}`;
+                                goalMap.set(key, g);
+                            });
+                            goals.forEach(g => {
+                                const key = `${g.childId || g.child_id}-${g.skillName?.toLowerCase()}`;
+                                goalMap.set(key, { ...g, id: g.id || g._id, childId: g.childId || g.child_id });
+                            });
+                            return Array.from(goalMap.values());
+                        });
+                    }
+
+                    if (progress.length > 0) {
+                        setSkillProgress(prev => {
+                            const progMap = new Map();
+                            prev.forEach(p => {
+                                const key = `${p.childId}-${p.skillName?.toLowerCase()}`;
+                                progMap.set(key, p);
+                            });
+                            progress.forEach(p => {
+                                const key = `${p.childId || p.child_id}-${p.skillName?.toLowerCase()}`;
+                                progMap.set(key, { ...p, id: p.id || p._id, childId: p.childId || p.child_id });
+                            });
+                            return Array.from(progMap.values());
+                        });
                     }
                 }
             } catch (err) {

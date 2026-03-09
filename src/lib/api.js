@@ -585,6 +585,15 @@ export const progressAPI = {
         }
     },
 
+    listAllGoals: async () => {
+        try {
+            const response = await apiClient.get('/api/progress/goals');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     updateGoal: async (goalId, updates) => {
         try {
             const response = await apiClient.put(`/api/progress/goals/${goalId}`, updates);
@@ -622,6 +631,15 @@ export const progressAPI = {
         }
     },
 
+    listAllProgress: async () => {
+        try {
+            const response = await apiClient.get('/api/progress/actual');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     updateProgress: async (progressId, updates) => {
         try {
             const response = await apiClient.put(`/api/progress/actual/${progressId}`, updates);
@@ -641,6 +659,15 @@ export const progressAPI = {
     },
 
     // === Periodic Reviews ===
+    listAllReviews: async () => {
+        try {
+            const response = await apiClient.get('/api/progress/reviews');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     getReviewsByChild: async (childId) => {
         try {
             const response = await apiClient.get(`/api/progress/reviews/child/${childId}`);

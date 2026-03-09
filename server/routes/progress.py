@@ -34,6 +34,15 @@ async def create_goal(goal: SkillGoalCreate, current_user: dict = Depends(get_cu
     
     return created_goal
 
+@router.get("", response_model=List[SkillGoalResponse])
+async def list_all_goals(current_user: dict = Depends(get_current_user)):
+    """List all goals for all children (Admin/Governance view)"""
+    db = db_manager.get_database()
+    goals = list(db.skill_goals.find().limit(500))
+    for goal in goals:
+        goal["_id"] = str(goal["_id"])
+    return goals
+
 @router.get("/goals/child/{child_id}", response_model=List[SkillGoalResponse])
 async def get_child_goals(child_id: str, current_user: dict = Depends(get_current_user)):
     """Get all goals for a specific child"""
@@ -115,6 +124,15 @@ async def create_progress(progress: SkillProgressCreate, current_user: dict = De
     
     return created_prog
 
+@router.get("", response_model=List[SkillProgressResponse])
+async def list_all_progress(current_user: dict = Depends(get_current_user)):
+    """List all progress records for all children (Admin/Governance view)"""
+    db = db_manager.get_database()
+    progress = list(db.skill_progress.find().limit(500))
+    for p in progress:
+        p["_id"] = str(p["_id"])
+    return progress
+
 @router.get("/actual/child/{child_id}", response_model=List[SkillProgressResponse])
 async def get_child_progress(child_id: str, current_user: dict = Depends(get_current_user)):
     """Get all progress records for a child"""
@@ -184,6 +202,15 @@ async def create_review(review: PeriodicReviewCreate, current_user: dict = Depen
         created_rev["_id"] = str(created_rev["_id"])
     
     return created_rev
+
+@router.get("", response_model=List[PeriodicReviewResponse])
+async def list_all_reviews(current_user: dict = Depends(get_current_user)):
+    """List all clinical reviews for all children (Admin dashboard)"""
+    db = db_manager.get_database()
+    reviews = list(db.periodic_reviews.find().sort("date", -1).limit(500))
+    for r in reviews:
+        r["_id"] = str(r["_id"])
+    return reviews
 
 @router.get("/reviews/child/{child_id}", response_model=List[PeriodicReviewResponse])
 async def get_child_reviews(child_id: str, current_user: dict = Depends(get_current_user)):

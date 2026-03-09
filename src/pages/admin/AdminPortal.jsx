@@ -624,7 +624,7 @@ const ReportsPage = () => {
             });
 
         const docReports = safeDocs
-            .filter(doc => doc.category === 'Clinical' || doc.category === 'Baseline')
+            .filter(doc => doc.category === 'Clinical')
             .map(doc => {
                 const child = safeKids.find(k => k.id === doc.childId);
                 const childName = child?.name || 'Unknown Child';
@@ -645,6 +645,7 @@ const ReportsPage = () => {
             });
 
         return [...sessionReports, ...docReports]
+            .filter(r => r.type?.toLowerCase() === 'clinical' || r.category?.toLowerCase() === 'clinical')
             .sort((a, b) => new Date(b.date) - new Date(a.date));
     }, [sessions, kids, childDocuments]);
 
