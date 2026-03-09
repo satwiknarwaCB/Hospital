@@ -142,12 +142,10 @@ const Login = () => {
                     <div className="max-w-md mx-auto">
                         <div className="text-center mb-10">
                             <h1 className="text-3xl font-bold text-neutral-800 mb-2">
-                                {isSignup ? 'Create Account' : 'Welcome Back'}
+                                Welcome Back
                             </h1>
                             <p className="text-neutral-500">
-                                {isSignup
-                                    ? 'Join NeuroBridge™ as a parent to track progress'
-                                    : 'Sign in to access your NeuroBridge™ portal'}
+                                Sign in to access your NeuroBridge™ portal
                             </p>
                         </div>
 
@@ -321,19 +319,7 @@ const Login = () => {
                             </form>
                         )}
 
-                        <div className="mt-8 text-center">
-                            <button
-                                onClick={() => {
-                                    setIsSignup(!isSignup);
-                                    setErrors({});
-                                    setApiError('');
-                                    setSignupSuccess('');
-                                }}
-                                className="text-primary-600 font-bold hover:underline"
-                            >
-                                {isSignup ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-                            </button>
-                        </div>
+
 
                         <div className="mt-10 text-center">
                             <p className="text-sm text-neutral-400 italic">
