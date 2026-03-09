@@ -6,21 +6,17 @@ import Footer from './components/Footer';
 import Landing from './pages/Landing';
 import About from './pages/About';
 import ParentPortal from './pages/parent/ParentPortal';
-import ParentLogin from './pages/parent/ParentLogin';
-import TherapistPortal from './pages/therapist/TherapistPortal';
-import TherapistLogin from './pages/therapist/TherapistLogin';
 import AdminPortal from './pages/admin/AdminPortal';
-import AdminLogin from './pages/admin/AdminLogin';
+import TherapistPortal from './pages/therapist/TherapistPortal';
 import Login from './pages/Login';
 import Contact from './pages/Contact';
-import DoctorLogin from './pages/doctor/DoctorLogin';
 import DoctorPortal from './pages/doctor/DoctorPortal';
 import ProtectedRoute from './components/ProtectedRoute';
 import ActivateAccount from './pages/ActivateAccount';
 import TherapyPage from './pages/services/TherapyPage';
 import Careers from './pages/Careers';
-import BookAppointmentModal from './components/BookAppointmentModal';
 import ScrollToTop from './components/ScrollToTop';
+import BookAppointment from './pages/BookAppointment';
 
 // Layout wrapper for public pages (Landing, About, Services)
 const PublicLayout = ({ children }) => {
@@ -55,6 +51,7 @@ function AppContent() {
             <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
             <Route path="/login" element={<Login />} />
             <Route path="/activate" element={<ActivateAccount />} />
+            <Route path="/book-appointment" element={<BookAppointment />} />
 
             {/* Admin Module */}
             <Route path="/admin/login" element={<Login />} />
@@ -112,7 +109,6 @@ function App() {
             <Router>
                 <ScrollToTop />
                 <AppContent />
-                <BookAppointmentModal />
             </Router>
         </AppProvider>
     );

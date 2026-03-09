@@ -15,7 +15,7 @@ import 'swiper/css/effect-fade';
 const HeroSlider = () => {
     const navigate = useNavigate();
 
-    const { setIsAppointmentModalOpen } = useApp();
+
 
     const slides = [
         {
@@ -111,7 +111,7 @@ const HeroSlider = () => {
                                         <div className="flex justify-center">
                                             <button
                                                 className="h-10 px-6 text-base font-semibold bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-lg shadow-lg shadow-[#0284c7]/20 transition-all duration-300 transform hover:scale-105 active:scale-95"
-                                                onClick={() => setIsAppointmentModalOpen(true)}
+                                                onClick={() => navigate('/book-appointment')}
                                             >
                                                 Book An Appointment
                                             </button>

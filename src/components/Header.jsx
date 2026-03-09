@@ -4,12 +4,11 @@ import { Activity, Menu, X, User, ChevronDown } from 'lucide-react';
 import { Button } from './ui/Button';
 import TopBar from './TopBar';
 
-import BookAppointmentModal from './BookAppointmentModal';
+
 
 import { useApp } from '../lib/context';
 
 const Header = () => {
-    const { isAppointmentModalOpen, setIsAppointmentModalOpen } = useApp();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isServicesOpen, setIsServicesOpen] = useState(false);
@@ -43,10 +42,7 @@ const Header = () => {
 
     return (
         <>
-            <BookAppointmentModal
-                isOpen={isAppointmentModalOpen}
-                onClose={() => setIsAppointmentModalOpen(false)}
-            />
+
 
             <header
                 className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled || isMobileMenuOpen ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-white lg:bg-transparent'
@@ -129,7 +125,7 @@ const Header = () => {
 
                         <Button
                             className="bg-[#0284c7] hover:bg-sky-700 text-white px-4 xl:px-6 shadow-xl shadow-sky-100"
-                            onClick={() => setIsAppointmentModalOpen(true)}
+                            onClick={() => navigate('/book-appointment')}
                         >
                             Book An Appointment
                         </Button>
@@ -204,7 +200,7 @@ const Header = () => {
                                     className="w-full bg-[#0284c7] hover:bg-sky-700 text-white"
                                     onClick={() => {
                                         setIsMobileMenuOpen(false);
-                                        setIsAppointmentModalOpen(true);
+                                        navigate('/book-appointment');
                                     }}
                                 >
                                     Book An Appointment

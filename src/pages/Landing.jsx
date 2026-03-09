@@ -8,7 +8,7 @@ import { useApp } from '../lib/context';
 
 const Landing = () => {
     const navigate = useNavigate();
-    const { login, setIsAppointmentModalOpen } = useApp();
+    const { login } = useApp();
     const [selectedRole, setSelectedRole] = useState(null);
 
     return (
@@ -284,18 +284,13 @@ const Landing = () => {
                         </p>
                         <div className="flex flex-col sm:flex-row justify-center gap-6 pt-6">
                             <button
-                                onClick={() => setIsAppointmentModalOpen(true)}
+                                onClick={() => navigate('/book-appointment')}
                                 className="h-16 px-10 text-xl font-bold bg-white text-[#0284c7] hover:bg-primary-50 rounded-2xl shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
                             >
                                 Book An Appointment
                                 <ArrowRight size={24} />
                             </button>
-                            <button
-                                onClick={() => navigate('/login', { state: { openSignup: true } })}
-                                className="h-16 px-10 text-xl font-bold bg-transparent border-2 border-white/30 text-white hover:bg-white/10 rounded-2xl transition-all duration-300 transform hover:scale-105 active:scale-95"
-                            >
-                                Create Account
-                            </button>
+
                         </div>
                     </div>
                 </div>

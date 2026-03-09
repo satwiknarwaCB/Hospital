@@ -101,7 +101,7 @@ export const AppProvider = ({ children }) => {
         const saved = localStorage.getItem('neurobridge_quick_test_progress');
         return saved ? JSON.parse(saved) : {};
     });
-    const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
+
 
     // Sync skill progress to localStorage and across tabs
     useEffect(() => {
@@ -174,7 +174,7 @@ export const AppProvider = ({ children }) => {
             setChildDocuments(prev => {
                 const prevIds = new Set(prev.map(d => d.id));
                 const newIds = new Set(allDocsFromKids.map(d => d.id));
-                
+
                 if (prev.length !== allDocsFromKids.length || allDocsFromKids.some(d => !prevIds.has(d.id))) {
                     console.log('🔄 Syncing Documents from Backend Caseload');
                     return allDocsFromKids;
@@ -1328,7 +1328,7 @@ export const AppProvider = ({ children }) => {
             id: doc.id || `doc-${Date.now()}`,
             date: doc.date || new Date().toISOString().split('T')[0]
         };
-        
+
         // 1. Update local state
         setChildDocuments(prev => [newDoc, ...prev]);
 
@@ -1343,14 +1343,14 @@ export const AppProvider = ({ children }) => {
                 console.error('❌ Failed to persist document to backend:', err);
             }
         }
-        
+
         return newDoc;
     }, [kids]);
 
     const deleteDocument = useCallback(async (docId) => {
         // Find which child this doc belongs to
         const docToDelete = childDocuments.find(d => d.id === docId);
-        
+
         // 1. Update local state
         setChildDocuments(prev => prev.filter(d => d.id !== docId));
 
@@ -2262,8 +2262,7 @@ export const AppProvider = ({ children }) => {
         communityUnreadCount,
         privateUnreadCount,
         setCommunityUnreadCount,
-        isAppointmentModalOpen,
-        setIsAppointmentModalOpen,
+
 
         // Auth Actions
         login,
@@ -2401,8 +2400,7 @@ export const AppProvider = ({ children }) => {
         periodicReviews, addPeriodicReview,
         roadmap, addRoadmapGoal,
         skillGoals, getChildGoals, updateSkillGoal, addSkillGoal, deleteSkillGoal, deleteSkillProgress,
-        childDocuments, addChild, realParents, realTherapists, deleteDocument,
-        isAppointmentModalOpen
+        childDocuments, addChild, realParents, realTherapists, deleteDocument
     ]);
 
     return (

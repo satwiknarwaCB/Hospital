@@ -112,3 +112,26 @@
   opacity: 0;
   transition: opacity 300ms;
 }
+
+/* Modal Specific Scrollbar */
+.custom-scrollbar-modal {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.custom-scrollbar-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar-modal::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 20px;
+}
+
+.custom-scrollbar-modal::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

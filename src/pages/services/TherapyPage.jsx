@@ -129,7 +129,6 @@ const therapyData = {
 const TherapyPage = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
-    const { setIsAppointmentModalOpen } = useApp();
 
     const therapy = therapyData[slug];
 
@@ -172,7 +171,7 @@ const TherapyPage = () => {
                             <p className="text-lg text-slate-600 leading-relaxed">{therapy.overview}</p>
                             <div className="flex flex-col sm:flex-row gap-4 pt-2">
                                 <button
-                                    onClick={() => setIsAppointmentModalOpen(true)}
+                                    onClick={() => navigate('/book-appointment')}
                                     className="h-14 px-8 text-base font-bold text-white rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
                                     style={{ backgroundColor: therapy.accent }}
                                 >
@@ -220,7 +219,7 @@ const TherapyPage = () => {
                                 <p className="text-lg text-slate-600 leading-relaxed">{therapy.whoIsItFor}</p>
                             </div>
                             <button
-                                onClick={() => setIsAppointmentModalOpen(true)}
+                                onClick={() => navigate('/book-appointment')}
                                 className="mt-6 h-14 px-8 text-base font-bold text-white rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center gap-2"
                                 style={{ backgroundColor: therapy.accent }}
                             >
@@ -269,7 +268,7 @@ const TherapyPage = () => {
                             Our expert clinical team is here to guide you every step of the way. Book a consultation today.
                         </p>
                         <button
-                            onClick={() => setIsAppointmentModalOpen(true)}
+                            onClick={() => navigate('/book-appointment')}
                             className="h-16 px-10 text-xl font-bold bg-white rounded-2xl shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 mx-auto"
                             style={{ color: therapy.accent }}
                         >

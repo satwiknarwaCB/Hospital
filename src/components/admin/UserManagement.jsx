@@ -28,7 +28,9 @@ import {
     Key,
     Image,
     Upload,
-    Clock
+    Clock,
+    Building2,
+    CalendarClock
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
@@ -79,6 +81,18 @@ const UserManagement = () => {
     const [editingUser, setEditingUser] = useState(null); // User being edited
     const [passwordResetModal, setPasswordResetModal] = useState(null); // { user, role }
     const [resetPasswordData, setResetPasswordData] = useState({ newPassword: '', confirmPassword: '' });
+
+    // Lock body scroll when any modal is open
+    useEffect(() => {
+        if (editingUser || passwordResetModal) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [editingUser, passwordResetModal]);
 
     const handleCreateChild = async (e) => {
         e.preventDefault();
@@ -1293,52 +1307,77 @@ const UserManagement = () => {
 
             {/* Password Reset Modal */}
             {passwordResetModal && (
-                <div className="fixed inset-0 bg-neutral-900/60 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-md animate-in fade-in duration-300">
-                    <Card className="w-full max-w-md shadow-2xl bg-white border-0 rounded-t-[2.5rem] sm:rounded-[2rem] overflow-hidden animate-in slide-in-from-bottom duration-500">
-                        <CardHeader className="bg-amber-50/50 border-b border-amber-100 p-6">
-                            <CardTitle className="text-xl font-black flex items-center gap-3 text-amber-900 uppercase tracking-tight">
-                                <Key className="h-5 w-5 text-amber-600" />
-                                Reset Access
-                            </CardTitle>
+                <div className="fixed inset-0 bg-neutral-900/60 z-[130] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-md animate-in fade-in duration-300">
+                    <Card className="w-full max-w-md shadow-2xl bg-white border-0 rounded-t-[2.5rem] sm:rounded-[2rem] overflow-hidden animate-in slide-in-from-bottom duration-500 flex flex-col">
+                        <CardHeader className="bg-white border-b border-neutral-100 p-6 shrink-0">
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-xl font-black flex items-center gap-3 text-amber-900 uppercase tracking-tight">
+                                    <div className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                                        <Key className="h-5 w-5 text-amber-600" />
+                                    </div>
+                                    Reset Access
+                                </CardTitle>
+                                <button onClick={() => setPasswordResetModal(null)} className="p-2 hover:bg-neutral-100 rounded-full transition-colors flex-shrink-0">
+                                    <XCircle className="h-6 w-6 text-neutral-300" />
+                                </button>
+                            </div>
                         </CardHeader>
-                        <CardContent className="p-6 space-y-6">
-                            <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
-                                <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest mb-1">Target Account</p>
+
+                        <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar-modal max-h-[60vh]">
+                            <div className="bg-amber-50/50 rounded-2xl p-4 border border-amber-100">
+                                <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                    <User className="h-3 w-3" />
+                                    Target Account
+                                </p>
                                 <p className="text-sm font-bold text-amber-900">{passwordResetModal.user.name}</p>
                                 <p className="text-[11px] text-amber-700">{passwordResetModal.user.email}</p>
                             </div>
 
-                            <form onSubmit={handleResetPassword} className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">New Secure Password</label>
+                            <form onSubmit={handleResetPassword} id="reset-password-form" className="space-y-6">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                        <Lock className="h-3 w-3 text-amber-400" />
+                                        New Secure Password
+                                    </label>
                                     <input
                                         type="password"
                                         value={resetPasswordData.newPassword}
                                         onChange={(e) => setResetPasswordData({ ...resetPasswordData, newPassword: e.target.value })}
                                         required
-                                        className="w-full px-4 py-3 bg-neutral-100 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm"
+                                        className="w-full px-5 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-amber-500 outline-none font-bold text-sm transition-all hover:bg-white"
                                         placeholder="Min 8 characters"
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Confirm Password</label>
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                        <Shield className="h-3 w-3 text-amber-400" />
+                                        Confirm Identity
+                                    </label>
                                     <input
                                         type="password"
                                         value={resetPasswordData.confirmPassword}
                                         onChange={(e) => setResetPasswordData({ ...resetPasswordData, confirmPassword: e.target.value })}
                                         required
-                                        className="w-full px-4 py-3 bg-neutral-100 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm"
+                                        className="w-full px-5 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-amber-500 outline-none font-bold text-sm transition-all hover:bg-white"
                                         placeholder="Repeat password"
                                     />
                                 </div>
-                                <div className="flex gap-3 pt-4">
-                                    <Button type="button" variant="ghost" className="flex-1" onClick={() => setPasswordResetModal(null)}>Cancel</Button>
-                                    <Button type="submit" disabled={isLoading} className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-black text-[10px] uppercase tracking-widest h-11">
-                                        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Override Password'}
-                                    </Button>
-                                </div>
                             </form>
-                        </CardContent>
+                        </div>
+
+                        <div className="p-6 border-t border-neutral-100 bg-neutral-50/50 flex flex-col sm:flex-row justify-end gap-3 shrink-0">
+                            <Button type="button" variant="ghost" className="px-8 font-black text-[10px] uppercase tracking-widest h-12 rounded-xl" onClick={() => setPasswordResetModal(null)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                form="reset-password-form"
+                                disabled={isLoading}
+                                className="bg-amber-600 hover:bg-amber-700 text-white font-black text-[10px] uppercase tracking-widest px-10 h-12 shadow-xl shadow-amber-50 rounded-xl"
+                            >
+                                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Override Password'}
+                            </Button>
+                        </div>
                     </Card>
                 </div>
             )}
@@ -1346,42 +1385,51 @@ const UserManagement = () => {
             {/* Edit User Modal */}
             {editingUser && (
                 <div className="fixed inset-0 bg-neutral-900/60 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-md animate-in fade-in duration-300">
-                    <Card className="w-full max-w-2xl shadow-2xl bg-white border-0 rounded-t-[2.5rem] sm:rounded-[2rem] overflow-hidden animate-in slide-in-from-bottom duration-500 overflow-y-auto max-h-[90vh]">
-                        <CardHeader className="bg-primary-50/50 border-b border-primary-100 p-6 sticky top-0 bg-white z-10">
+                    <Card className="w-full max-w-2xl shadow-2xl bg-white border-0 rounded-t-[2.5rem] sm:rounded-[2rem] overflow-hidden animate-in slide-in-from-bottom duration-500 flex flex-col max-h-[95vh] sm:max-h-[90vh]">
+                        <CardHeader className="bg-white border-b border-neutral-100 p-6 shrink-0 relative z-20">
                             <div className="flex items-center justify-between">
                                 <CardTitle className="text-xl font-black flex items-center gap-3 text-primary-900 uppercase tracking-tight">
-                                    <Edit className="h-5 w-5 text-primary-600" />
-                                    Edit {activeTab.slice(0, -1)} Registry
+                                    <div className="h-10 w-10 rounded-xl bg-primary-50 flex items-center justify-center">
+                                        <Edit className="h-5 w-5 text-primary-600" />
+                                    </div>
+                                    Edit {activeTab.slice(0, -1)} Record
                                 </CardTitle>
-                                <button onClick={() => setEditingUser(null)} className="p-2 hover:bg-primary-100 rounded-full transition-colors">
-                                    <XCircle className="h-5 w-5 text-neutral-400" />
+                                <button onClick={() => setEditingUser(null)} className="p-2 hover:bg-neutral-100 rounded-full transition-colors flex-shrink-0">
+                                    <XCircle className="h-6 w-6 text-neutral-300" />
                                 </button>
                             </div>
                         </CardHeader>
-                        <CardContent className="p-6 md:p-8">
-                            <form onSubmit={handleUpdateUser} className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <div className="flex-1 overflow-y-auto custom-scrollbar-modal p-6 md:p-10">
+                            <form onSubmit={handleUpdateUser} id="update-user-form" className="space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                     {/* Common Fields */}
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Full Name</label>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                            <Fingerprint className="h-3 w-3 text-primary-400" />
+                                            Full Name
+                                        </label>
                                         <input
                                             type="text"
                                             value={editingUser.name}
                                             onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
                                             required
-                                            className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm"
+                                            className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm transition-all hover:bg-white"
                                         />
                                     </div>
 
                                     {activeTab !== 'children' && (
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Email Registry</label>
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                <Mail className="h-3 w-3 text-primary-400" />
+                                                Email Registry
+                                            </label>
                                             <input
                                                 type="email"
                                                 value={editingUser.email}
                                                 onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
                                                 required
-                                                className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm"
+                                                className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm transition-all hover:bg-white"
                                             />
                                         </div>
                                     )}
@@ -1389,13 +1437,16 @@ const UserManagement = () => {
                                     {/* Role Specific Fields */}
                                     {activeTab === 'therapists' && (
                                         <>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Specialization</label>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                    <Activity className="h-3 w-3 text-primary-400" />
+                                                    Specialization
+                                                </label>
                                                 <div className="relative">
                                                     <select
                                                         value={editingUser.specialization}
                                                         onChange={(e) => setEditingUser({ ...editingUser, specialization: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl appearance-none font-bold text-sm outline-none cursor-pointer"
+                                                        className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl appearance-none font-bold text-sm outline-none cursor-pointer transition-all hover:bg-white"
                                                     >
                                                         <option>Speech Therapy</option>
                                                         <option>Occupational Therapy</option>
@@ -1403,7 +1454,7 @@ const UserManagement = () => {
                                                         <option>Behavioral Therapy</option>
                                                         <option>+ Add Custom</option>
                                                     </select>
-                                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+                                                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
                                                 </div>
                                                 {editingUser.specialization === '+ Add Custom' && (
                                                     <input
@@ -1412,40 +1463,49 @@ const UserManagement = () => {
                                                         onChange={(e) => setEditingUser({ ...editingUser, customSpecialization: e.target.value })}
                                                         required
                                                         placeholder="Enter Specialization"
-                                                        className="w-full mt-2 px-4 py-3 bg-white border border-primary-200 rounded-xl outline-none font-bold text-sm"
+                                                        className="w-full mt-2 px-5 py-4 bg-white border-2 border-primary-100 rounded-2xl outline-none font-bold text-sm"
                                                     />
                                                 )}
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Experience (Years)</label>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                    <Clock className="h-3 w-3 text-primary-400" />
+                                                    Experience (Years)
+                                                </label>
                                                 <input
                                                     type="number"
                                                     value={editingUser.experience_years}
                                                     onChange={(e) => setEditingUser({ ...editingUser, experience_years: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                    className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl outline-none font-bold text-sm transition-all hover:bg-white"
                                                 />
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Professional Qualification</label>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                    <Briefcase className="h-3 w-3 text-primary-400" />
+                                                    Qualification
+                                                </label>
                                                 <input
                                                     type="text"
                                                     value={editingUser.qualification}
                                                     onChange={(e) => setEditingUser({ ...editingUser, qualification: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                    className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl outline-none font-bold text-sm transition-all hover:bg-white"
                                                     placeholder="e.g. BPT, MPT, Psychology"
                                                 />
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Profile Photo</label>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                    <Image className="h-3 w-3 text-primary-400" />
+                                                    Profile Photo
+                                                </label>
                                                 <div className="flex items-center gap-4">
                                                     {editingUser.profile_photo && (
-                                                        <div className="h-12 w-12 rounded-xl border border-neutral-200 overflow-hidden bg-neutral-100 flex-shrink-0">
+                                                        <div className="h-14 w-14 rounded-2xl border-2 border-primary-100 overflow-hidden bg-neutral-100 flex-shrink-0 shadow-sm">
                                                             <img src={editingUser.profile_photo} alt="Preview" className="w-full h-full object-cover" />
                                                         </div>
                                                     )}
-                                                    <label className="flex-1 flex items-center justify-center gap-2 h-[46px] bg-neutral-50 border border-neutral-200 border-dashed rounded-xl hover:bg-neutral-100 hover:border-primary-300 transition-all cursor-pointer group">
-                                                        <Upload className="h-4 w-4 text-neutral-400 group-hover:text-primary-500" />
-                                                        <span className="text-xs font-bold text-neutral-600 group-hover:text-primary-600 uppercase tracking-tight">
+                                                    <label className="flex-1 flex items-center justify-center gap-3 px-5 py-4 bg-neutral-50/50 border-2 border-neutral-200 border-dashed rounded-2xl hover:bg-white hover:border-primary-400 hover:shadow-md transition-all cursor-pointer group">
+                                                        <Upload className="h-4 w-4 text-neutral-400 group-hover:text-primary-600" />
+                                                        <span className="text-[10px] font-black text-neutral-600 group-hover:text-primary-700 uppercase tracking-widest">
                                                             Choose Image
                                                         </span>
                                                         <input
@@ -1457,22 +1517,30 @@ const UserManagement = () => {
                                                     </label>
                                                 </div>
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Contact Phone</label>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                    <Phone className="h-3 w-3 text-primary-400" />
+                                                    Contact Phone
+                                                </label>
                                                 <input
                                                     type="tel"
                                                     value={editingUser.phone}
                                                     onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                    className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl outline-none font-bold text-sm transition-all hover:bg-white"
+                                                    placeholder="+91 XXXXX XXXXX"
                                                 />
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">License Registry</label>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                    <Fingerprint className="h-3 w-3 text-primary-400" />
+                                                    License Number
+                                                </label>
                                                 <input
                                                     type="text"
                                                     value={editingUser.license_number}
                                                     onChange={(e) => setEditingUser({ ...editingUser, license_number: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                    className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl outline-none font-bold text-sm transition-all hover:bg-white"
+                                                    placeholder="Registry ID"
                                                 />
                                             </div>
                                         </>
@@ -1480,37 +1548,48 @@ const UserManagement = () => {
 
                                     {activeTab === 'parents' && (
                                         <>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Relationship</label>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                    <Heart className="h-3 w-3 text-pink-400" />
+                                                    Relationship
+                                                </label>
                                                 <div className="relative">
                                                     <select
                                                         value={editingUser.relationship}
                                                         onChange={(e) => setEditingUser({ ...editingUser, relationship: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl appearance-none font-bold text-sm outline-none cursor-pointer"
+                                                        className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl appearance-none font-bold text-sm outline-none cursor-pointer transition-all hover:bg-white"
                                                     >
                                                         <option>Mother</option>
                                                         <option>Father</option>
                                                         <option>Guardian</option>
                                                     </select>
-                                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+                                                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
                                                 </div>
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Contact Phone</label>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                    <Phone className="h-3 w-3 text-pink-400" />
+                                                    Contact Phone
+                                                </label>
                                                 <input
                                                     type="tel"
                                                     value={editingUser.phone}
                                                     onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                    className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl outline-none font-bold text-sm transition-all hover:bg-white"
+                                                    placeholder="+91 XXXXX XXXXX"
                                                 />
                                             </div>
-                                            <div className="col-span-full space-y-2">
-                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Residential Address</label>
+                                            <div className="col-span-full space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                    <MapPin className="h-3 w-3 text-pink-400" />
+                                                    Residential Address
+                                                </label>
                                                 <textarea
                                                     value={editingUser.address}
                                                     onChange={(e) => setEditingUser({ ...editingUser, address: e.target.value })}
                                                     rows={3}
-                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                    className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl outline-none font-bold text-sm transition-all hover:bg-white resize-none"
+                                                    placeholder="Street, City, Zip Code"
                                                 />
                                             </div>
                                         </>
@@ -1518,36 +1597,45 @@ const UserManagement = () => {
 
                                     {activeTab === 'children' && (
                                         <>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Child Age</label>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                    <Activity className="h-3 w-3 text-emerald-400" />
+                                                    Child Age
+                                                </label>
                                                 <input
                                                     type="number"
                                                     value={editingUser.age}
                                                     onChange={(e) => setEditingUser({ ...editingUser, age: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                    className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl outline-none font-bold text-sm transition-all hover:bg-white"
                                                 />
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Gender Identity</label>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                    <Users className="h-3 w-3 text-emerald-400" />
+                                                    Gender Identity
+                                                </label>
                                                 <div className="relative">
                                                     <select
                                                         value={editingUser.gender}
                                                         onChange={(e) => setEditingUser({ ...editingUser, gender: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl appearance-none font-bold text-sm outline-none cursor-pointer"
+                                                        className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl appearance-none font-bold text-sm outline-none cursor-pointer transition-all hover:bg-white"
                                                     >
                                                         <option>Male</option>
                                                         <option>Female</option>
                                                     </select>
-                                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+                                                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
                                                 </div>
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Medical Condition</label>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                    <Activity className="h-3 w-3 text-emerald-400" />
+                                                    Clinical Condition
+                                                </label>
                                                 <div className="relative">
                                                     <select
                                                         value={editingUser.condition}
                                                         onChange={(e) => setEditingUser({ ...editingUser, condition: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl appearance-none font-bold text-sm outline-none cursor-pointer"
+                                                        className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl appearance-none font-bold text-sm outline-none cursor-pointer transition-all hover:bg-white"
                                                     >
                                                         <option>Autism</option>
                                                         <option>ADHD</option>
@@ -1555,7 +1643,7 @@ const UserManagement = () => {
                                                         <option>Developmental Delay</option>
                                                         <option>+ Add Custom</option>
                                                     </select>
-                                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+                                                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
                                                 </div>
                                                 {editingUser.condition === '+ Add Custom' && (
                                                     <input
@@ -1564,35 +1652,45 @@ const UserManagement = () => {
                                                         onChange={(e) => setEditingUser({ ...editingUser, customCondition: e.target.value })}
                                                         required
                                                         placeholder="Specify Condition"
-                                                        className="w-full mt-2 px-4 py-3 bg-white border border-primary-200 rounded-xl outline-none font-bold text-sm"
+                                                        className="w-full mt-2 px-5 py-4 bg-white border border-primary-100 rounded-2xl outline-none font-bold text-sm"
                                                     />
                                                 )}
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">School Affiliation</label>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                    <Building2 className="h-3 w-3 text-emerald-400" />
+                                                    School Affiliation
+                                                </label>
                                                 <input
                                                     type="text"
                                                     value={editingUser.school_name}
                                                     onChange={(e) => setEditingUser({ ...editingUser, school_name: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl outline-none font-bold text-sm"
+                                                    className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl outline-none font-bold text-sm transition-all hover:bg-white"
+                                                    placeholder="School Name"
                                                 />
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Therapy Start Date</label>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                    <CalendarClock className="h-3 w-3 text-emerald-400" />
+                                                    Start Date
+                                                </label>
                                                 <input
                                                     type="date"
                                                     value={editingUser.therapy_start_date}
                                                     onChange={(e) => setEditingUser({ ...editingUser, therapy_start_date: e.target.value })}
-                                                    className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm cursor-pointer"
+                                                    className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none font-bold text-sm cursor-pointer transition-all hover:bg-white"
                                                 />
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Therapy Type</label>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                                                    <Activity className="h-3 w-3 text-emerald-400" />
+                                                    Primary Therapy
+                                                </label>
                                                 <div className="relative">
                                                     <select
                                                         value={editingUser.therapy_type}
                                                         onChange={(e) => setEditingUser({ ...editingUser, therapy_type: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl appearance-none font-bold text-sm outline-none cursor-pointer"
+                                                        className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-2xl appearance-none font-bold text-sm outline-none cursor-pointer transition-all hover:bg-white"
                                                     >
                                                         <option>Speech Therapy</option>
                                                         <option>Occupational Therapy</option>
@@ -1601,21 +1699,28 @@ const UserManagement = () => {
                                                         <option>Social Skills</option>
                                                         <option>Sensory Integration</option>
                                                     </select>
-                                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+                                                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
                                                 </div>
                                             </div>
                                         </>
                                     )}
                                 </div>
-
-                                <div className="flex justify-end gap-3 pt-6 border-t border-neutral-100 sticky bottom-0 bg-white">
-                                    <Button type="button" variant="ghost" className="px-8" onClick={() => setEditingUser(null)}>Dismiss</Button>
-                                    <Button type="submit" disabled={isLoading} className="bg-primary-600 hover:bg-primary-700 text-white font-black text-[10px] uppercase tracking-widest px-10 h-12 shadow-xl shadow-primary-50">
-                                        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Commit Changes'}
-                                    </Button>
-                                </div>
                             </form>
-                        </CardContent>
+                        </div>
+
+                        <div className="p-6 border-t border-neutral-100 bg-neutral-50/50 flex flex-col sm:flex-row justify-end gap-3 shrink-0">
+                            <Button type="button" variant="ghost" className="px-8 font-black text-[10px] uppercase tracking-widest h-12 rounded-xl" onClick={() => setEditingUser(null)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                form="update-user-form"
+                                disabled={isLoading}
+                                className="bg-primary-600 hover:bg-primary-700 text-white font-black text-[10px] uppercase tracking-widest px-10 h-12 shadow-xl shadow-primary-50 rounded-xl"
+                            >
+                                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Commit Changes'}
+                            </Button>
+                        </div>
                     </Card>
                 </div>
             )}
