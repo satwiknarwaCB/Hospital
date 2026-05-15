@@ -478,7 +478,7 @@ const UserManagement = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
                 <div>
-                    <h2 className="text-2xl md:text-3xl font-black text-neutral-900 uppercase tracking-tight">User Governance</h2>
+                    <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">User Governance</h2>
                     <p className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] mt-1">Personnel & Family Access Control</p>
                 </div>
                 <div className="flex items-center gap-3 w-full md:w-auto">

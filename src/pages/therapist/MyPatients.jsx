@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - My Children Module
+//  - My Children Module
 // Therapist Console - Child Caseload Management
 // ============================================================
 
@@ -666,7 +666,7 @@ const AddChildModal = ({ onClose, onAdd }) => {
                 <div className="p-8">
                     <div className="flex items-center justify-between mb-8">
                         <div>
-                            <h2 className="text-2xl font-black text-neutral-800 tracking-tight">Add New Child</h2>
+                            <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">Add New Child</h2>
                             <p className="text-neutral-500 text-xs font-bold uppercase tracking-widest mt-1">Onboarding Clinical Profile</p>
                         </div>
                         <button onClick={onClose} className="p-2 hover:bg-neutral-100 rounded-full transition-colors">
@@ -806,7 +806,7 @@ const MyChildren = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-neutral-800">My Children</h2>
+                    <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">My Children</h2>
                     <p className="text-neutral-500">Manage your caseload of {myChildren.length} children</p>
                 </div>
                 <Button onClick={() => setShowAddModal(true)}>

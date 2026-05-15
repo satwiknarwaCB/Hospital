@@ -80,7 +80,7 @@ def ensure_demo_users():
 
     # --- 3. ENSURE ADMIN ---
     admins = [
-        {"name": "Director Anjali Sharma", "email": "anjali.sharma@neurobridge.com", "password": "Admin@123"}
+        {"name": "Director Anjali Sharma", "email": "anjali.sharma@.com", "password": "Admin@123"}
     ]
 
     for a in admins:

@@ -35,7 +35,7 @@ def create_therapists():
         {
             "_id": "dr_rajesh_001",
             "name": "Dr. Rajesh Kumar",
-            "email": "dr.rajesh@neurobridge.com",
+            "email": "dr.rajesh@.com",
             "hashed_password": hash_password("therapist123"),
             "specialization": "Speech & Language Therapy",
             "experience_years": 12,
@@ -49,7 +49,7 @@ def create_therapists():
         {
             "_id": "dr_meera_002",
             "name": "Dr. Meera Singh",
-            "email": "dr.meera@neurobridge.com",
+            "email": "dr.meera@.com",
             "hashed_password": hash_password("therapist123"),
             "specialization": "Occupational Therapy",
             "experience_years": 8,
@@ -88,12 +88,12 @@ def create_therapists():
     print("THERAPIST LOGIN CREDENTIALS")
     print("="*60)
     print("\nDr. Rajesh Kumar:")
-    print(f"  Email: dr.rajesh@neurobridge.com")
+    print(f"  Email: dr.rajesh@.com")
     print(f"  Password: therapist123")
     print(f"  Specialization: Speech & Language Therapy")
     
     print("\nDr. Meera Singh:")
-    print(f"  Email: dr.meera@neurobridge.com")
+    print(f"  Email: dr.meera@.com")
     print(f"  Password: therapist123")
     print(f"  Specialization: Occupational Therapy")
     print("="*60 + "\n")

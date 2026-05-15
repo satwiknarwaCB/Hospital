@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Application Context & State Management
+//  - Application Context & State Management
 // Production-Ready Global State Provider
 // ============================================================
 
@@ -30,7 +30,7 @@ export const AppProvider = ({ children }) => {
     const [users] = useState(USERS);
     const [realChildren, setRealChildren] = useState([]);
     const [kids, setKids] = useState(() => {
-        const saved = localStorage.getItem('neurobridge_kids');
+        const saved = localStorage.getItem('_kids');
         if (saved) {
             try {
                 return JSON.parse(saved);
@@ -43,11 +43,11 @@ export const AppProvider = ({ children }) => {
     const [sessions, setSessions] = useState([]);
     const [skillScores, setSkillScores] = useState([]);
     const [roadmap, setRoadmap] = useState(() => {
-        const saved = localStorage.getItem('neurobridge_roadmap');
+        const saved = localStorage.getItem('_roadmap');
         return saved ? JSON.parse(saved) : [];
     });
     const [homeActivities, setHomeActivities] = useState(() => {
-        const saved = localStorage.getItem('neurobridge_home_activities');
+        const saved = localStorage.getItem('_home_activities');
         if (saved) {
             try {
                 return JSON.parse(saved);
@@ -78,15 +78,15 @@ export const AppProvider = ({ children }) => {
         pending_assignments: 0
     });
     const [skillProgress, setSkillProgress] = useState(() => {
-        const saved = localStorage.getItem('neurobridge_skill_progress');
+        const saved = localStorage.getItem('_skill_progress');
         return saved ? JSON.parse(saved) : [];
     });
     const [skillGoals, setSkillGoals] = useState(() => {
-        const saved = localStorage.getItem('neurobridge_skill_goals');
+        const saved = localStorage.getItem('_skill_goals');
         return saved ? JSON.parse(saved) : [];
     });
     const [childDocuments, setChildDocuments] = useState(() => {
-        const saved = localStorage.getItem('neurobridge_documents');
+        const saved = localStorage.getItem('_documents');
         return saved ? JSON.parse(saved) : [];
     });
     const [communityUnreadCount, setCommunityUnreadCount] = useState(0);
@@ -94,42 +94,42 @@ export const AppProvider = ({ children }) => {
     const notifiedMessageIds = useRef(new Set());
     const isMigratingRoadmap = useRef(false);
     const [quickTestResults, setQuickTestResults] = useState(() => {
-        const saved = localStorage.getItem('neurobridge_quick_test_results');
+        const saved = localStorage.getItem('_quick_test_results');
         return saved ? JSON.parse(saved) : [];
     });
     const [quickTestProgress, setQuickTestProgress] = useState(() => {
-        const saved = localStorage.getItem('neurobridge_quick_test_progress');
+        const saved = localStorage.getItem('_quick_test_progress');
         return saved ? JSON.parse(saved) : {};
     });
 
 
     // Sync skill progress to localStorage and across tabs
     useEffect(() => {
-        localStorage.setItem('neurobridge_skill_progress', JSON.stringify(skillProgress));
+        localStorage.setItem('_skill_progress', JSON.stringify(skillProgress));
     }, [skillProgress]);
 
     useEffect(() => {
-        localStorage.setItem('neurobridge_kids', JSON.stringify(kids));
+        localStorage.setItem('_kids', JSON.stringify(kids));
     }, [kids]);
 
     useEffect(() => {
-        localStorage.setItem('neurobridge_skill_goals', JSON.stringify(skillGoals));
+        localStorage.setItem('_skill_goals', JSON.stringify(skillGoals));
     }, [skillGoals]);
 
     useEffect(() => {
-        localStorage.setItem('neurobridge_documents', JSON.stringify(childDocuments));
+        localStorage.setItem('_documents', JSON.stringify(childDocuments));
     }, [childDocuments]);
 
     useEffect(() => {
-        localStorage.setItem('neurobridge_quick_test_results', JSON.stringify(quickTestResults));
+        localStorage.setItem('_quick_test_results', JSON.stringify(quickTestResults));
     }, [quickTestResults]);
 
     useEffect(() => {
-        localStorage.setItem('neurobridge_quick_test_progress', JSON.stringify(quickTestProgress));
+        localStorage.setItem('_quick_test_progress', JSON.stringify(quickTestProgress));
     }, [quickTestProgress]);
 
     useEffect(() => {
-        localStorage.setItem('neurobridge_home_activities', JSON.stringify(homeActivities));
+        localStorage.setItem('_home_activities', JSON.stringify(homeActivities));
     }, [homeActivities]);
 
     useEffect(() => {
@@ -185,13 +185,13 @@ export const AppProvider = ({ children }) => {
     }, [kids]);
 
     useEffect(() => {
-        localStorage.setItem('neurobridge_roadmap', JSON.stringify(roadmap));
+        localStorage.setItem('_roadmap', JSON.stringify(roadmap));
     }, [roadmap]);
 
 
     useEffect(() => {
         const handleStorage = (e) => {
-            if (e.key === 'neurobridge_skill_progress' && e.newValue) {
+            if (e.key === '_skill_progress' && e.newValue) {
                 try {
                     setSkillProgress(JSON.parse(e.newValue));
                 } catch (err) {
@@ -201,7 +201,7 @@ export const AppProvider = ({ children }) => {
         };
 
         const handleGoalsStorage = (e) => {
-            if (e.key === 'neurobridge_skill_goals' && e.newValue) {
+            if (e.key === '_skill_goals' && e.newValue) {
                 try {
                     setSkillGoals(JSON.parse(e.newValue));
                 } catch (err) {
@@ -211,7 +211,7 @@ export const AppProvider = ({ children }) => {
         };
 
         const handleRoadmapStorage = (e) => {
-            if (e.key === 'neurobridge_roadmap' && e.newValue) {
+            if (e.key === '_roadmap' && e.newValue) {
                 try {
                     setRoadmap(JSON.parse(e.newValue));
                 } catch (err) {

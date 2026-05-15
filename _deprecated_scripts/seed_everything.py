@@ -18,7 +18,7 @@ def seed_everything():
         print("No doctors found. Please run restore_test_users.py first.")
         return
 
-    therapist = next((d for d in doctors if d['email'] == 'dr.rajesh@neurobridge.com'), doctors[0])
+    therapist = next((d for d in doctors if d['email'] == 'dr.rajesh@.com'), doctors[0])
     therapist_id = str(therapist['_id'])
     
     community = db['communities'].find_one({"name": "Parent Support Community"})

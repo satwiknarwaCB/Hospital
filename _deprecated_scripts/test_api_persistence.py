@@ -7,7 +7,7 @@ BASE_URL = "http://127.0.0.1:8000"
 def test_admin_flow():
     # 1. Login
     login_data = {
-        "email": "anjali.sharma@neurobridge.com",
+        "email": "anjali.sharma@.com",
         "password": "Admin@123"
     }
     print(f"Logging in to {BASE_URL}/api/admin/login...")
@@ -27,7 +27,7 @@ def test_admin_flow():
     # 2. Create Therapist
     therapist_data = {
         "name": "Dr. Persistence Test",
-        "email": f"test_{int(time.time())}@neurobridge.com",
+        "email": f"test_{int(time.time())}@.com",
         "password": "Therapist@123",
         "specialization": "Speech Therapy",
         "experience_years": 8,

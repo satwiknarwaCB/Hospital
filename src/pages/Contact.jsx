@@ -38,7 +38,7 @@ const Contact = () => {
         {
             icon: Phone,
             title: 'Call Us',
-            details: '+91 9985333108',
+            details: '+91 9876543210',
             sub: 'Mon-Fri from 8am to 6pm',
             color: 'text-blue-600',
             bg: 'bg-blue-50'
@@ -46,7 +46,7 @@ const Contact = () => {
         {
             icon: Mail,
             title: 'Email Us',
-            details: 'care@neurobridge.com',
+            details: 'twinkles@gmail.com',
             sub: 'Online support 24/7',
             color: 'text-primary-600',
             bg: 'bg-primary-50'
@@ -54,8 +54,8 @@ const Contact = () => {
         {
             icon: MapPin,
             title: 'Visit Us',
-            details: '123 Therapy Lane, Suite 000',
-            sub: 'Medical District ABC 123456',
+            details: 'Madhapur',
+            sub: 'Hyderabad, Telangana',
             color: 'text-secondary-600',
             bg: 'bg-secondary-50'
         },
@@ -70,9 +70,9 @@ const Contact = () => {
     ];
 
     return (
-        <div className="pt-20 md:pt-32 pb-8 overflow-x-hidden">
+        <div className="pt-32 md:pt-44 pb-8 overflow-x-hidden">
             {/* Header Section */}
-            <section className="bg-primary-50 pt-6 pb-8 md:py-20 relative overflow-hidden">
+            <section className="bg-primary-50 pt-6 pb-8 md:py-20 relative overflow-hidden" data-aos="fade-down">
                 <div className="absolute top-0 right-0 w-1/3 h-full bg-primary-100/50 skew-x-12 transform translate-x-1/2" />
                 <div className="container mx-auto px-4 md:px-6 relative z-10">
                     <div className="max-w-3xl mx-auto text-center">
@@ -93,7 +93,7 @@ const Contact = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-12">
 
                         {/* Contact Info Cards */}
-                        <div className="lg:col-span-4 space-y-4 md:space-y-6">
+                        <div className="lg:col-span-4 space-y-4 md:space-y-6" data-aos="fade-right">
                             <h2 className="text-xl md:text-2xl font-bold text-neutral-800 mb-4 md:mb-8">Contact Information</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 md:gap-6">
                                 {contactInfo.map((card, i) => (
@@ -115,7 +115,7 @@ const Contact = () => {
                                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
                                     <Globe className="h-24 w-24" />
                                 </div>
-                                <h3 className="text-xl font-bold mb-4">NeuroBridge™ Global</h3>
+                                <h3 className="text-xl font-bold mb-4"> Global</h3>
                                 <p className="text-neutral-400 text-sm mb-6">
                                     Join our community of over 5,000+ families sharing resources and success stories.
                                 </p>
@@ -129,7 +129,7 @@ const Contact = () => {
                         </div>
 
                         {/* Contact Form */}
-                        <div className="lg:col-span-8">
+                        <div className="lg:col-span-8" data-aos="fade-left">
                             <div className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-12 border border-neutral-100 shadow-xl">
                                 <div className="mb-6">
                                     <h2 className="text-xl md:text-3xl font-bold text-neutral-900 mb-1">Send us a Message</h2>
@@ -229,7 +229,7 @@ const Contact = () => {
             </section>
 
             {/* Map Section */}
-            <section className="container mx-auto px-4 md:px-6 mb-12 md:mb-20">
+            <section className="container mx-auto px-4 md:px-6 mb-12 md:mb-20" data-aos="zoom-in">
                 <div className="h-[300px] md:h-[450px] w-full bg-neutral-100 rounded-2xl md:rounded-3xl border border-neutral-200 overflow-hidden shadow-lg relative group">
                     <iframe
                         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.1422937950147!2d-73.98731968482413!3d40.75889497932681!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25855c6480299%3A0x55194ec5a1ae072e!2sTimes%20Square!5e0!3m2!1sen!2sus!4v1620304953684!5m2!1sen!2sus"
@@ -239,7 +239,7 @@ const Contact = () => {
                         allowFullScreen=""
                         loading="lazy"
                         className="grayscale group-hover:grayscale-0 transition-all duration-500"
-                        title="NeuroBridge Clinic Location"
+                        title=" Clinic Location"
                     ></iframe>
 
                     {/* Overlay for better integration */}

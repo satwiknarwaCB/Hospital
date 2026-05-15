@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Community Chat Component
+//  - Community Chat Component
 // Shared component for community messaging
 // ============================================================
 
@@ -128,7 +128,7 @@ const CommunityMessageBubble = ({ message, currentUserId, currentUserRole, membe
                 {/* Message Content */}
                 <div className="relative group/bubble">
                     <div className={`rounded-2xl px-4 py-3 ${isOwn
-                        ? 'bg-secondary-600 text-white rounded-br-md shadow-md'
+                        ? 'bg-gradient-to-br from-sky-400 to-blue-600 text-white rounded-br-md shadow-md'
                         : 'bg-white text-neutral-800 rounded-bl-md shadow-sm border border-neutral-100'
                         }`}>
                         <p className={`text-sm whitespace-pre-wrap ${isOwn ? 'text-white' : 'text-neutral-700'}`}>
@@ -310,7 +310,7 @@ const CommunityMessageBubble = ({ message, currentUserId, currentUserRole, membe
                                                         }}
                                                         className={`w-full text-xs font-bold py-1.5 rounded-lg transition-colors ${hasReacted
                                                             ? 'bg-secondary-100 text-secondary-700 hover:bg-secondary-200'
-                                                            : 'bg-primary-600 text-white hover:bg-primary-700'
+                                                            : 'bg-gradient-to-br from-sky-400 to-blue-600 text-white hover:brightness-110'
                                                             }`}
                                                     >
                                                         {hasReacted ? `Remove my ${emoji}` : `React with ${emoji}`}
@@ -560,7 +560,7 @@ const CommunityChat = ({ communityId, currentUserId, currentUserName, currentUse
             {/* Header */}
             <div className="p-4 border-b border-neutral-200 flex items-center justify-between bg-white">
                 <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-secondary-500 to-primary-500 flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center">
                         <Users className="h-5 w-5 text-white" />
                     </div>
                     <div>
@@ -710,7 +710,7 @@ const CommunityChat = ({ communityId, currentUserId, currentUserName, currentUse
             {/* Notification Toast */}
             {notification && (
                 <div className="fixed top-20 right-4 z-50 animate-in fade-in slide-in-from-right-4 duration-300">
-                    <div className="bg-secondary-600 text-white p-4 rounded-xl shadow-lg border border-secondary-500 max-w-xs flex items-start gap-3">
+                    <div className="bg-gradient-to-br from-sky-400 to-blue-600 text-white p-4 rounded-xl shadow-lg border border-secondary-500 max-w-xs flex items-start gap-3">
                         <div className="bg-white/20 p-2 rounded-lg">
                             <MessageSquare className="h-5 w-5 text-white" />
                         </div>

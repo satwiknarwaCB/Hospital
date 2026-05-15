@@ -1,10 +1,10 @@
 /**
- * NeuroBridge™ - Secure Bridge Encryption Utility
+ *  - Secure Bridge Encryption Utility
  * Simulates End-to-End Encryption (E2EE) logic
  * Ensures data is scrambled before storage
  */
 
-const SECRET_SALT = 'neurobridge_secure_protocol_v1';
+const SECRET_SALT = '_secure_protocol_v1';
 
 export const cryptoUtils = {
     /**

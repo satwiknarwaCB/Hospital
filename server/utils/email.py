@@ -24,14 +24,14 @@ async def send_invitation_email(email: str, name: str, role: str, invitation_lin
         msg = MIMEMultipart()
         msg['From'] = settings.SMTP_FROM
         msg['To'] = email
-        msg['Subject'] = f"Invitation to join NeuroBridge as a {role.capitalize()}"
+        msg['Subject'] = f"Invitation to join  as a {role.capitalize()}"
 
         body = f"""
         <html>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-                    <h2 style="color: #4f46e5;">Welcome to NeuroBridge, {name}!</h2>
-                    <p>You have been invited to join the NeuroBridge platform as a <strong>{role}</strong>.</p>
+                    <h2 style="color: #4f46e5;">Welcome to , {name}!</h2>
+                    <p>You have been invited to join the  platform as a <strong>{role}</strong>.</p>
                     <p>To get started and set your password, please click the button below:</p>
                     <div style="text-align: center; margin: 30px 0;">
                         <a href="{invitation_link}" 

@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Home Therapy Continuity Module
+//  - Home Therapy Continuity Module
 // Parent Portal - Daily Activities & Home Practice
 // ============================================================
 
@@ -413,7 +413,7 @@ const HomeActivities = () => {
 
             {/* Header */}
             <div>
-                <h2 className="text-2xl font-bold text-neutral-800">Home Activities</h2>
+                <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">Home Activities</h2>
                 <p className="text-neutral-500">Daily practice activities to support {child.name}'s therapy</p>
             </div>
 

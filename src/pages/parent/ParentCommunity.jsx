@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Parent Community Page
+//  - Parent Community Page
 // Parent Portal - Community Support & Connection
 // ============================================================
 
@@ -58,7 +58,7 @@ const ParentCommunity = () => {
             <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center p-4">
                 <div className="text-center max-w-md">
                     <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold text-neutral-800 mb-2">Unable to Load Community</h2>
+                    <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight mb-2">Unable to Load Community</h2>
                     <p className="text-neutral-600 mb-6">{error}</p>
                     <div className="flex gap-3 justify-center">
                         <Button onClick={loadCommunity} variant="secondary">
@@ -91,7 +91,7 @@ const ParentCommunity = () => {
                                     <Users className="h-6 w-6 text-white" />
                                 </div>
                                 <div>
-                                    <h1 className="text-2xl font-bold text-neutral-800">Parent Community</h1>
+                                    <h1 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">Parent Community</h1>
                                     <p className="text-sm text-neutral-500">Connect and support each other</p>
                                 </div>
                             </div>

@@ -76,31 +76,38 @@ export const useAuth = () => {
      */
     const login = async (email, password, role = null) => {
         try {
+            // Trim credentials to prevent whitespace-related failures
+            const cleanEmail = email.trim();
+            const cleanPassword = password; // Trimming password is debatable, usually not done, but we'll stick to email
+            
             // Automatic role detection if not provided
             let detectedRole = role;
             if (!detectedRole) {
-                if (email.includes('@parent.com')) {
+                const lowerEmail = cleanEmail.toLowerCase();
+                if (lowerEmail.includes('@parent.com')) {
                     detectedRole = 'parent';
-                } else if (email.includes('@neurobridge.com')) {
+                } else if (lowerEmail.includes('@twinkles.com')) {
                     detectedRole = 'admin';
-                } else if (email.includes('@therapist.com') || email.includes('@hospital.com')) {
+                } else if (lowerEmail.includes('@therapist.com') || lowerEmail.includes('@hospital.com') || lowerEmail.includes('@doctor.com')) {
                     detectedRole = 'doctor';
                 } else {
-                    detectedRole = 'doctor'; // Default
+                    // Default for common providers (gmail, etc.) is usually parent or doctor depending on your app's bias
+                    // Since we have fallbacks, the first choice just saves one roundtrip
+                    detectedRole = 'doctor'; 
                 }
             }
 
-            console.log(`🔐 useAuth.login: Attempting login as ${detectedRole} for ${email}`);
+            console.log(`🔐 useAuth.login: Attempting login as ${detectedRole} for ${cleanEmail}`);
             setLoading(true);
             setError(null);
 
             const attemptLogin = async (currentRole) => {
                 if (currentRole === 'parent') {
-                    return await parentAuthAPI.login(email, password);
+                    return await parentAuthAPI.login(cleanEmail, cleanPassword);
                 } else if (currentRole === 'admin') {
-                    return await adminAuthAPI.login(email, password);
+                    return await adminAuthAPI.login(cleanEmail, cleanPassword);
                 } else {
-                    return await doctorAuthAPI.login(email, password);
+                    return await doctorAuthAPI.login(cleanEmail, cleanPassword);
                 }
             };
 
@@ -116,15 +123,28 @@ export const useAuth = () => {
                 const isNetworkError = err.message === 'Network Error' || !err.response;
                 const isAuthError = err.response?.status === 401 || err.response?.status === 404;
 
-                if (!role && !isNetworkError && isAuthError && (detectedRole === 'doctor' || detectedRole === 'parent')) {
-                    const fallbackRole = detectedRole === 'doctor' ? 'parent' : 'doctor';
-                    console.log(`⚠️ Login as ${detectedRole} failed (Auth). Trying fallback role: ${fallbackRole}`);
-                    try {
-                        response = await attemptLogin(fallbackRole);
-                        detectedRole = fallbackRole; // Update role if fallback succeeded
-                    } catch (fallbackErr) {
-                        throw err; // Throw original error if fallback also fails
+                if (!role && !isNetworkError && isAuthError) {
+                    // Try sequence: doctor -> parent -> admin
+                    let fallbackRoles = ['doctor', 'parent', 'admin'];
+                    // Remove already tried role
+                    fallbackRoles = fallbackRoles.filter(r => r !== detectedRole);
+                    
+                    let success = false;
+                    let lastErr = err;
+                    for (const fallbackRole of fallbackRoles) {
+                        console.log(`⚠️ Initial login failed. Trying fallback role: ${fallbackRole}`);
+                        try {
+                            response = await attemptLogin(fallbackRole);
+                            detectedRole = fallbackRole;
+                            success = true;
+                            break;
+                        } catch (fallbackErr) {
+                            console.warn(`⚠️ Fallback login as ${fallbackRole} also failed.`);
+                            lastErr = fallbackErr; // Keep track of the last error
+                        }
                     }
+                    
+                    if (!success) throw lastErr; // Throw the last error if all fallbacks fail
                 } else {
                     // Log more helpful message for network errors
                     if (isNetworkError) {

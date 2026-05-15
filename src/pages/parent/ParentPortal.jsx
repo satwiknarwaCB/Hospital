@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Parent Portal
+//  - Parent Portal
 // Complete Parent Experience with All Modules
 // ============================================================
 
@@ -51,7 +51,7 @@ const SessionDetailModal = ({ session, child, onClose }) => {
                 <div className="p-6">
                     {/* Header with Close Button */}
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-2xl font-bold text-neutral-800">Session Details</h3>
+                        <h3 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">Session Details</h3>
                         <button
                             onClick={onClose}
                             className="text-neutral-400 hover:text-neutral-600 transition-colors"
@@ -291,7 +291,7 @@ const ParentDashboard = () => {
                             <span className="text-5xl">🐘</span>
                         </div>
                         <h2 className="text-3xl font-black text-neutral-800 mb-4 tracking-tight">
-                            Welcome to NeuroBridge™, {currentUser.name.split(' ')[0]}!
+                            Welcome to , {currentUser.name.split(' ')[0]}!
                         </h2>
                         <p className="text-lg text-neutral-600 mb-10 leading-relaxed font-medium">
                             We're excited to have you join our community. Your account has been created successfully.
@@ -300,7 +300,7 @@ const ParentDashboard = () => {
 
                         <div className="space-y-4">
                             <Button
-                                className="w-full h-14 text-lg font-bold bg-primary-600 hover:bg-primary-700 shadow-xl shadow-primary-200 rounded-2xl"
+                                className="w-full h-14 text-lg font-bold bg-gradient-to-br from-sky-400 to-blue-600 hover:brightness-110 shadow-xl shadow-primary-200 rounded-2xl"
                                 onClick={() => navigate('/parent/messages')}
                             >
                                 Contact Administrator to Add Child
@@ -429,7 +429,7 @@ const ParentDashboard = () => {
 
             {/* Quick Stats Row - Peer Friendly Labels */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="btn-premium bg-gradient-to-br from-primary-500 to-primary-600 border-none text-white shadow-xl shadow-primary-200/50">
+                <Card className="btn-premium bg-gradient-to-br from-sky-400 to-blue-600 border-none text-white shadow-xl shadow-primary-200/50">
                     <CardContent className="p-5">
                         <p className="text-primary-100 text-[10px] font-black uppercase tracking-widest mb-1">Activity Streak</p>
                         <p className="text-3xl font-black">{child.streak} DAYS 🔥</p>
@@ -791,7 +791,7 @@ const ParentDashboard = () => {
                         {/* Modal Header */}
                         <div className="p-8 pb-4 flex items-center justify-between">
                             <div>
-                                <h2 className="text-3xl font-black text-neutral-800 tracking-tight flex items-center gap-3">
+                                <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight flex items-center gap-3">
                                     Digital Vault 🛡️
                                 </h2>
                                 <p className="text-neutral-500 font-bold ml-1">Clinical Reports for {child?.name}</p>

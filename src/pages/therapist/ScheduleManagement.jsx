@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Schedule Management
+//  - Schedule Management
 // Therapist Console - Session Calendar & Scheduling
 // ============================================================
 
@@ -168,7 +168,7 @@ const SessionDetailModal = ({ session, child, onClose, onStatusChange }) => {
                                 <div className="space-y-2">
                                     {(Array.isArray(session.nonMeasurableOutcomes) ? session.nonMeasurableOutcomes : []).map((outcome, i) => (
                                         <div key={i} className="flex items-start gap-2 text-xs font-bold text-neutral-600 bg-neutral-50 p-3 rounded-xl border border-neutral-100">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0 mt-1.5" />
+                                            <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 shrink-0 mt-1.5" />
                                             {outcome}
                                         </div>
                                     ))}

@@ -1,17 +1,16 @@
 {
-    "short_name": "NeuroBridge",
-    "name": "NeuroBridge Hospital Management System",
+    "short_name": "Twinkles CDC",
+    "name": "Twinkles - The Child Development Center",
     "icons": [
         {
-            "src": "logo.svg",
-            "sizes": "64x64 32x32 24x24 16x16",
-            "type": "image/svg+xml"
+            "src": "TwinklesLogo.jpeg",
+            "sizes": "192x192",
+            "type": "image/jpeg"
         },
         {
-            "src": "logo.svg",
-            "type": "image/svg+xml",
+            "src": "TwinklesLogo.jpeg",
             "sizes": "512x512",
-            "purpose": "any maskable"
+            "type": "image/jpeg"
         }
     ],
     "start_url": ".",

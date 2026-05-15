@@ -92,7 +92,7 @@ async def get_default_community(
             "_id": str(ObjectId()),
             "community_id": community_id,
             "sender_id": "system",
-            "sender_name": "NeuroBridge Team",
+            "sender_name": " Team",
             "sender_role": "system",
             "content": "Welcome to the Parent Support Community! 🎉 This is a safe space for you to connect with other parents.",
             "attachments": [],

@@ -35,10 +35,7 @@ const Footer = () => {
                     {/* Brand Section */}
                     <div className="space-y-6">
                         <Link to="/" className="flex items-center gap-2">
-                            <Activity className="h-8 w-8 text-primary-500" />
-                            <span className="text-2xl font-bold text-white">
-                                NeuroBridge™
-                            </span>
+                            <img src="/TwinklesLogoTransparent.png" alt="Logo" className="h-20 w-auto rounded-xl opacity-80 hover:opacity-100 transition-opacity" />
                         </Link>
                         <p className="text-neutral-400 leading-relaxed">
                             Empowering neurodiverse families with data-driven therapy and compassionate care. Connecting progress with purpose.
@@ -55,7 +52,7 @@ const Footer = () => {
                                     href={social.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="p-3 bg-neutral-800 rounded-full hover:bg-[#0284c7] hover:text-white transition-all duration-300 hover:scale-110 shadow-lg shadow-black/20"
+                                    className="p-3 bg-neutral-800 rounded-full hover:bg-gradient-to-br from-sky-400 to-blue-600 hover:text-white transition-all duration-300 hover:scale-110 shadow-lg shadow-black/20"
                                 >
                                     <social.Icon className="h-5 w-5" />
                                 </a>
@@ -105,22 +102,22 @@ const Footer = () => {
                                 placeholder="Your email"
                                 className="bg-neutral-800 border-none rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-primary-500 outline-none"
                             />
-                            <Button className="bg-primary-600 hover:bg-primary-700 px-4">
+                            <Button className="bg-gradient-to-br from-sky-400 to-blue-600 hover:brightness-110 px-4">
                                 Join
                             </Button>
                         </div>
                         <div className="pt-4 space-y-3">
                             <div className="flex items-center gap-3">
                                 <Phone className="h-5 w-5 text-primary-500" />
-                                <span>+91 9985333108</span>
+                                <span>+91 9876543210</span>
                             </div>
                             <div className="flex items-center gap-3">
                                 <Mail className="h-5 w-5 text-primary-500" />
-                                <span>hello@neurobridge.com</span>
+                                <span>twinkles@gmail.com</span>
                             </div>
                             <div className="flex items-center gap-3">
                                 <MapPin className="h-5 w-5 text-primary-500" />
-                                <span>123 Therapy Way, SF, CA 94103</span>
+                                <span>Madhapur, Hyderabad</span>
                             </div>
                         </div>
                     </div>
@@ -129,7 +126,7 @@ const Footer = () => {
                 <hr className="border-neutral-800 mb-8" />
 
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-neutral-500">
-                    <p>© {currentYear} NeuroBridge™ Clinical Services. All rights reserved.</p>
+                    <p>© {currentYear}  Clinical Services. All rights reserved.</p>
                     <div className="flex items-center gap-6">
                         <Link to="/privacy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Privacy Policy</Link>
                         <Link to="/terms" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Terms of Service</Link>

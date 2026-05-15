@@ -18,14 +18,14 @@ const Landing = () => {
             <HeroSlider />
 
             {/* Our Ideology Section */}
-            <section className="py-24 bg-white overflow-hidden">
+            <section className="py-24 bg-white overflow-hidden" data-aos="fade-up">
                 <div className="container mx-auto px-4 md:px-8 lg:px-12">
                     <div className="max-w-3xl mx-auto text-center mb-16 animate-in fade-in slide-in-from-bottom duration-700">
-                        <h2 className="text-sm font-bold tracking-[0.2em] text-[#0284c7] uppercase mb-4">OUR IDEOLOGY</h2>
+                        <h2 className="text-sm font-bold tracking-[0.2em] text-[#0ea5e9] uppercase mb-4">OUR IDEOLOGY</h2>
                         <h3 className="text-3xl md:text-4xl font-bold text-[#1e293b] leading-tight transition-all">
-                            Guided by Compassion, Driven by <span className="text-[#0284c7]">Innovation</span>
+                            Guided by Compassion, Driven by <span className="text-[#0ea5e9]">Innovation</span>
                         </h3>
-                        <div className="w-20 h-1.5 bg-[#0284c7] mx-auto mt-6 rounded-full"></div>
+                        <div className="w-20 h-1.5 bg-[#0ea5e9] mx-auto mt-6 rounded-full"></div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -57,12 +57,12 @@ const Landing = () => {
                         ].map((pillar, i) => (
                             <div
                                 key={i}
-                                className="group p-8 rounded-3xl bg-white border border-slate-100 hover:border-[#0284c7]/20 hover:shadow-2xl hover:shadow-[#0284c7]/5 transition-all duration-500 transform hover:-translate-y-2"
+                                className="group p-8 rounded-3xl bg-white border border-slate-100 hover:border-[#0ea5e9]/20 hover:shadow-2xl hover:shadow-[#0ea5e9]/5 transition-all duration-500 transform hover:-translate-y-2"
                             >
                                 <div className={`h-14 w-14 rounded-2xl ${pillar.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 shadow-sm`}>
                                     <pillar.icon size={28} />
                                 </div>
-                                <h4 className="text-xl font-bold text-[#1e293b] mb-4 group-hover:text-[#0284c7] transition-colors">{pillar.title}</h4>
+                                <h4 className="text-xl font-bold text-[#1e293b] mb-4 group-hover:text-[#0ea5e9] transition-colors">{pillar.title}</h4>
                                 <p className="text-slate-600 leading-relaxed text-sm">
                                     {pillar.desc}
                                 </p>
@@ -73,16 +73,16 @@ const Landing = () => {
             </section>
 
             {/* Speech Therapy Section */}
-            <section className="py-24 bg-slate-50 overflow-hidden">
+            <section className="py-24 bg-slate-50 overflow-hidden" data-aos="fade-up">
                 <div className="container mx-auto px-4 md:px-8 lg:px-12">
                     <div className="flex flex-col lg:flex-row items-center gap-16">
                         {/* Left Side: Heading & Text */}
-                        <div className="lg:w-1/2 space-y-8 animate-in fade-in slide-in-from-left duration-700">
-                            <div className="inline-block px-4 py-2 rounded-lg bg-[#0284c7]/10 text-[#0284c7] font-bold text-sm tracking-widest uppercase">
+                        <div className="lg:w-1/2 space-y-8" data-aos="fade-right">
+                            <div className="inline-block px-4 py-2 rounded-lg bg-[#0ea5e9]/10 text-[#0ea5e9] font-bold text-sm tracking-widest uppercase">
                                 COMMUNICATION SKILLS
                             </div>
                             <h2 className="text-3xl md:text-5xl font-bold text-[#1e293b] leading-tight transition-all">
-                                What Is <span className="text-[#0284c7]">Speech Therapy?</span>
+                                What Is <span className="text-[#0ea5e9]">Speech Therapy?</span>
                             </h2>
                             <p className="text-lg text-slate-600 leading-relaxed">
                                 Speech-Language Pathology (SLP) or Speech Therapy focuses on helping children overcome challenges with articulation, language comprehension, and social communication. Our goal is to help every child find their voice and communicate with confidence.
@@ -95,23 +95,23 @@ const Landing = () => {
                                     'Cognitive Communication Skills'
                                 ].map((item, i) => (
                                     <div key={i} className="flex items-center gap-3">
-                                        <CheckCircle2 className="text-[#0284c7]" size={20} />
+                                        <CheckCircle2 className="text-[#0ea5e9]" size={20} />
                                         <span className="text-slate-700 font-medium">{item}</span>
                                     </div>
                                 ))}
                             </div>
                             <Button
                                 onClick={() => navigate('/services/speech-therapy')}
-                                className="bg-[#0284c7] hover:bg-sky-700 text-white px-8 py-4 rounded-xl font-bold mt-4 shadow-lg shadow-sky-100 transition-all flex items-center gap-2 group/btn"
+                                className="bg-gradient-to-br from-sky-400 to-blue-600 hover:brightness-110 text-white px-8 py-4 rounded-xl font-bold mt-4 shadow-lg shadow-sky-100 transition-all flex items-center gap-2 group/btn"
                             >
                                 Learn More <ArrowRight className="h-5 w-5 transition-transform group-hover/btn:translate-x-1" />
                             </Button>
                         </div>
                         {/* Right Side: Image */}
                         <div className="lg:w-1/2 relative group animate-in fade-in zoom-in duration-700">
-                            <div className="absolute -inset-4 bg-[#0284c7]/5 rounded-[3rem] blur-2xl group-hover:bg-[#0284c7]/10 transition-colors duration-500"></div>
+                            <div className="absolute -inset-4 bg-[#0ea5e9]/5 rounded-[3rem] blur-2xl group-hover:bg-[#0ea5e9]/10 transition-colors duration-500"></div>
                             <img
-                                src="/therapist_professional_4.png"
+                                src="/SpeechTherapy.png"
                                 alt="Speech Therapy Session"
                                 className="relative rounded-[2.5rem] shadow-2xl w-full h-[450px] object-cover transform transition-transform duration-700 hover:scale-[1.02]"
                             />
@@ -121,16 +121,16 @@ const Landing = () => {
             </section>
 
             {/* ABA Therapy Section */}
-            <section className="py-24 bg-white overflow-hidden">
+            <section className="py-24 bg-white overflow-hidden" data-aos="fade-up">
                 <div className="container mx-auto px-4 md:px-8 lg:px-12">
                     <div className="flex flex-col lg:flex-row-reverse items-center gap-16">
                         {/* Right Side: Heading & Text */}
-                        <div className="lg:w-1/2 space-y-8 animate-in fade-in slide-in-from-right duration-700">
-                            <div className="inline-block px-4 py-2 rounded-lg bg-[#0284c7]/10 text-[#0284c7] font-bold text-sm tracking-widest uppercase">
+                        <div className="lg:w-1/2 space-y-8" data-aos="fade-left">
+                            <div className="inline-block px-4 py-2 rounded-lg bg-[#0ea5e9]/10 text-[#0ea5e9] font-bold text-sm tracking-widest uppercase">
                                 SPECIALIZED CARE
                             </div>
                             <h2 className="text-3xl md:text-5xl font-bold text-[#1e293b] leading-tight transition-all">
-                                What Is <span className="text-[#0284c7]">ABA Therapy?</span>
+                                What Is <span className="text-[#0ea5e9]">ABA Therapy?</span>
                             </h2>
                             <p className="text-lg text-slate-600 leading-relaxed">
                                 Applied Behavior Analysis (ABA) is a scientifically validated therapy focused on improving specific behaviors, such as social skills, communication, and learning, while reducing problematic ones.
@@ -143,23 +143,23 @@ const Landing = () => {
                                     'Focus on Data-Driven Progress'
                                 ].map((item, i) => (
                                     <div key={i} className="flex items-center gap-3">
-                                        <CheckCircle2 className="text-[#0284c7]" size={20} />
+                                        <CheckCircle2 className="text-[#0ea5e9]" size={20} />
                                         <span className="text-slate-700 font-medium">{item}</span>
                                     </div>
                                 ))}
                             </div>
                             <Button
                                 onClick={() => navigate('/services/aba-therapy')}
-                                className="bg-[#0284c7] hover:bg-sky-700 text-white px-8 py-4 rounded-xl font-bold mt-4 shadow-lg shadow-sky-100 transition-all flex items-center gap-2 group/btn"
+                                className="bg-gradient-to-br from-sky-400 to-blue-600 hover:brightness-110 text-white px-8 py-4 rounded-xl font-bold mt-4 shadow-lg shadow-sky-100 transition-all flex items-center gap-2 group/btn"
                             >
                                 Learn More <ArrowRight className="h-5 w-5 transition-transform group-hover/btn:translate-x-1" />
                             </Button>
                         </div>
                         {/* Left Side: Image */}
-                        <div className="lg:w-1/2 relative group animate-in fade-in zoom-in duration-700">
-                            <div className="absolute -inset-4 bg-[#0284c7]/5 rounded-[3rem] blur-2xl group-hover:bg-[#0284c7]/10 transition-colors duration-500"></div>
+                        <div className="lg:w-1/2 relative group" data-aos="fade-right">
+                            <div className="absolute -inset-4 bg-[#0ea5e9]/5 rounded-[3rem] blur-2xl group-hover:bg-[#0ea5e9]/10 transition-colors duration-500"></div>
                             <img
-                                src="/therapy_session_2.png"
+                                src="/ABATherapy.png"
                                 alt="ABA Therapy Session"
                                 className="relative rounded-[2.5rem] shadow-2xl w-full h-[450px] object-cover transform transition-transform duration-700 hover:scale-[1.02]"
                             />
@@ -169,16 +169,16 @@ const Landing = () => {
             </section>
 
             {/* Occupational Therapy Section */}
-            <section className="py-24 bg-slate-50 overflow-hidden">
+            <section className="py-24 bg-slate-50 overflow-hidden" data-aos="fade-up">
                 <div className="container mx-auto px-4 md:px-8 lg:px-12">
                     <div className="flex flex-col lg:flex-row items-center gap-16">
                         {/* Left Side: Heading & Text */}
-                        <div className="lg:w-1/2 space-y-8 animate-in fade-in slide-in-from-left duration-700">
-                            <div className="inline-block px-4 py-2 rounded-lg bg-[#0284c7]/10 text-[#0284c7] font-bold text-sm tracking-widest uppercase">
+                        <div className="lg:w-1/2 space-y-8" data-aos="fade-right">
+                            <div className="inline-block px-4 py-2 rounded-lg bg-[#0ea5e9]/10 text-[#0ea5e9] font-bold text-sm tracking-widest uppercase">
                                 DAILY LIFE SKILLS
                             </div>
                             <h2 className="text-3xl md:text-5xl font-bold text-[#1e293b] leading-tight transition-all">
-                                What Is <span className="text-[#0284c7]">Occupational Therapy?</span>
+                                What Is <span className="text-[#0ea5e9]">Occupational Therapy?</span>
                             </h2>
                             <p className="text-lg text-slate-600 leading-relaxed">
                                 Occupational Therapy (OT) helps children develop the "occupations" of childhood—meaning play, socialization, and daily tasks like dressing or handwriting. It focuses on sensory integration and fine motor independence.
@@ -191,23 +191,23 @@ const Landing = () => {
                                     'Adaptive Equipment Training'
                                 ].map((item, i) => (
                                     <div key={i} className="flex items-center gap-3">
-                                        <CheckCircle2 className="text-[#0284c7]" size={20} />
+                                        <CheckCircle2 className="text-[#0ea5e9]" size={20} />
                                         <span className="text-slate-700 font-medium">{item}</span>
                                     </div>
                                 ))}
                             </div>
                             <Button
                                 onClick={() => navigate('/services/occupational-therapy')}
-                                className="bg-[#0284c7] hover:bg-sky-700 text-white px-8 py-4 rounded-xl font-bold mt-4 shadow-lg shadow-sky-100 transition-all flex items-center gap-2 group/btn"
+                                className="bg-gradient-to-br from-sky-400 to-blue-600 hover:brightness-110 text-white px-8 py-4 rounded-xl font-bold mt-4 shadow-lg shadow-sky-100 transition-all flex items-center gap-2 group/btn"
                             >
                                 Learn More <ArrowRight className="h-5 w-5 transition-transform group-hover/btn:translate-x-1" />
                             </Button>
                         </div>
                         {/* Right Side: Image */}
                         <div className="lg:w-1/2 relative group animate-in fade-in zoom-in duration-700">
-                            <div className="absolute -inset-4 bg-[#0284c7]/5 rounded-[3rem] blur-2xl group-hover:bg-[#0284c7]/10 transition-colors duration-500"></div>
+                            <div className="absolute -inset-4 bg-[#0ea5e9]/5 rounded-[3rem] blur-2xl group-hover:bg-[#0ea5e9]/10 transition-colors duration-500"></div>
                             <img
-                                src="/therapy_child_1.png"
+                                src="/OccupationalTherapy.png"
                                 alt="Occupational Therapy Session"
                                 className="relative rounded-[2.5rem] shadow-2xl w-full h-[450px] object-cover transform transition-transform duration-700 hover:scale-[1.02]"
                             />
@@ -217,39 +217,39 @@ const Landing = () => {
             </section>
 
             {/* Message From Our Founder */}
-            <section className="py-24 bg-white overflow-hidden relative border-t border-slate-100">
+            <section className="py-24 bg-white overflow-hidden relative border-t border-slate-100" data-aos="fade-up">
                 <div className="container mx-auto px-4 md:px-8 lg:px-12 relative z-10">
                     <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
                         {/* Founder Image */}
-                        <div className="lg:w-1/2 relative group animate-in fade-in slide-in-from-left duration-700">
-                            <div className="absolute -inset-4 bg-[#0284c7]/10 rounded-3xl blur-2xl group-hover:bg-[#0284c7]/20 transition-all duration-700"></div>
+                        <div className="lg:w-1/2 relative group" data-aos="zoom-in">
+                            <div className="absolute -inset-4 bg-[#0ea5e9]/10 rounded-3xl blur-2xl group-hover:bg-[#0ea5e9]/20 transition-all duration-700"></div>
                             <div className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white">
                                 <img
                                     src="/founder_portrait.png"
-                                    alt="NeuroBridge Founder"
+                                    alt=" Founder"
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                 />
                                 <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-[#1e293b]/80 via-[#1e293b]/40 to-transparent">
                                     <h3 className="text-2xl font-bold text-white uppercase tracking-tight">Dr. Sarah Thompson</h3>
-                                    <p className="text-[#0284c7] font-semibold">Founder & Chief Medical Officer</p>
+                                    <p className="text-[#0ea5e9] font-semibold">Founder & Chief Medical Officer</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* Founder Text */}
-                        <div className="lg:w-1/2 space-y-8 animate-in fade-in slide-in-from-right duration-700">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0284c7]/10 text-[#0284c7] text-sm font-bold border border-[#0284c7]/20">
+                        <div className="lg:w-1/2 space-y-8" data-aos="fade-left">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0ea5e9]/10 text-[#0ea5e9] text-sm font-bold border border-[#0ea5e9]/20">
                                 <Sparkles className="h-4 w-4" /> MESSAGE FROM OUR FOUNDER
                             </div>
                             <div className="relative">
-                                <Quote className="absolute -top-10 -left-6 h-20 w-20 text-[#0284c7]/10" />
+                                <Quote className="absolute -top-10 -left-6 h-20 w-20 text-[#0ea5e9]/10" />
                                 <h2 className="text-3xl md:text-5xl font-bold leading-tight text-[#1e293b] relative z-10">
-                                    "Our mission is to ensure that no child's potential is limited by a lack of <span className="text-[#0284c7]">coordinated care</span>."
+                                    "Our mission is to ensure that no child's potential is limited by a lack of <span className="text-[#0ea5e9]">coordinated care</span>."
                                 </h2>
                             </div>
                             <div className="space-y-6 text-slate-600 text-lg leading-relaxed">
                                 <p>
-                                    At NeuroBridge™, we believe that every child follows a unique developmental path. Our role isn't just to provide therapy, but to build a bridge between clinical expertise and the everyday environment where children grow.
+                                    At <span className="animate-twinkle">TWINKLES - The Child Development Center</span>, we believe that every child follows a unique developmental path. Our role isn't just to provide therapy, but to build a bridge between clinical expertise and the everyday environment where children grow.
                                 </p>
                                 <p>
                                     We started with a simple vision: to bring transparency and data to a field where families often felt lost. Today, we are proud to support thousands of families with a platform that empowers them to be active participants in their child's progress.
@@ -270,22 +270,22 @@ const Landing = () => {
             </section>
 
             {/* Final CTA Section */}
-            <section className="py-24 bg-[#0284c7] relative overflow-hidden">
+            <section className="py-24 bg-gradient-to-br from-sky-400 to-blue-600 relative overflow-hidden">
                 <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:40px_40px]"></div>
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0369a1]/50"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0284c7]/50"></div>
                 <div className="container mx-auto px-4 md:px-8 lg:px-12 relative z-10 text-center">
                     <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in zoom-in duration-700">
                         <h2 className="text-4xl md:text-6xl font-bold text-white leading-tight">
                             Ready to Start Your Child's <br />
                             <span className="text-primary-100">Success Journey?</span>
                         </h2>
-                        <p className="text-xl text-primary-50 max-w-2xl mx-auto leading-relaxed">
-                            Join thousands of families already benefiting from NeuroBridge™. Our expert clinical team is here to support you every step of the way.
+                        <p className="text-xl text-primary-50 max-w-3xl mx-auto leading-relaxed">
+                            Join thousands of families already benefiting from <span className="animate-twinkle !text-transparent">TWINKLES - The Child Development Center</span>. Our expert clinical team is here to support you every step of the way.
                         </p>
                         <div className="flex flex-col sm:flex-row justify-center gap-6 pt-6">
                             <button
                                 onClick={() => navigate('/book-appointment')}
-                                className="h-16 px-10 text-xl font-bold bg-white text-[#0284c7] hover:bg-primary-50 rounded-2xl shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                                className="h-16 px-10 text-xl font-bold bg-white text-[#0ea5e9] hover:bg-primary-50 rounded-2xl shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
                             >
                                 Book An Appointment
                                 <ArrowRight size={24} />

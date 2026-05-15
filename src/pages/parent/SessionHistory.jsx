@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Session History Module
+//  - Session History Module
 // Parent Portal - View Past Therapy Sessions
 // ============================================================
 

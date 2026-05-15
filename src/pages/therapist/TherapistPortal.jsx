@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Therapist Portal
+//  - Therapist Portal
 // Complete Therapist Experience with All Modules
 // ============================================================
 
@@ -62,7 +62,7 @@ const TherapistLayoutWrapper = () => {
         <DashboardLayout
             title="Therapist Console"
             sidebarItems={sidebarItems}
-            roleColor="bg-secondary-600"
+            roleColor="bg-gradient-to-br from-sky-400 to-blue-600"
             onLogout={handleLogout}
         >
             <Outlet />
@@ -188,7 +188,7 @@ const TherapistDashboard = () => {
             {/* Quick Actions */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
 
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-primary-500 to-primary-600 text-white" onClick={() => navigate('/therapist/blueprints')}>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-sky-400 to-blue-600 text-white" onClick={() => navigate('/therapist/blueprints')}>
                     <CardContent className="p-6 flex items-center gap-4">
                         <Target className="h-10 w-10 text-primary-200" />
                         <div>
@@ -206,7 +206,7 @@ const TherapistDashboard = () => {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-indigo-500 to-blue-600 text-white" onClick={() => navigate('/therapist/growth-tracking')}>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-sky-400 to-blue-600 text-white" onClick={() => navigate('/therapist/growth-tracking')}>
                     <CardContent className="p-6 flex items-center gap-4">
                         <Activity className="h-10 w-10 text-indigo-200" />
                         <div>

@@ -93,7 +93,7 @@ const CareTeam = () => {
             <div className="relative">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <h1 className="text-3xl font-black text-neutral-800 tracking-tight mb-2">
+                        <h1 className="text-2xl font-black text-neutral-900 uppercase tracking-tight mb-2">
                             Your Care Team 🛡️
                         </h1>
                         <p className="text-neutral-500 font-medium">

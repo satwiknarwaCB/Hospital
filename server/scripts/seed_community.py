@@ -52,7 +52,7 @@ def seed_community():
             "_id": welcome_message_id,
             "community_id": community_id,
             "sender_id": "system",
-            "sender_name": "NeuroBridge Team",
+            "sender_name": " Team",
             "sender_role": "system",
             "content": "Welcome to the Parent Support Community! 🎉\n\nThis is a safe and supportive space where you can:\n• Connect with other parents\n• Share your experiences and insights\n• Ask questions and get support\n• Celebrate successes together\n\nRemember to be kind, respectful, and supportive of one another. We're all on this journey together!",
             "attachments": [],

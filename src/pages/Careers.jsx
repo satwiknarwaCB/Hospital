@@ -110,9 +110,9 @@ const Careers = () => {
     };
 
     return (
-        <div className="pt-24 lg:pt-32 min-h-screen bg-slate-50">
+        <div className="pt-32 lg:pt-44 min-h-screen bg-slate-50">
             {/* Hero Section */}
-            <section className="bg-[#0284c7] py-24 md:py-32 relative overflow-hidden text-white">
+            <section className="bg-[#0ea5e9] py-24 md:py-32 relative overflow-hidden text-white" data-aos="fade-down">
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
                     <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/2 translate-y-1/2 blur-3xl"></div>
@@ -128,11 +128,11 @@ const Careers = () => {
                         <span className="text-sky-200">Changes Lives</span>
                     </h1>
                     <p className="text-xl text-sky-50 max-w-2xl mx-auto mb-10 leading-relaxed">
-                        At NeuroBridge™, we're more than a clinic. We're a family of dedicated professionals
+                        At , we're more than a clinic. We're a family of dedicated professionals
                         committed to empowering children and families.
                     </p>
                     <div className="max-w-xl mx-auto relative group">
-                        <div className="absolute inset-y-0 left-5 flex items-center text-slate-400 group-focus-within:text-[#0284c7] transition-colors">
+                        <div className="absolute inset-y-0 left-5 flex items-center text-slate-400 group-focus-within:text-[#0ea5e9] transition-colors">
                             <Search size={22} />
                         </div>
                         <input
@@ -147,10 +147,10 @@ const Careers = () => {
             </section>
 
             {/* Why Join Us */}
-            <section className="py-20 bg-white">
+            <section className="py-20 bg-white" data-aos="fade-up">
                 <div className="container mx-auto px-4 md:px-8">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Why NeuroBridge™?</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Why ?</h2>
                         <p className="text-slate-500 max-w-2xl mx-auto">We provide the environment and support you need to do your best work.</p>
                     </div>
 
@@ -161,7 +161,7 @@ const Careers = () => {
                             { icon: Star, title: 'Growth & Support', desc: 'Continuing education, certifications, and mentorship programs for all staff.' }
                         ].map((benefit, i) => (
                             <div key={i} className="p-8 rounded-3xl bg-slate-50 border border-transparent hover:border-sky-100 hover:shadow-xl transition-all duration-300">
-                                <div className="h-14 w-14 rounded-2xl bg-[#0284c7]/10 flex items-center justify-center text-[#0284c7] mb-6">
+                                <div className="h-14 w-14 rounded-2xl bg-[#0ea5e9]/10 flex items-center justify-center text-[#0ea5e9] mb-6">
                                     <benefit.icon size={28} />
                                 </div>
                                 <h3 className="text-xl font-bold text-slate-800 mb-3">{benefit.title}</h3>
@@ -173,7 +173,7 @@ const Careers = () => {
             </section>
 
             {/* Job Openings */}
-            <section className="py-20" id="openings">
+            <section className="py-20" id="openings" data-aos="fade-up">
                 <div className="container mx-auto px-4 md:px-8">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
                         <div>
@@ -187,7 +187,7 @@ const Careers = () => {
                                     key={cat}
                                     onClick={() => setSelectedCategory(cat)}
                                     className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${selectedCategory === cat
-                                        ? 'bg-[#0284c7] text-white shadow-lg shadow-sky-200'
+                                        ? 'bg-[#0ea5e9] text-white shadow-lg shadow-sky-200'
                                         : 'bg-white text-slate-600 hover:bg-slate-100'
                                         }`}
                                 >
@@ -199,27 +199,27 @@ const Careers = () => {
 
                     <div className="grid grid-cols-1 gap-6">
                         {filteredJobs.length > 0 ? filteredJobs.map(job => (
-                            <div key={job.id} className="group bg-white rounded-[2.5rem] p-8 border border-slate-100 hover:border-[#0284c7]/30 hover:shadow-2xl transition-all duration-500 shadow-sm relative overflow-hidden">
-                                <div className="absolute right-0 top-0 h-full w-1.5 bg-[#0284c7] opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                            <div key={job.id} className="group bg-white rounded-[2.5rem] p-8 border border-slate-100 hover:border-[#0ea5e9]/30 hover:shadow-2xl transition-all duration-500 shadow-sm relative overflow-hidden">
+                                <div className="absolute right-0 top-0 h-full w-1.5 bg-[#0ea5e9] opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
 
                                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
                                     <div className="flex-grow">
                                         <div className="flex items-center gap-3 mb-4">
-                                            <span className="px-3 py-1 bg-sky-50 text-[#0284c7] text-[10px] font-black uppercase tracking-widest rounded-lg">{job.category}</span>
+                                            <span className="px-3 py-1 bg-sky-50 text-[#0ea5e9] text-[10px] font-black uppercase tracking-widest rounded-lg">{job.category}</span>
                                             <span className="flex items-center gap-1.5 text-slate-400 text-sm font-medium"><Clock size={14} /> {job.type}</span>
                                         </div>
-                                        <h3 className="text-2xl font-bold text-slate-800 mb-3 group-hover:text-[#0284c7] transition-colors">{job.title}</h3>
+                                        <h3 className="text-2xl font-bold text-slate-800 mb-3 group-hover:text-[#0ea5e9] transition-colors">{job.title}</h3>
                                         <p className="text-slate-500 mb-6 max-w-2xl leading-relaxed">{job.description}</p>
                                         <div className="flex flex-wrap gap-6 text-sm text-slate-600">
-                                            <div className="flex items-center gap-2"><MapPin size={16} className="text-[#0284c7]" /> {job.location}</div>
-                                            <div className="flex items-center gap-2 font-bold text-slate-800"><Briefcase size={16} className="text-[#0284c7]" /> {job.salary}</div>
+                                            <div className="flex items-center gap-2"><MapPin size={16} className="text-[#0ea5e9]" /> {job.location}</div>
+                                            <div className="flex items-center gap-2 font-bold text-slate-800"><Briefcase size={16} className="text-[#0ea5e9]" /> {job.salary}</div>
                                         </div>
                                     </div>
 
                                     <div className="flex lg:flex-col gap-4 shrink-0 lg:text-right">
                                         <Button
                                             onClick={() => handleApply(job)}
-                                            className="bg-[#0284c7] hover:bg-sky-700 text-white px-10 py-4 rounded-2xl font-bold shadow-xl shadow-sky-100 transition-all active:scale-95"
+                                            className="bg-[#0ea5e9] hover:bg-sky-700 text-white px-10 py-4 rounded-2xl font-bold shadow-xl shadow-sky-100 transition-all active:scale-95"
                                         >
                                             Apply Now
                                         </Button>
@@ -257,7 +257,7 @@ const Careers = () => {
                             </div>
                         ) : (
                             <>
-                                <div className="bg-[#0284c7] p-10 text-white relative">
+                                <div className="bg-[#0ea5e9] p-10 text-white relative">
                                     <button
                                         disabled={isSubmitting}
                                         onClick={() => setIsApplyModalOpen(false)}
@@ -280,17 +280,17 @@ const Careers = () => {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">First Name</label>
-                                            <input required type="text" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:outline-none focus:border-[#0284c7] focus:ring-4 focus:ring-sky-50 transition-all font-medium" placeholder="Amrita" />
+                                            <input required type="text" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:outline-none focus:border-[#0ea5e9] focus:ring-4 focus:ring-sky-50 transition-all font-medium" placeholder="Amrita" />
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Last Name</label>
-                                            <input required type="text" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:outline-none focus:border-[#0284c7] focus:ring-4 focus:ring-sky-50 transition-all font-medium" placeholder="Singh" />
+                                            <input required type="text" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:outline-none focus:border-[#0ea5e9] focus:ring-4 focus:ring-sky-50 transition-all font-medium" placeholder="Singh" />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
                                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Contact Email</label>
-                                        <input required type="email" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:outline-none focus:border-[#0284c7] focus:ring-4 focus:ring-sky-50 transition-all font-medium" placeholder="amrita@example.com" />
+                                        <input required type="email" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:outline-none focus:border-[#0ea5e9] focus:ring-4 focus:ring-sky-50 transition-all font-medium" placeholder="amrita@example.com" />
                                     </div>
 
                                     <div className="space-y-2">
@@ -304,9 +304,9 @@ const Careers = () => {
                                         />
                                         <div
                                             onClick={() => fileInputRef.current?.click()}
-                                            className={`group border-2 border-dashed rounded-[2rem] p-8 text-center transition-all cursor-pointer bg-slate-50/50 ${fileName ? 'border-emerald-200 bg-emerald-50/50' : 'border-slate-200 hover:bg-slate-50 hover:border-[#0284c7]/30'}`}
+                                            className={`group border-2 border-dashed rounded-[2rem] p-8 text-center transition-all cursor-pointer bg-slate-50/50 ${fileName ? 'border-emerald-200 bg-emerald-50/50' : 'border-slate-200 hover:bg-slate-50 hover:border-[#0ea5e9]/30'}`}
                                         >
-                                            <div className={`h-16 w-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform ${fileName ? 'text-emerald-500' : 'text-slate-300 group-hover:text-[#0284c7]'}`}>
+                                            <div className={`h-16 w-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform ${fileName ? 'text-emerald-500' : 'text-slate-300 group-hover:text-[#0ea5e9]'}`}>
                                                 {fileName ? <CheckCircle2 size={32} /> : <Upload size={32} />}
                                             </div>
                                             <p className="text-sm text-slate-700 font-bold">
@@ -320,7 +320,7 @@ const Careers = () => {
 
                                     <Button
                                         disabled={isSubmitting}
-                                        className="w-full bg-[#0284c7] hover:bg-sky-700 text-white py-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 shadow-2xl shadow-sky-100 disabled:opacity-70"
+                                        className="w-full bg-[#0ea5e9] hover:bg-sky-700 text-white py-5 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 shadow-2xl shadow-sky-100 disabled:opacity-70"
                                     >
                                         {isSubmitting ? (
                                             <>
@@ -341,10 +341,10 @@ const Careers = () => {
             )}
 
             {/* Culture/Last CTA */}
-            <section className="py-20 bg-[#0284c7]/5">
+            <section className="py-20" data-aos="fade-up">
                 <div className="container mx-auto px-4 md:px-8">
                     <div className="flex flex-col lg:flex-row items-center gap-16">
-                        <div className="lg:w-1/2 space-y-8">
+                        <div className="lg:w-1/2 space-y-8" data-aos="fade-right">
                             <h2 className="text-3xl md:text-4xl font-bold text-slate-800 leading-tight">Can't Find a Suitable Role?</h2>
                             <p className="text-lg text-slate-600 leading-relaxed">
                                 We're always on the lookout for talented individuals. Send us your resume anyway and we'll keep you
@@ -352,25 +352,25 @@ const Careers = () => {
                             </p>
                             <div className="space-y-4">
                                 <div className="flex items-center gap-4 text-slate-700 font-medium">
-                                    <CheckCircle2 className="text-[#0284c7]" size={24} />
+                                    <CheckCircle2 className="text-[#0ea5e9]" size={24} />
                                     <span>Direct access to leadership</span>
                                 </div>
                                 <div className="flex items-center gap-4 text-slate-700 font-medium">
-                                    <CheckCircle2 className="text-[#0284c7]" size={24} />
+                                    <CheckCircle2 className="text-[#0ea5e9]" size={24} />
                                     <span>Continuous professional mentorship</span>
                                 </div>
                             </div>
                             <Button
                                 onClick={() => handleApply({ title: 'General Application' })}
-                                className="bg-[#0284c7] hover:bg-sky-700 text-white px-8 py-4 rounded-xl font-bold shadow-lg mt-4"
+                                className="bg-[#0ea5e9] hover:bg-sky-700 text-white px-8 py-4 rounded-xl font-bold shadow-lg mt-4"
                             >
                                 Drop Your Resume
                             </Button>
                         </div>
-                        <div className="lg:w-1/2 relative group">
-                            <div className="aspect-square bg-[#0284c7] rounded-[3rem] rotate-3 absolute inset-0 opacity-10 group-hover:rotate-6 transition-transform duration-500"></div>
+                        <div className="lg:w-1/2 relative group" data-aos="fade-left">
+                            <div className="aspect-square bg-[#0ea5e9] rounded-[3rem] rotate-3 absolute inset-0 opacity-10 group-hover:rotate-6 transition-transform duration-500"></div>
                             <img
-                                src="/team_clinical_director.png"
+                                src="/ClinicalDoctors.avif"
                                 alt="Our Team"
                                 className="relative rounded-[3rem] shadow-2xl grayscale hover:grayscale-0 transition-all duration-700 cursor-pointer w-full h-full object-cover"
                             />

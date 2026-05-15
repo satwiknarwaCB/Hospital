@@ -17,6 +17,8 @@ import TherapyPage from './pages/services/TherapyPage';
 import Careers from './pages/Careers';
 import ScrollToTop from './components/ScrollToTop';
 import BookAppointment from './pages/BookAppointment';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 // Layout wrapper for public pages (Landing, About, Services)
 const PublicLayout = ({ children }) => {
@@ -104,6 +106,14 @@ function AppContent() {
 }
 
 function App() {
+    React.useEffect(() => {
+        AOS.init({
+            duration: 1000,
+            once: true,
+            easing: 'ease-in-out',
+        });
+    }, []);
+
     return (
         <AppProvider>
             <Router>

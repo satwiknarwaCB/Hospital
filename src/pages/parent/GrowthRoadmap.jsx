@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Predictive Growth Roadmap
+//  - Predictive Growth Roadmap
 // Parent Portal - Milestone Tracking & AI Predictions
 // ============================================================
 
@@ -270,7 +270,7 @@ const GrowthRoadmap = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-neutral-800">Growth Roadmap</h2>
+                    <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">Growth Roadmap</h2>
                     <p className="text-neutral-500">Predictive milestones and therapy goals for {child.name}</p>
                 </div>
                 <div className="flex items-center gap-2">

@@ -1,5 +1,5 @@
 /* ============================================================
-   NeuroBridge™ - High Priority Audit Fixes (v9)
+    - High Priority Audit Fixes (v9)
    Force-fixing Header/Tablet layout misalignment
    ============================================================ */
 
@@ -24,7 +24,7 @@ header {
     }
 
     /* Ensure title text stays with the icon */
-    header span[class*="NeuroBridge"] {
+    header span[class*=""] {
         font-size: 1.15rem !important;
         margin-left: 0.5rem !important;
         display: inline-block !important;

@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Therapist Progress Management
+//  - Therapist Progress Management
 // Clinical View for Child Progress Tracking
 // ============================================================
 
@@ -55,7 +55,7 @@ const TherapistProgressTracking = () => {
             <div className="w-full lg:w-48 flex flex-col gap-4">
                 <header className="space-y-4">
                     <div>
-                        <h2 className="text-2xl font-black text-neutral-800 tracking-tight">Case Load</h2>
+                        <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">Case Load</h2>
                         <p className="text-sm text-neutral-500">Manage mastery for your children</p>
                     </div>
 
@@ -151,7 +151,7 @@ const TherapistProgressTracking = () => {
                                 <Activity className="h-10 w-10 text-primary-600" />
                             </div>
                         </div>
-                        <h3 className="text-2xl font-black text-neutral-800 mb-2">Child Progress Portal</h3>
+                        <h3 className="text-2xl font-black text-neutral-900 uppercase tracking-tight mb-2">Child Progress Portal</h3>
                         <p className="text-neutral-500 max-w-sm leading-relaxed">
                             Select a child from the left to view their functional skill mastery, growth trends, and validate clinical progress.
                         </p>

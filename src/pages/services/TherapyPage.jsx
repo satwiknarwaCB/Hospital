@@ -10,8 +10,8 @@ const therapyData = {
         title: 'Speech Therapy',
         subtitle: 'Helping Every Child Find Their Voice',
         color: 'bg-blue-50 text-blue-600',
-        accent: '#0284c7',
-        image: '/therapist_professional_4.png',
+        accent: '#0ea5e9',
+        image: '/SpeechTherapy.png',
         overview: `Speech-Language Pathology (SLP), commonly known as Speech Therapy, is a clinical practice that addresses disorders in speech, language, communication, and swallowing. Our speech therapists work closely with children to overcome articulation challenges, improve language comprehension, and build confident social communication skills.`,
         whoIsItFor: `Speech Therapy is ideal for children who struggle with pronouncing words clearly, forming sentences, understanding spoken language, or communicating socially with peers and adults.`,
         benefits: [
@@ -34,8 +34,8 @@ const therapyData = {
         title: 'ABA Therapy',
         subtitle: 'Scientifically-Proven Behavioral Support',
         color: 'bg-emerald-50 text-emerald-600',
-        accent: '#0284c7',
-        image: '/therapy_session_2.png',
+        accent: '#0ea5e9',
+        image: '/ABATherapy.png',
         overview: `Applied Behavior Analysis (ABA) is the gold-standard, scientifically validated therapy for children with autism spectrum disorder (ASD) and other developmental challenges. ABA focuses on understanding and improving socially significant behaviors through systematic teaching strategies, positive reinforcement, and data-driven decision making.`,
         whoIsItFor: `ABA Therapy is primarily designed for children diagnosed with autism spectrum disorder, though it is also effective for children with ADHD, developmental delays, and other behavioral challenges.`,
         benefits: [
@@ -58,8 +58,8 @@ const therapyData = {
         title: 'Occupational Therapy',
         subtitle: 'Building Independence for Daily Life',
         color: 'bg-indigo-50 text-indigo-600',
-        accent: '#0284c7',
-        image: '/therapy_child_1.png',
+        accent: '#0ea5e9',
+        image: '/OccupationalTherapy.png',
         overview: `Occupational Therapy (OT) helps children develop the skills they need to participate fully in everyday life — from playing and learning to self-care and social interaction. Our OT specialists use sensory integration, fine motor training, and adaptive strategies to support children in reaching their full functional potential.`,
         whoIsItFor: `OT is beneficial for children with sensory processing disorders, fine/gross motor delays, difficulties with self-care tasks (dressing, feeding), handwriting challenges, and those needing adaptive equipment support.`,
         benefits: [
@@ -82,8 +82,8 @@ const therapyData = {
         title: 'Behavioural Therapy',
         subtitle: 'Transforming Challenges into Strengths',
         color: 'bg-amber-50 text-amber-600',
-        accent: '#0284c7',
-        image: '/family_clinic_3.png',
+        accent: '#0ea5e9',
+        image: '/BehaviouralTherapy.png',
         overview: `Behavioural Therapy is a broad clinical approach focused on identifying and modifying problematic thought patterns and behaviors. It is rooted in the principle that undesirable behaviors are learned and, therefore, can be unlearned or replaced with healthier, more adaptive ones. Our therapists use evidence-based techniques to help children manage emotions and develop positive behavioral patterns.`,
         whoIsItFor: `Behavioural Therapy is suitable for children experiencing anxiety, aggression, impulse control challenges, phobias, OCD, ADHD-related behavioral issues, and general emotional dysregulation.`,
         benefits: [
@@ -106,9 +106,9 @@ const therapyData = {
         title: 'Autism Therapy',
         subtitle: 'Empowering Every Child on the Spectrum',
         color: 'bg-rose-50 text-rose-600',
-        accent: '#0284c7',
-        image: '/hospital_hero.png',
-        overview: `Autism Therapy at NeuroBridge™ is a comprehensive, multi-disciplinary program designed to support children across the autism spectrum. We combine evidence-based approaches including ABA, speech therapy, social skills training, and sensory integration to address the unique needs of each child and help them reach their full potential.`,
+        accent: '#0ea5e9',
+        image: '/AutismTherapy.png',
+        overview: `Autism Therapy at  is a comprehensive, multi-disciplinary program designed to support children across the autism spectrum. We combine evidence-based approaches including ABA, speech therapy, social skills training, and sensory integration to address the unique needs of each child and help them reach their full potential.`,
         whoIsItFor: `This program is designed for children diagnosed with Autism Spectrum Disorder (ASD) across all levels of the spectrum, from early intervention for toddlers to support for school-age children developing social and academic skills.`,
         benefits: [
             'Comprehensive, multi-disciplinary support model',
@@ -136,8 +136,8 @@ const TherapyPage = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
                 <h1 className="text-3xl font-bold text-neutral-800">Therapy not found</h1>
-                <Link to="/services" className="text-primary-600 hover:underline flex items-center gap-2">
-                    <ArrowLeft size={18} /> Back to Services
+                <Link to="/" className="text-primary-600 hover:underline flex items-center gap-2">
+                    <ArrowLeft size={18} /> Back to Home
                 </Link>
             </div>
         );
@@ -150,17 +150,18 @@ const TherapyPage = () => {
         <div className="flex flex-col min-h-screen">
 
             {/* Hero Section */}
-            <section className="pt-32 pb-20 bg-white relative overflow-hidden">
+            <section className="pt-48 pb-20 bg-white relative overflow-hidden" data-aos="fade-down">
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-white"></div>
                 <div className="container mx-auto px-4 md:px-8 lg:px-12 relative z-10">
                     <div className="flex flex-col lg:flex-row items-center gap-16">
                         <div className="lg:w-1/2 space-y-8">
-                            <Link to="/services" className="inline-flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors">
-                                <ArrowLeft size={16} />
-                                Back to All Services
-                            </Link>
-                            <div className="inline-block px-4 py-2 rounded-lg text-sm font-bold tracking-widest uppercase" style={{ backgroundColor: `${therapy.accent}15`, color: therapy.accent }}>
-                                {therapy.tag}
+                            <div className="flex items-center gap-6">
+                                <Link to="/" className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium transition-colors">
+                                    <ArrowLeft size={20} />
+                                </Link>
+                                <div className="inline-block px-4 py-2 rounded-lg text-sm font-bold tracking-widest uppercase" style={{ backgroundColor: `${therapy.accent}15`, color: therapy.accent }}>
+                                    {therapy.tag}
+                                </div>
                             </div>
                             <div>
                                 <h1 className="text-4xl md:text-6xl font-bold text-[#1e293b] leading-tight">
@@ -193,10 +194,10 @@ const TherapyPage = () => {
             </section>
 
             {/* Benefits Section */}
-            <section className="py-20 bg-slate-50">
+            <section className="py-20 bg-slate-50" data-aos="fade-up">
                 <div className="container mx-auto px-4 md:px-8 lg:px-12">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                        <div className="space-y-8">
+                        <div className="space-y-8" data-aos="fade-right">
                             <div>
                                 <p className="text-sm font-bold tracking-widest uppercase mb-3" style={{ color: therapy.accent }}>WHY CHOOSE THIS</p>
                                 <h2 className="text-3xl md:text-4xl font-bold text-[#1e293b] leading-tight">
@@ -212,7 +213,7 @@ const TherapyPage = () => {
                                 ))}
                             </div>
                         </div>
-                        <div className="space-y-6">
+                        <div className="space-y-6" data-aos="fade-left">
                             <div>
                                 <p className="text-sm font-bold tracking-widest uppercase mb-3" style={{ color: therapy.accent }}>WHO IS IT FOR</p>
                                 <h2 className="text-3xl md:text-4xl font-bold text-[#1e293b] leading-tight mb-6">Is This Right For Your Child?</h2>
@@ -232,7 +233,7 @@ const TherapyPage = () => {
             </section>
 
             {/* Our Process Section */}
-            <section className="py-20 bg-white">
+            <section className="py-20 bg-white" data-aos="fade-up">
                 <div className="container mx-auto px-4 md:px-8 lg:px-12">
                     <div className="text-center max-w-2xl mx-auto mb-16">
                         <p className="text-sm font-bold tracking-widest uppercase mb-3" style={{ color: therapy.accent }}>HOW WE WORK</p>
@@ -280,7 +281,7 @@ const TherapyPage = () => {
             </section>
 
             {/* Other Therapies */}
-            <section className="py-20 bg-slate-50">
+            <section className="py-20 bg-slate-50" data-aos="fade-up">
                 <div className="container mx-auto px-4 md:px-8 lg:px-12">
                     <h2 className="text-2xl md:text-3xl font-bold text-[#1e293b] mb-10 text-center">Explore Other Therapies</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

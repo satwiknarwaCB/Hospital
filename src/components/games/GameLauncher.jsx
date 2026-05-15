@@ -37,7 +37,7 @@ const GameLauncher = ({ gameType, onComplete, onExit }) => {
             case 'calm-bubbles': return 'Calm Bubble World';
             case 'aba-choice': return 'Good Choice City';
             case 'ot-trace': return 'Tracing Fun';
-            default: return 'NeuroBridge Play';
+            default: return ' Play';
         }
     };
 

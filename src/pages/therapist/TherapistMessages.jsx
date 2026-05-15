@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Therapist Messages Module
+//  - Therapist Messages Module
 // Therapist Console - Communication with Parents
 // ============================================================
 
@@ -466,7 +466,7 @@ const TherapistMessages = () => {
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-neutral-800">Messages</h2>
+                    <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">Messages</h2>
                     <p className="text-neutral-500">
                         {activeTab === 'conversations' ? 'Communication with parents' : 'Parent support community'}
                         {activeTab === 'conversations' && totalUnread > 0 && (

@@ -12,7 +12,7 @@ from database import db_manager
 from utils.auth import hash_password
 
 def reset_db_clean():
-    print("🚀 Starting Clean Database Reset...")
+    print("Starting Clean Database Reset...")
     db_manager.connect()
     db = db_manager.get_database()
 
@@ -27,18 +27,18 @@ def reset_db_clean():
     for coll_name in collections_to_clear:
         # We use delete_many({}) instead of drop() to keep indexes if any
         result = db[coll_name].delete_many({})
-        print(f"🧹 Cleared collection: {coll_name} ({result.deleted_count} documents removed)")
+        print(f"Cleared collection: {coll_name} ({result.deleted_count} documents removed)")
 
     # --- RECREATE ADMIN ---
-    admin_email = "anjali.sharma@neurobridge.com"
+    admin_email = "anjali.sharma@twinkles.com"
     admin_password = "Admin@123"
     
-    print(f"👤 Creating Admin: {admin_email}...")
+    print(f"Creating Admin: {admin_email}...")
     
     hashed_password = hash_password(admin_password)
     
     admin_data = {
-        "name": "Director Anjali Sharma",
+        "name": "Anjali Sharma",
         "email": admin_email,
         "hashed_password": hashed_password,
         "role": "admin",
@@ -49,7 +49,7 @@ def reset_db_clean():
     
     db_manager.admins.insert_one(admin_data)
     
-    print("\n✅ Database Reset Complete!")
+    print("\nDatabase Reset Complete!")
     print(f"Credentials for testing:")
     print(f"  Email: {admin_email}")
     print(f"  Password: {admin_password}")

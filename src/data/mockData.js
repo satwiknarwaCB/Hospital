@@ -1,5 +1,5 @@
 /**
- * NeuroBridge™ - Static Data & Constants
+ *  - Static Data & Constants
  * Used for initial state and lookups
  */
 
@@ -100,7 +100,7 @@ export const DOCUMENTS = [];
 export const PERIODIC_REVIEWS = [];
 
 export const THERAPY_TYPES = [
-    { id: 'st', name: 'Speech Therapy', icon: '🗣️', color: 'bg-blue-500' },
+    { id: 'st', name: 'Speech Therapy', icon: '🗣️', color: 'bg-gradient-to-br from-sky-400 to-blue-600' },
     { id: 'ot', name: 'Occupational Therapy', icon: '👐', color: 'bg-green-500' },
     { id: 'bt', name: 'Behavioral Therapy', icon: '🧠', color: 'bg-purple-500' },
     { id: 'pt', name: 'Physical Therapy', icon: '🏃', color: 'bg-orange-500' },

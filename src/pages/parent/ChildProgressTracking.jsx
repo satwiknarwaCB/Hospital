@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Child Progress Tracking Module
+//  - Child Progress Tracking Module
 // Parent Portal - Daily, Weekly, & Monthly Insights
 // ============================================================
 

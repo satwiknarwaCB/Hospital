@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Clinical Intelligence Dashboard
+//  - Clinical Intelligence Dashboard
 // Therapist Console - AI-Powered Analytics & Insights
 // ============================================================
 
@@ -251,7 +251,7 @@ const TherapyIntelligence = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-neutral-800 flex items-center gap-2">
+                    <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight flex items-center gap-2">
                         <Brain className="h-7 w-7 text-primary-600" />
                         Clinical Brain
                     </h2>

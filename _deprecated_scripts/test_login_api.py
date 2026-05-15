@@ -22,7 +22,7 @@ def test_login(email, password, role):
 
 if __name__ == "__main__":
     # Test Admin
-    test_login("anjali.sharma@neurobridge.com", "Admin@123", "admin")
+    test_login("anjali.sharma@.com", "Admin@123", "admin")
     # Test Parent
     test_login("priya.patel@parent.com", "Parent@123", "parent")
     # Test Doctor

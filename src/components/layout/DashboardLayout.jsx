@@ -7,7 +7,7 @@ import { useApp } from '../../lib/context';
 import ProfileEditModal from './ProfileEditModal';
 import { parentAuthAPI, doctorAuthAPI } from '../../lib/api';
 
-const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primary-700", onLogout }) => {
+const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-gradient-to-br from-sky-400 to-blue-600", onLogout }) => {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const location = useLocation();
@@ -124,18 +124,17 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                     "lg:relative lg:translate-x-0"
                 )}
             >
-                <div className="h-16 flex items-center gap-3 px-6 border-b border-neutral-100 shrink-0">
-                    <img src="/logo.svg" alt="NeuroBridge Logo" className="h-8 w-8" />
-                    <span className="text-xl font-bold text-primary-900 font-serif tracking-tight">NeuroBridge™</span>
+                <Link to="/" className="h-24 flex items-center justify-center px-6 border-b border-neutral-100 shrink-0 group hover:bg-neutral-50 transition-colors">
+                    <img src="/TwinklesLogoTransparent.png" alt="Twinkles" className="h-20 w-auto rounded-lg" />
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="lg:hidden text-neutral-400 hover:text-neutral-600 ml-auto"
+                        className="lg:hidden text-neutral-400 hover:text-neutral-600 absolute right-4"
                         onClick={() => setSidebarOpen(false)}
                     >
                         <X className="h-5 w-5" />
                     </Button>
-                </div>
+                </Link>
 
                 <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
                     {sidebarItems.map((item) => {
@@ -192,6 +191,7 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                 {/* Header */}
                 <header className="h-16 bg-white border-b border-neutral-200 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-30">
                     <div className="flex items-center gap-4">
+
                         <Button
                             variant="ghost"
                             size="icon"
@@ -200,7 +200,9 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                         >
                             <Menu className="h-6 w-6 text-neutral-600" />
                         </Button>
-                        <h2 className="text-lg font-bold text-neutral-800 tracking-tight">{title}</h2>
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-lg font-bold text-neutral-800 tracking-tight">{title}</h2>
+                        </div>
                     </div>
 
                     <div className="flex items-center space-x-4">
@@ -218,7 +220,7 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
-                                    <div className="w-full h-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
+                                    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center">
                                         <User className="h-6 w-6 text-white" />
                                     </div>
                                 )}
@@ -229,7 +231,7 @@ const DashboardLayout = ({ children, title, sidebarItems, roleColor = "bg-primar
                 </header>
 
                 {/* Scrollable Content */}
-                <main className="flex-1 p-4 lg:p-8 pb-24 lg:pb-8 overflow-auto relative">
+                <main className="flex-1 p-4 lg:p-8 pb-24 lg:pb-8 overflow-auto relative" data-aos="fade-up">
                     {children || <Outlet />}
 
                     {/* Global Notifications Toast Stack */}

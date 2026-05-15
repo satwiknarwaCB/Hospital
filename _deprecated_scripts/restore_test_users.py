@@ -77,7 +77,7 @@ def restore_users():
         {
             "_id": "dr_rajesh_001",
             "name": "Dr. Rajesh Kumar",
-            "email": "dr.rajesh@neurobridge.com",
+            "email": "dr.rajesh@.com",
             "hashed_password": hash_password("therapist123"),
             "specialization": "Speech & Language Therapy",
             "experience_years": 12,
@@ -91,7 +91,7 @@ def restore_users():
         {
             "_id": "dr_meera_002",
             "name": "Dr. Meera Singh",
-            "email": "dr.meera@neurobridge.com",
+            "email": "dr.meera@.com",
             "hashed_password": hash_password("therapist123"),
             "specialization": "Occupational Therapy",
             "experience_years": 8,

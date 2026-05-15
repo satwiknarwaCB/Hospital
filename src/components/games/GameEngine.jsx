@@ -212,7 +212,7 @@ export const GameEngine = ({ title, children, onExit }) => {
             {/* Footer / Branding */}
             <div className="p-4 text-center">
                 <p className="text-[10px] text-neutral-400 font-medium tracking-widest uppercase">
-                    NeuroBridge™ Play Therapy • Multi-Language Support
+                     Play Therapy • Multi-Language Support
                 </p>
             </div>
         </div>

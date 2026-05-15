@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Messages & Communication Module
+//  - Messages & Communication Module
 // Parent Portal - Secure Messaging with Therapists
 // ============================================================
 
@@ -416,7 +416,7 @@ const Messages = () => {
                         type: message.type,
                         participantId: otherUserId,
                         participantName: otherUser ? otherUser.name :
-                            (message.type === 'weekly-summary' ? 'NeuroBridge AI' : (message.senderName || 'Therapist')),
+                            (message.type === 'weekly-summary' ? ' AI' : (message.senderName || 'Therapist')),
                         participantAvatar,
                         participantRole: otherUser ? otherUser.role : (isMessageFromMe ? message.recipientRole : message.senderRole)
                     };
@@ -503,7 +503,7 @@ const Messages = () => {
             {/* Header */}
             <div className="mb-6">
                 <div className="mb-4">
-                    <h2 className="text-2xl font-bold text-neutral-800">Messages</h2>
+                    <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">Messages</h2>
                     <p className="text-neutral-500 text-sm">
                         Communicate with {child.name}'s therapy team and community
                     </p>

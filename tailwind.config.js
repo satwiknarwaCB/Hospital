@@ -17,11 +17,11 @@ export default {
           900: '#0c4a6e',
         },
         secondary: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          500: '#22c55e', // Success/Growth Green
-          600: '#16a34a',
-          700: '#15803d',
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          500: '#38bdf8', // Sky Blue Accent
+          600: '#0ea5e9',
+          700: '#0284c7',
         },
         neutral: {
           50: '#f8fafc',
@@ -32,6 +32,7 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        poppins: ['Poppins', 'sans-serif'],
       },
     },
   },

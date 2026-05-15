@@ -52,12 +52,7 @@ const Header = () => {
                 <div className={`container mx-auto px-4 md:px-6 lg:px-8 flex items-center justify-between transition-all duration-300 ${isScrolled ? 'py-2' : 'py-3 lg:py-4'}`}>
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2 group">
-                        <div className="p-2 bg-[#0284c7] rounded-lg group-hover:scale-110 transition-transform shadow-lg shadow-sky-100">
-                            <Activity className="h-6 w-6 text-white" />
-                        </div>
-                        <span className="text-xl lg:text-2xl font-bold text-[#0284c7]">
-                            NeuroBridge™
-                        </span>
+                        <img src="/TwinklesLogoTransparent.png" alt="Logo" className="h-20 w-auto rounded-xl" />
                     </Link>
 
                     {/* Desktop Navigation */}
@@ -124,7 +119,7 @@ const Header = () => {
                         </Button>
 
                         <Button
-                            className="bg-[#0284c7] hover:bg-sky-700 text-white px-4 xl:px-6 shadow-xl shadow-sky-100"
+                            className="bg-gradient-to-br from-sky-400 to-blue-600 hover:brightness-110 text-white px-4 xl:px-6 shadow-xl shadow-sky-100"
                             onClick={() => navigate('/book-appointment')}
                         >
                             Book An Appointment
@@ -197,7 +192,7 @@ const Header = () => {
                                 </Button>
 
                                 <Button
-                                    className="w-full bg-[#0284c7] hover:bg-sky-700 text-white"
+                                    className="w-full bg-gradient-to-br from-sky-400 to-blue-600 hover:brightness-110 text-white"
                                     onClick={() => {
                                         setIsMobileMenuOpen(false);
                                         navigate('/book-appointment');

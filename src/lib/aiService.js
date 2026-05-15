@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - AI Service Layer
+//  - AI Service Layer
 // Production-Ready AI/ML Simulation for Therapy Intelligence
 // ============================================================
 

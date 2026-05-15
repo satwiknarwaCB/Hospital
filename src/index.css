@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800;900&family=Roboto:wght@400;500;700;900&display=swap');
 
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
@@ -15,10 +15,14 @@
   }
 
   body {
-    font-family: theme('fontFamily.sans');
+    font-family: 'Inter', sans-serif !important;
     color: theme('colors.neutral.800');
     background-color: theme('colors.neutral.50');
     scroll-behavior: smooth;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif !important;
   }
 }
 
@@ -134,4 +138,22 @@
 
 .custom-scrollbar-modal::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Twinkle Shimmer Animation */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-twinkle {
+  background: linear-gradient(90deg, #0284c7, #38bdf8, #818cf8, #38bdf8, #0284c7);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+  display: inline-block;
+  font-family: 'Roboto', sans-serif !important;
+  font-weight: 800;
 }

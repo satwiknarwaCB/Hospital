@@ -65,7 +65,7 @@ const ChildHealthAssessment = ({ isOpen, onClose, child }) => {
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(24);
         doc.setFont('helvetica', 'bold');
-        doc.text('NEUROBRIDGE HOSPITAL', 20, 25);
+        doc.text(' HOSPITAL', 20, 25);
 
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
@@ -143,7 +143,7 @@ const ChildHealthAssessment = ({ isOpen, onClose, child }) => {
         // Footer
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text('System Certified Medical Report - NeuroBridge Digital Health System', 20, 280);
+        doc.text('System Certified Medical Report -  Digital Health System', 20, 280);
         doc.text('Confidential Document - Hospital Use Only', 140, 280);
 
         doc.save(`${formData.name}_Health_Assessment.pdf`);

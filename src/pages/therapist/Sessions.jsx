@@ -35,7 +35,7 @@ const Sessions = () => {
         <div className="space-y-6">
             <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-black text-neutral-900 tracking-tight">Sessions</h2>
+                    <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">Sessions</h2>
                     <p className="text-neutral-500">Manage your calendar and clinical records in one place</p>
                 </div>
             </header>

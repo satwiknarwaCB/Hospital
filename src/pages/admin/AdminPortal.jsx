@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - CDC Admin Portal
+//  - CDC Admin Portal
 // Complete Administrative Experience with All Modules
 // ============================================================
 
@@ -384,7 +384,7 @@ const OperationsPage = () => {
     return (
         <div className="space-y-8 pb-safe-nav animate-slide-up">
             <div>
-                <h2 className="text-2xl font-bold text-neutral-800">Operations Management</h2>
+                <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">OPERATIONS MANAGEMENT</h2>
                 <p className="text-neutral-500">Monitor and manage center operations</p>
             </div>
 
@@ -764,7 +764,7 @@ const ReportsPage = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl md:text-3xl font-black text-neutral-900 uppercase tracking-tight">Clinical Reports</h2>
+                    <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">Clinical Reports</h2>
                     <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Session reports submitted by therapists</p>
                 </div>
             </div>
@@ -794,7 +794,7 @@ const ReportsPage = () => {
             {/* Report Detail Modal */}
             {selectedReport && (
                 <Card className="rounded-[2rem] border-none shadow-xl ring-2 ring-primary-200 overflow-hidden animate-in zoom-in-95 duration-200">
-                    <CardHeader className="bg-gradient-to-r from-primary-600 to-primary-700 text-white">
+                    <CardHeader className="bg-gradient-to-br from-sky-400 to-blue-600 text-white">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-base font-black uppercase tracking-tight">{selectedReport.name}</CardTitle>
                             <button onClick={() => setSelectedReport(null)} className="text-white/70 hover:text-white text-xl font-bold">✕</button>
@@ -857,7 +857,7 @@ const ReportsPage = () => {
 
                         <div className="flex gap-3 pt-2">
                             <Button
-                                className="flex-1 bg-primary-600 hover:bg-primary-700 font-black text-[11px] uppercase tracking-widest h-12 rounded-xl shadow-lg shadow-primary-100"
+                                className="flex-1 bg-gradient-to-br from-sky-400 to-blue-600 hover:brightness-110 font-black text-[11px] uppercase tracking-widest h-12 rounded-xl shadow-lg shadow-primary-100"
                                 onClick={() => handleDownloadReport(selectedReport)}
                             >
                                 <Download className="h-4 w-4 mr-2" />
@@ -929,7 +929,7 @@ const ReportsPage = () => {
                                             <Eye className="h-4 w-4" />
                                         </Button>
                                         {report.status === 'ready' && (
-                                            <Button size="sm" className="bg-primary-600 hover:bg-primary-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-primary-50" onClick={() => handleDownloadReport(report)}>
+                                            <Button size="sm" className="bg-gradient-to-br from-sky-400 to-blue-600 hover:brightness-110 text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-primary-50" onClick={() => handleDownloadReport(report)}>
                                                 <Download className="h-4 w-4 mr-2" />
                                                 Download
                                             </Button>
@@ -988,7 +988,7 @@ const AppointmentsPage = () => {
         <div className="space-y-6 pb-20 animate-slide-up">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-neutral-800 uppercase tracking-tight">Appointment Requests</h2>
+                    <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">Appointment Requests</h2>
                     <p className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] mt-1">Waitlist from Public Booking System</p>
                 </div>
                 <div className="relative w-full md:w-64">
@@ -1131,7 +1131,7 @@ const AdminPortal = () => {
 
     return (
         <Routes>
-            <Route element={<DashboardLayout title="CDC Admin" sidebarItems={sidebarItems} roleColor="bg-primary-600" onLogout={handleLogout} />}>
+            <Route element={<DashboardLayout title="CDC Admin" sidebarItems={sidebarItems} roleColor="bg-gradient-to-br from-sky-400 to-blue-600" onLogout={handleLogout} />}>
                 <Route path="overview" element={<AdminDashboard />} />
                 <Route path="operations" element={<OperationsPage />} />
                 <Route path="users" element={<UserManagement />} />

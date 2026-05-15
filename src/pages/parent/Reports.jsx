@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Parent Portal: Clinical Reports
+//  - Parent Portal: Clinical Reports
 // Secure View of Intake, Medical, and Assessment Reports
 // ============================================================
 
@@ -131,7 +131,7 @@ const Reports = () => {
             {/* Header */}
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-black text-neutral-800 tracking-tight">Clinical Reports</h2>
+                    <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">Clinical Reports</h2>
                     <p className="text-sm text-neutral-500">Official assessments and intake documents for {child?.name || 'your child'}.</p>
                 </div>
                 <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-xl border border-green-200">

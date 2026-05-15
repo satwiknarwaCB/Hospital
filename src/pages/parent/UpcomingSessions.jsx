@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Upcoming Sessions Module
+//  - Upcoming Sessions Module
 // Parent Portal - View and Manage Scheduled Sessions
 // ============================================================
 

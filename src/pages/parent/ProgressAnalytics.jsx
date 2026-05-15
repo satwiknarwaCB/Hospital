@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Progress Analytics Module
+//  - Progress Analytics Module
 // Parent Portal - Skill-wise Progress Tracking
 // ============================================================
 
@@ -188,7 +188,7 @@ const ProgressAnalytics = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-neutral-800">New Learning</h2>
+                    <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">New Learning</h2>
                     <p className="text-neutral-500">Track {child.name}'s development across key skill areas</p>
                 </div>
             </div>

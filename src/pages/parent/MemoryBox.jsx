@@ -1,5 +1,5 @@
 // ============================================================
-// NeuroBridge™ - Memory Box (Child Portfolio)
+//  - Memory Box (Child Portfolio)
 // A digital scrapbook for capturing "Small Wins"
 // ============================================================
 
@@ -42,7 +42,7 @@ const MemoryBox = () => {
             {/* Header Section */}
             <div className="flex items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-black text-neutral-800 tracking-tight">Our Memory Box 💝</h2>
+                    <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">OUR MEMORY BOX 💝</h2>
                     <p className="text-neutral-500 font-medium mt-1 text-sm leading-tight">Saving every small win in {memories[0]?.title.split(' ')[0]}'s journey.</p>
                 </div>
                 <Button

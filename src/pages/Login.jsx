@@ -137,15 +137,18 @@ const Login = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex border border-neutral-100">
+            <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex border border-neutral-100" data-aos="zoom-in">
                 <div className="flex-1 p-8 md:p-12">
                     <div className="max-w-md mx-auto">
-                        <div className="text-center mb-10">
+                        <div className="text-left mb-10">
+                            <div className="flex justify-center mb-10">
+                                <img src="/TwinklesLogoTransparent.png" alt="Twinkles Logo" className="h-32 w-auto rounded-3xl" />
+                            </div>
                             <h1 className="text-3xl font-bold text-neutral-800 mb-2">
                                 Welcome Back
                             </h1>
                             <p className="text-neutral-500">
-                                Sign in to access your NeuroBridge™ portal
+                                Sign in to access your  portal
                             </p>
                         </div>
 
@@ -250,7 +253,7 @@ const Login = () => {
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="w-full py-4 bg-primary-600 text-white rounded-2xl font-bold shadow-lg shadow-primary-200 hover:bg-primary-700 hover:-translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="w-full py-4 bg-gradient-to-br from-sky-400 to-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-primary-200 hover:brightness-110 hover:-translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {isLoading ? (
                                         <>
@@ -302,7 +305,7 @@ const Login = () => {
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="w-full py-4 bg-primary-600 text-white rounded-2xl font-bold shadow-lg shadow-primary-200 hover:bg-primary-700 hover:-translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="w-full py-4 bg-gradient-to-br from-sky-400 to-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-primary-200 hover:brightness-110 hover:-translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {isLoading ? (
                                         <>

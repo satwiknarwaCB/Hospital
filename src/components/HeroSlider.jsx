@@ -22,7 +22,7 @@ const HeroSlider = () => {
             image: '/therapy_child_1.png',
             position: 'justify-start',
             title: (
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight text-[#0284c7]">
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight text-[#0ea5e9]">
                     FOSTERING GROWTH<br />
                     & POSITIVE BEHAVIOR
                 </h1>
@@ -32,7 +32,7 @@ const HeroSlider = () => {
             image: '/therapy_session_2.png',
             position: 'justify-center',
             title: (
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight text-[#0284c7]">
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight text-[#0ea5e9]">
                     AUTISM THERAPY<br />
                     & POTENTIAL
                 </h1>
@@ -42,7 +42,7 @@ const HeroSlider = () => {
             image: '/family_clinic_3.png',
             position: 'justify-end',
             title: (
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight text-[#0284c7]">
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight text-[#0ea5e9]">
                     EXPERT CARE<br />
                     & UNIQUE JOURNEYS
                 </h1>
@@ -52,7 +52,7 @@ const HeroSlider = () => {
             image: '/therapist_professional_4.png',
             position: 'justify-start',
             title: (
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight text-[#0284c7]">
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight text-[#0ea5e9]">
                     SUPPORTING EVERY<br />
                     FAMILY & CHILD
                 </h1>
@@ -62,7 +62,7 @@ const HeroSlider = () => {
             image: '/hospital_hero.png',
             position: 'justify-center',
             title: (
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight text-[#0284c7]">
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold leading-tight text-[#0ea5e9]">
                     INNOVATIVE TOOLS<br />
                     & OUTCOMES
                 </h1>
@@ -110,7 +110,7 @@ const HeroSlider = () => {
                                         {slide.title}
                                         <div className="flex justify-center">
                                             <button
-                                                className="h-10 px-6 text-base font-semibold bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-lg shadow-lg shadow-[#0284c7]/20 transition-all duration-300 transform hover:scale-105 active:scale-95"
+                                                className="h-10 px-6 text-base font-semibold bg-[#0ea5e9] hover:bg-[#0284c7] text-white rounded-lg shadow-lg shadow-[#0ea5e9]/20 transition-all duration-300 transform hover:scale-105 active:scale-95"
                                                 onClick={() => navigate('/book-appointment')}
                                             >
                                                 Book An Appointment

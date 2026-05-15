@@ -67,7 +67,7 @@ const BookAppointmentPage = () => {
                         <h1 className="text-3xl font-bold text-neutral-900 mb-4">Success!</h1>
                         <p className="text-neutral-600 mb-8 text-lg">Your appointment request has been received. We will contact you shortly to confirm.</p>
                         <p className="text-sm text-neutral-400">Redirecting you to home page...</p>
-                        <Button onClick={() => navigate('/')} className="mt-8 bg-[#0284c7] hover:bg-sky-700 w-full py-4 text-white font-bold rounded-2xl">
+                        <Button onClick={() => navigate('/')} className="mt-8 bg-[#0ea5e9] hover:bg-sky-700 w-full py-4 text-white font-bold rounded-2xl">
                             Return to Home
                         </Button>
                     </div>
@@ -80,19 +80,25 @@ const BookAppointmentPage = () => {
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">
             <Header />
-            <main className="flex-grow pt-24 md:pt-32 pb-16">
+            <main className="flex-grow pt-32 md:pt-44 pb-16">
                 <div className="container mx-auto px-4 md:px-6">
                     <div className="max-w-2xl mx-auto">
                         <button
-                            onClick={() => navigate(-1)}
-                            className="flex items-center gap-2 text-neutral-500 hover:text-[#0284c7] transition-colors mb-8 group"
+                            onClick={() => {
+                                if (window.history.length > 1) {
+                                    navigate(-1);
+                                } else {
+                                    navigate('/');
+                                }
+                            }}
+                            className="flex items-center gap-2 text-neutral-500 hover:text-[#0ea5e9] transition-colors mb-8 group"
                         >
                             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
                             Back
                         </button>
 
                         <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-neutral-100">
-                            <div className="bg-[#0284c7] p-8 md:p-10 text-white text-center">
+                            <div className="bg-[#0ea5e9] p-8 md:p-10 text-white text-center">
                                 <h1 className="text-3xl md:text-4xl font-bold mb-4">Book an Appointment</h1>
                                 <p className="text-sky-100 max-w-md mx-auto">Schedule a consultation with our expert clinical team to start your child's journey.</p>
                             </div>
@@ -107,14 +113,14 @@ const BookAppointmentPage = () => {
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-neutral-700 uppercase tracking-wider ml-1">Full Name</label>
                                     <div className="relative group">
-                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-[#0284c7] transition-colors" />
+                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-[#0ea5e9] transition-colors" />
                                         <input
                                             type="text"
                                             name="name"
                                             required
                                             value={formData.name}
                                             onChange={handleChange}
-                                            className="w-full pl-12 pr-4 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] outline-none transition-all placeholder:text-neutral-400"
+                                            className="w-full pl-12 pr-4 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-[#0ea5e9]/20 focus:border-[#0ea5e9] outline-none transition-all placeholder:text-neutral-400"
                                             placeholder="John Doe"
                                         />
                                     </div>
@@ -124,14 +130,14 @@ const BookAppointmentPage = () => {
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-neutral-700 uppercase tracking-wider ml-1">Email Address</label>
                                         <div className="relative group">
-                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-[#0284c7] transition-colors" />
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-[#0ea5e9] transition-colors" />
                                             <input
                                                 type="email"
                                                 name="email"
                                                 required
                                                 value={formData.email}
                                                 onChange={handleChange}
-                                                className="w-full pl-12 pr-4 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] outline-none transition-all placeholder:text-neutral-400"
+                                                className="w-full pl-12 pr-4 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-[#0ea5e9]/20 focus:border-[#0ea5e9] outline-none transition-all placeholder:text-neutral-400"
                                                 placeholder="john@example.com"
                                             />
                                         </div>
@@ -139,14 +145,14 @@ const BookAppointmentPage = () => {
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-neutral-700 uppercase tracking-wider ml-1">Mobile Number</label>
                                         <div className="relative group">
-                                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-[#0284c7] transition-colors" />
+                                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-[#0ea5e9] transition-colors" />
                                             <input
                                                 type="tel"
                                                 name="mobile"
                                                 required
                                                 value={formData.mobile}
                                                 onChange={handleChange}
-                                                className="w-full pl-12 pr-4 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] outline-none transition-all placeholder:text-neutral-400"
+                                                className="w-full pl-12 pr-4 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-[#0ea5e9]/20 focus:border-[#0ea5e9] outline-none transition-all placeholder:text-neutral-400"
                                                 placeholder="+91 98765 43210"
                                             />
                                         </div>
@@ -157,13 +163,13 @@ const BookAppointmentPage = () => {
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-neutral-700 uppercase tracking-wider ml-1">Selecting Service</label>
                                         <div className="relative group">
-                                            <Stethoscope className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-[#0284c7] transition-colors" />
+                                            <Stethoscope className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-[#0ea5e9] transition-colors" />
                                             <select
                                                 name="department"
                                                 required
                                                 value={formData.department}
                                                 onChange={handleChange}
-                                                className="w-full pl-12 pr-4 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] outline-none transition-all appearance-none cursor-pointer"
+                                                className="w-full pl-12 pr-4 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-[#0ea5e9]/20 focus:border-[#0ea5e9] outline-none transition-all appearance-none cursor-pointer"
                                             >
                                                 <option value="">Select Service</option>
                                                 {departments.map(dept => (
@@ -175,14 +181,14 @@ const BookAppointmentPage = () => {
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-neutral-700 uppercase tracking-wider ml-1">Appointment Date</label>
                                         <div className="relative group">
-                                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-[#0284c7] transition-colors" />
+                                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-[#0ea5e9] transition-colors" />
                                             <input
                                                 type="date"
                                                 name="date"
                                                 required
                                                 value={formData.date}
                                                 onChange={handleChange}
-                                                className="w-full pl-12 pr-4 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-[#0284c7]/20 focus:border-[#0284c7] outline-none transition-all cursor-pointer"
+                                                className="w-full pl-12 pr-4 py-4 bg-neutral-50 border border-neutral-200 rounded-2xl focus:ring-2 focus:ring-[#0ea5e9]/20 focus:border-[#0ea5e9] outline-none transition-all cursor-pointer"
                                             />
                                         </div>
                                     </div>
@@ -201,7 +207,7 @@ const BookAppointmentPage = () => {
                                                     onChange={handleChange}
                                                     className="peer sr-only"
                                                 />
-                                                <div className="text-center py-4 rounded-2xl border-2 border-neutral-100 peer-checked:bg-sky-50 peer-checked:border-[#0284c7] peer-checked:text-[#0284c7] transition-all font-bold text-neutral-600">
+                                                <div className="text-center py-4 rounded-2xl border-2 border-neutral-100 peer-checked:bg-sky-50 peer-checked:border-[#0ea5e9] peer-checked:text-[#0ea5e9] transition-all font-bold text-neutral-600">
                                                     {mode}
                                                 </div>
                                             </label>
@@ -213,7 +219,7 @@ const BookAppointmentPage = () => {
                                     <Button
                                         type="submit"
                                         disabled={status === 'loading'}
-                                        className="w-full py-4 bg-[#0284c7] hover:bg-sky-700 text-white font-bold text-lg rounded-2xl shadow-xl shadow-sky-100 transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
+                                        className="w-full py-4 bg-[#0ea5e9] hover:bg-sky-700 text-white font-bold text-lg rounded-2xl shadow-xl shadow-sky-100 transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
                                     >
                                         {status === 'loading' ? (
                                             <>

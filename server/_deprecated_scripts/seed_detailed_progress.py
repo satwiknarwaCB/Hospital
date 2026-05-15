@@ -4,7 +4,7 @@ import os
 
 # MongoDB Connection
 MONGO_URI = "mongodb://localhost:27017/"
-DB_NAME = "neurobridge"
+DB_NAME = ""
 
 client = pymongo.MongoClient(MONGO_URI)
 db = client[DB_NAME]
